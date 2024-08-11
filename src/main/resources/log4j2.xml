@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project>
+<Configuration status="WARN" packages="com.hamusuke.numguesser.logging">
+    <Properties>
+        <Property name="format1">[%-6p][%d{HH:mm:ss.SSS}/%t][%c{1}]: %m%n</Property>
+        <Property name="logfile">./log/latest.log</Property>
+        <Property name="logfile-archive">./log/latest_%d{yyyy-MM-dd}-%i.log</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout>
+                <pattern>${format1}</pattern>
+            </PatternLayout>
+        </Console>
+        <Queue name="ServerGuiConsole">
+            <PatternLayout pattern="[%d{HH:mm:ss} %level]: %msg{nolookups}%n"/>
+        </Queue>
+        <RollingFile name="logfile001" append="true" fileName="${logfile}"
+                     filePattern="${logfile-archive}">
+            <PatternLayout>
+                <pattern>${format1}</pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="1KB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="3"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="logfile001"/>
+            <AppenderRef ref="ServerGuiConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>
