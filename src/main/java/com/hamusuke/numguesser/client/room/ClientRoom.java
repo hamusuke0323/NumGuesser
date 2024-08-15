@@ -14,8 +14,6 @@ import java.util.List;
 public class ClientRoom extends Room {
     private final List<AbstractClientPlayer> clientPlayers = Collections.synchronizedList(Lists.newArrayList());
     private final List<AbstractClientPlayer> clientPlayerList;
-    @Nullable
-    private AbstractClientPlayer host;
 
     public ClientRoom(NumGuesser client, String roomName) {
         super(roomName);

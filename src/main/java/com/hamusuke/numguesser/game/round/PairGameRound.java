@@ -5,23 +5,20 @@ import com.hamusuke.numguesser.server.network.ServerPlayer;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class TwoPlayerGameRound extends GameRound {
-    public TwoPlayerGameRound(List<ServerPlayer> players, @Nullable ServerPlayer parent) {
+public class PairGameRound extends GameRound {
+    public PairGameRound(List<ServerPlayer> players, @Nullable ServerPlayer parent) {
         super(players, parent);
     }
 
     @Override
     protected int getGivenCardNumPerPlayer() {
-        return 4;
-    }
-
-    @Override
-    protected ServerPlayer nextParent() {
-        return null;
+        return 6;
     }
 
     @Override
     public GameRound newRound() {
-        return new TwoPlayerGameRound(this.players, this.parent);
+        var game = new PairGameRound(this.players, this.parent);
+        game.pulledCardMap.putAll(this.pulledCardMap);
+        return game;
     }
 }

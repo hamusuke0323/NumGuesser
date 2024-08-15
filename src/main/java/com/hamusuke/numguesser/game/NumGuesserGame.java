@@ -2,7 +2,8 @@ package com.hamusuke.numguesser.game;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.round.GameRound;
-import com.hamusuke.numguesser.game.round.TwoPlayerGameRound;
+import com.hamusuke.numguesser.game.round.PairGameRound;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.StartGameRoundNotify;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import java.util.Collections;
@@ -20,7 +21,8 @@ public class NumGuesserGame {
     }
 
     public void startGame() {
-        this.round.decideParent();
+        this.round.sendPacketToAllInGame(new StartGameRoundNotify());
+        this.round.startRound();
     }
 
     public synchronized void leavePlayer(ServerPlayer player) {
@@ -28,7 +30,19 @@ public class NumGuesserGame {
         this.round.onPlayerLeft(player);
     }
 
+    public void onCardSelect(ServerPlayer selector, int id) {
+        this.round.onCardSelect(selector, id);
+    }
+
+    public void onAttack(ServerPlayer player, int id, int num) {
+        this.round.onAttack(player, id, num);
+    }
+
+    public List<ServerPlayer> getPlayingPlayers() {
+        return this.playerList;
+    }
+
     private GameRound getFirstRound() {
-        return new TwoPlayerGameRound(this.playerList, null);
+        return new GameRound(this.playerList, null);
     }
 }

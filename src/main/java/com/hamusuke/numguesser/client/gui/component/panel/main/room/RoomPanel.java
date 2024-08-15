@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.gui.component.panel.main.room;
 
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
+import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
@@ -33,6 +34,14 @@ public class RoomPanel extends Panel {
 
     public void hideReadyButton() {
         this.ready.setEnabled(false);
+    }
+
+    public void countReadyPlayers() {
+        synchronized (this.client.curRoom.getPlayers()) {
+            var players = this.client.curRoom.getPlayers();
+            int readyPlayers = (int) players.stream().filter(Player::isReady).count();
+            this.ready.setText("準備完了（%d / %d）".formatted(readyPlayers, players.size()));
+        }
     }
 
     @Override

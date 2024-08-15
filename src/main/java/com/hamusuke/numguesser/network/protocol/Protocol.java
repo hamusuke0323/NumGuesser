@@ -20,7 +20,7 @@ import com.hamusuke.numguesser.network.protocol.packet.clientbound.info.InfoHand
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.info.ServerInfoRsp;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.*;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.*;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.PlayerDeckSyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.*;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.handshake.HandshakeReq;
@@ -30,6 +30,9 @@ import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveRe
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
 import com.hamusuke.numguesser.util.Util;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -104,7 +107,16 @@ public enum Protocol {
                     .add(ReadyRsp.class, ReadyRsp::new)
 
                     // play
+                    .add(ExitGameSuccNotify.class, ExitGameSuccNotify::new)
                     .add(PlayerDeckSyncNotify.class, PlayerDeckSyncNotify::new)
+                    .add(PlayerNewDeckNotify.class, PlayerNewDeckNotify::new)
+                    .add(StartGameRoundNotify.class, StartGameRoundNotify::new)
+                    .add(PlayerStartAttackingNotify.class, PlayerStartAttackingNotify::new)
+                    .add(RemotePlayerStartAttackingNotify.class, RemotePlayerStartAttackingNotify::new)
+                    .add(CardOpenNotify.class, CardOpenNotify::new)
+                    .add(PlayerCardSelectionSyncNotify.class, PlayerCardSelectionSyncNotify::new)
+                    .add(AttackRsp.class, AttackRsp::new)
+                    .add(PlayerNewCardAddNotify.class, PlayerNewCardAddNotify::new)
             )
             .addDirection(PacketDirection.SERVERBOUND, new PacketSet<ServerPlayPacketListener>()
                     // common
@@ -113,6 +125,11 @@ public enum Protocol {
                     .add(ChatReq.class, ChatReq::new)
                     .add(LeaveRoomReq.class, LeaveRoomReq::new)
                     .add(ReadyReq.class, ReadyReq::new)
+
+                    // play
+                    .add(ClientCommandReq.class, ClientCommandReq::new)
+                    .add(CardSelectReq.class, CardSelectReq::new)
+                    .add(AttackReq.class, AttackReq::new)
             )
     ),
     LOGIN(3, protocol()

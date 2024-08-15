@@ -42,6 +42,10 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
                     .filter(p -> p.getId() == packet.id())
                     .forEach(player -> player.setReady(packet.ready()));
         }
+
+        if (this.client.getPanel() instanceof RoomPanel roomPanel) {
+            roomPanel.countReadyPlayers();
+        }
     }
 
     @Override

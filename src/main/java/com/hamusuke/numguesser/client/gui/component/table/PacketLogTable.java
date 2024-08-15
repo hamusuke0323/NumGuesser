@@ -2,19 +2,17 @@ package com.hamusuke.numguesser.client.gui.component.table;
 
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.network.PacketLogger.PacketDetails;
-import org.jdesktop.swingx.JXTable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
-public class PacketLogTable extends JXTable {
+public class PacketLogTable extends JTable {
     private static final int MAX_LOG_SIZE = 256;
     private static final DefaultTableModel MODEL = new DefaultTableModel(new String[]{"送信", "受信"}, 0);
 
     public PacketLogTable() {
         super(MODEL);
-        this.setSortable(false);
         this.setDragEnabled(false);
         this.setColumnSelectionAllowed(false);
         this.setCellSelectionEnabled(false);

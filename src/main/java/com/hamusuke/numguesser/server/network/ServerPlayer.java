@@ -7,6 +7,7 @@ import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.PlayerNewDeckNotify;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.game.ServerPlayerDeck;
 import com.hamusuke.numguesser.server.room.ServerRoom;
@@ -33,6 +34,7 @@ public class ServerPlayer extends Player implements CommandSource {
 
     public void makeNewDeck() {
         this.deck = new ServerPlayerDeck(this);
+        this.sendPacket(new PlayerNewDeckNotify());
     }
 
     public ServerPlayerDeck getDeck() {

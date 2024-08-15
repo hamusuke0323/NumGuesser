@@ -18,7 +18,7 @@ public class LocalCard extends AbstractClientCard {
     }
 
     @Override
-    public boolean isOpened() {
+    public boolean canBeSeen() {
         return true;
     }
 }

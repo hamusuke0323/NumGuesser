@@ -11,19 +11,7 @@ public class ServerCard extends Card {
     }
 
     @Override
-    public void open() {
-        super.open();
-
-
-    }
-
-    @Override
     public int getNum() {
         return this.num;
-    }
-
-    @Override
-    public boolean isOpened() {
-        return true;
     }
 }

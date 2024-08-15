@@ -4,6 +4,7 @@ import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jdesktop.swingx.JXBusyLabel;
 import org.jdesktop.swingx.JXLabel;
 
 import javax.swing.*;
@@ -23,7 +24,10 @@ public class ConnectingPanel extends Panel {
     public void init() {
         super.init();
 
-        var label = new JXLabel(String.format("%s:%d に接続しています...", this.host, this.port), SwingConstants.CENTER);
+        var label = new JXBusyLabel();
+        label.setText(String.format("%s:%d に接続しています", this.host, this.port));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setBusy(true);
         this.add(new JXLabel(String.format("%s:%d に接続中", this.host, this.port), SwingConstants.CENTER), BorderLayout.NORTH);
         this.add(label, BorderLayout.CENTER);
 

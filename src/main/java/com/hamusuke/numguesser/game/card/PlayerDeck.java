@@ -7,32 +7,27 @@ import com.hamusuke.numguesser.network.Player;
 import java.util.List;
 
 public abstract class PlayerDeck {
-    private final List<Card> cards;
+    protected final List<Card> cards;
 
     public PlayerDeck() {
         this.cards = Lists.newArrayList();
     }
 
-    public void addCard(Card card) {
+    public int addCard(Card card) {
         this.cards.add(card);
+        this.sort();
+        return this.cards.indexOf(card);
     }
 
     public void sort() {
         this.cards.sort(Card::compareTo);
     }
 
-    public void removeCard(Card card) {
-        this.cards.remove(card);
+    public void openAllCards() {
+        this.cards.forEach(Card::open);
     }
 
-    public void openCard(Card card) {
-        this.cards.stream()
-                .filter(card1 -> card1.equals(card))
-                .findFirst()
-                .ifPresent(Card::open);
-    }
-
-    public List<Card> getCards() {
+    public List<? extends Card> getCards() {
         return ImmutableList.copyOf(this.cards);
     }
 

@@ -1,5 +1,8 @@
 package com.hamusuke.numguesser.game.card;
 
+import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
+import com.hamusuke.numguesser.client.game.card.LocalCard;
+import com.hamusuke.numguesser.client.game.card.RemoteCard;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 
 import javax.annotation.Nonnull;
@@ -7,6 +10,7 @@ import java.awt.*;
 import java.util.Objects;
 
 public abstract class Card implements Comparable<Card> {
+    private int id = -1;
     protected final CardColor cardColor;
     protected boolean opened;
 
@@ -16,6 +20,14 @@ public abstract class Card implements Comparable<Card> {
 
     public CardColor getCardColor() {
         return this.cardColor;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     public abstract int getNum();
@@ -61,6 +73,14 @@ public abstract class Card implements Comparable<Card> {
         return this.cardColor + " Card: " + getNum();
     }
 
+    public CardSerializer toSerializer() {
+        return new CardSerializer(this.getId(), this.getCardColor(), this.getNum());
+    }
+
+    public CardSerializer toSerializerForOthers() {
+        return new CardSerializer(this.getId(), this.getCardColor(), -1);
+    }
+
     public enum CardColor {
         BLACK(Color.WHITE, Color.BLACK),
         WHITE(Color.BLACK, Color.WHITE);
@@ -82,14 +102,21 @@ public abstract class Card implements Comparable<Card> {
         }
     }
 
-    public record CardSerializer(CardColor cardColor, int num) {
+    public record CardSerializer(int id, CardColor cardColor, int num) {
         public CardSerializer(IntelligentByteBuf buf) {
-            this(buf.readEnum(CardColor.class), buf.readVarInt());
+            this(buf.readVarInt(), buf.readEnum(CardColor.class), buf.readVarInt());
         }
 
         public void writeTo(IntelligentByteBuf buf) {
+            buf.writeVarInt(this.id);
             buf.writeEnum(this.cardColor);
             buf.writeVarInt(this.num);
+        }
+
+        public AbstractClientCard toClientCard() {
+            var card = this.num() >= 0 ? new LocalCard(this.cardColor(), this.num()) : new RemoteCard(this.cardColor());
+            card.setId(this.id);
+            return card;
         }
     }
 }

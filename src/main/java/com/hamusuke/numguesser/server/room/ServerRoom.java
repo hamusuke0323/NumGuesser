@@ -8,6 +8,7 @@ import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNo
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerJoinNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerLeaveNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.ExitGameSuccNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
@@ -45,6 +46,8 @@ public class ServerRoom extends Room {
         if (this.game == null) {
             synchronized (this.players) {
                 if (this.players.stream().allMatch(Player::isReady)) {
+                    this.players.forEach(player -> player.setReady(false));
+
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
                     this.game = new NumGuesserGame(this.players);
                     this.players.forEach(player -> {
@@ -55,6 +58,11 @@ public class ServerRoom extends Room {
                     this.game.startGame();
                 }
             }
+        }
+
+        if (this.game != null && this.game.getPlayingPlayers().isEmpty()) {
+            this.players.forEach(player -> player.setReady(false));
+            this.game = null;
         }
     }
 
@@ -77,6 +85,11 @@ public class ServerRoom extends Room {
         var serverPlayer = (ServerPlayer) player;
         serverPlayer.curRoom = null;
         this.players.remove(serverPlayer);
+
+        if (this.game != null) {
+            this.game.leavePlayer(serverPlayer);
+        }
+
         if (this.players.isEmpty()) {
             this.server.removeRoom(this);
             return;
@@ -86,6 +99,7 @@ public class ServerRoom extends Room {
         this.sendPacketToAllInRoom(new ChatNotify("%s が部屋から退出しました".formatted(serverPlayer.getDisplayName())));
     }
 
+    @Override
     public List<ServerPlayer> getPlayers() {
         return this.playerList;
     }
@@ -110,6 +124,18 @@ public class ServerRoom extends Room {
 
     public boolean doesPlayerExist(String name) {
         return this.players.stream().anyMatch(player -> player.getName().equals(name));
+    }
+
+    public synchronized void exitGame(ServerPlayer player) {
+        if (this.game != null) {
+            this.game.leavePlayer(player);
+            player.sendPacket(new ExitGameSuccNotify());
+            new ServerRoomPacketListenerImpl(this.server, player.connection.getConnection(), player);
+        }
+    }
+
+    public NumGuesserGame getGame() {
+        return this.game;
     }
 
     @Nullable
