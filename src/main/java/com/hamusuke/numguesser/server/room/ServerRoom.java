@@ -43,9 +43,16 @@ public class ServerRoom extends Room {
     public void tick() {
         super.tick();
 
+        if (this.game != null && this.game.getPlayingPlayers().isEmpty()) {
+            this.players.forEach(player -> player.setReady(false));
+            this.game = null;
+        }
+    }
+
+    public void onPlayerReady() {
         if (this.game == null) {
             synchronized (this.players) {
-                if (this.players.stream().allMatch(Player::isReady)) {
+                if (this.isPlayerNumValid() && this.players.stream().allMatch(Player::isReady)) {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
@@ -59,11 +66,10 @@ public class ServerRoom extends Room {
                 }
             }
         }
+    }
 
-        if (this.game != null && this.game.getPlayingPlayers().isEmpty()) {
-            this.players.forEach(player -> player.setReady(false));
-            this.game = null;
-        }
+    private boolean isPlayerNumValid() {
+        return this.players.size() > 1 && this.players.size() < 5;
     }
 
     @Override

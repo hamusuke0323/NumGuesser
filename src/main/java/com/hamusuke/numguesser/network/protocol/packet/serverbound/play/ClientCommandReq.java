@@ -20,6 +20,8 @@ public record ClientCommandReq(Command command) implements Packet<ServerPlayPack
     }
 
     public enum Command {
-        EXIT_GAME
+        EXIT_GAME,
+        CONTINUE_ATTACKING,
+        STAY,
     }
 }

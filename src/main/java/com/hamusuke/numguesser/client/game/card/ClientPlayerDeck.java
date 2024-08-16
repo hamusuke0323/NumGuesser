@@ -15,6 +15,10 @@ public class ClientPlayerDeck extends PlayerDeck {
         this.model = new DefaultListModel<>();
     }
 
+    public void tick() {
+        this.cards.forEach(card -> ((AbstractClientCard) card).tick());
+    }
+
     @Override
     public int addCard(Card card) {
         this.addCard(this.cards.size(), (AbstractClientCard) card);

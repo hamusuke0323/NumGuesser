@@ -17,9 +17,15 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handleCardOpen(CardOpenNotify packet);
 
+    void handleCardsOpen(CardsOpenNotify packet);
+
     void handlePlayerCardSelectionSync(PlayerCardSelectionSyncNotify packet);
 
     void handleAttack(AttackRsp packet);
 
     void handlePlayerNewCardAdd(PlayerNewCardAddNotify packet);
+
+    void handleAttackSucc(AttackSuccNotify packet);
+
+    void handleEndGameRound(EndGameRoundNotify packet);
 }

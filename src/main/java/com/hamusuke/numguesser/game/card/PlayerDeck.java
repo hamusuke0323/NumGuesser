@@ -23,8 +23,17 @@ public abstract class PlayerDeck {
         this.cards.sort(Card::compareTo);
     }
 
-    public void openAllCards() {
-        this.cards.forEach(Card::open);
+    public List<Card> openAllCards() {
+        var hasOpened = this.cards.stream()
+                .filter(card -> !card.isOpened())
+                .toList();
+        hasOpened.forEach(Card::open);
+
+        return hasOpened;
+    }
+
+    public boolean contains(Card card) {
+        return this.cards.contains(card);
     }
 
     public List<? extends Card> getCards() {

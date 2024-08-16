@@ -114,9 +114,12 @@ public enum Protocol {
                     .add(PlayerStartAttackingNotify.class, PlayerStartAttackingNotify::new)
                     .add(RemotePlayerStartAttackingNotify.class, RemotePlayerStartAttackingNotify::new)
                     .add(CardOpenNotify.class, CardOpenNotify::new)
+                    .add(CardsOpenNotify.class, CardsOpenNotify::new)
                     .add(PlayerCardSelectionSyncNotify.class, PlayerCardSelectionSyncNotify::new)
                     .add(AttackRsp.class, AttackRsp::new)
                     .add(PlayerNewCardAddNotify.class, PlayerNewCardAddNotify::new)
+                    .add(AttackSuccNotify.class, AttackSuccNotify::new)
+                    .add(EndGameRoundNotify.class, EndGameRoundNotify::new)
             )
             .addDirection(PacketDirection.SERVERBOUND, new PacketSet<ServerPlayPacketListener>()
                     // common

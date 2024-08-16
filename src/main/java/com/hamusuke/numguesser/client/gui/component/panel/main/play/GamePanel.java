@@ -6,14 +6,13 @@ import com.hamusuke.numguesser.client.game.card.LocalCard;
 import com.hamusuke.numguesser.client.gui.component.list.CardList;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
+import com.hamusuke.numguesser.network.Player;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq.Command;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jdesktop.swingx.JXButton;
-import org.jdesktop.swingx.JXDialog;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXPanel;
 
@@ -24,12 +23,9 @@ import java.awt.event.ActionEvent;
 import java.util.List;
 
 public class GamePanel extends Panel {
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final int STATUS_LABEL_INDEX = 0;
-    private static final int CARD_SHOWCASE_INDEX = 1;
-    private static final int BUTTONS_INDEX = 2;
-    private static final int LOCAL_DECK_INDEX = 3;
     private int cardListIndex;
+    private JXPanel deckPanel;
+    private JXPanel commandPanel;
     private CardList myCards;
     private final List<CardList> remoteCards = Lists.newArrayList();
     private JXLabel statusLabel;
@@ -38,6 +34,9 @@ public class GamePanel extends Panel {
     @Nullable
     private JXPanel curShownCardPanel;
     private JXButton attackBtn;
+    private JXButton continueBtn;
+    private JXButton stayBtn;
+    private JXButton readyBtn;
     @Nullable
     private AbstractClientCard selectedCard;
 
@@ -51,6 +50,10 @@ public class GamePanel extends Panel {
 
         var l = (GridBagLayout) this.getLayout();
 
+        this.deckPanel = new JXPanel(new GridBagLayout());
+        this.commandPanel = new JXPanel(new GridBagLayout());
+        var commandPanelLayout = (GridBagLayout) this.commandPanel.getLayout();
+
         this.statusLabel = new JXLabel();
         this.statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
@@ -61,25 +64,52 @@ public class GamePanel extends Panel {
         this.attackBtn = new JXButton("アタック");
         this.attackBtn.addActionListener(e -> this.attack());
 
-        addButton(this, this.statusLabel, l, 1, STATUS_LABEL_INDEX, 1, 1, 1.0D, 0.05D);
-        addButton(this, this.cardShowCaseForFriend, l, 1, CARD_SHOWCASE_INDEX, 1, 1, 1.0D);
-        addButton(this, this.cardShowCase, l, 2, CARD_SHOWCASE_INDEX, 1, 1, 1.0D);
-        addButton(this, this.attackBtn, l, 1, BUTTONS_INDEX, 1, 1, 1.0D, 0.05D);
+        this.continueBtn = new JXButton("アタックを続ける");
+        this.continueBtn.addActionListener(e -> this.continueAttacking());
+        this.continueBtn.setVisible(false);
+        this.stayBtn = new JXButton("ステイ");
+        this.stayBtn.addActionListener(e -> this.stay());
+        this.stayBtn.setVisible(false);
+
+        this.readyBtn = new JXButton("準備完了");
+        this.readyBtn.setVisible(false);
+        this.readyBtn.addActionListener(e -> this.ready());
+
+        addButton(this.commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 2, 1, 1.0D, 0.05D);
+        addButton(this.commandPanel, this.cardShowCaseForFriend, commandPanelLayout, 0, 1, 1, 1, 1.0D);
+        addButton(this.commandPanel, this.cardShowCase, commandPanelLayout, 1, 1, 1, 1, 1.0D);
+        addButton(this.commandPanel, this.attackBtn, commandPanelLayout, 0, 2, 2, 1, 1.0D, 0.05D);
+        addButton(this.commandPanel, this.continueBtn, commandPanelLayout, 0, 3, 2, 1, 1.0D, 0.05D);
+        addButton(this.commandPanel, this.stayBtn, commandPanelLayout, 0, 4, 2, 1, 1.0D, 0.05D);
+        addButton(this.commandPanel, this.readyBtn, commandPanelLayout, 0, 5, 2, 1, 1.0D, 0.05D);
+
+        addButton(this, this.deckPanel, l, 0, 0, 1, 1, 1.0D);
+        addButton(this, this.commandPanel, l, 1, 0, 1, 1, 1.0D);
     }
 
     public void prepareAttacking(AbstractClientCard card) {
         this.setStatusLabel("あなたの番です。アタックしてください");
         this.setCardShowCase(card);
         this.setAttackBtnEnabled(true);
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+
+        if (this.selectedCard != null) {
+            this.client.getConnection().sendPacket(new CardSelectReq(this.selectedCard.getId()));
+        }
     }
 
     public void onRemotePlayerAttacking(RemotePlayer player) {
         this.setAttackBtnEnabled(false);
         this.setStatusLabel(player.getName() + "がアタックしています");
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+        this.setCardShowCase(null);
     }
 
     public void setAttackBtnEnabled(boolean enabled) {
         this.attackBtn.setEnabled(enabled);
+        this.attackBtn.setVisible(true);
     }
 
     public void setStatusLabel(String text) {
@@ -87,16 +117,33 @@ public class GamePanel extends Panel {
     }
 
     public void setCardShowCase(@Nullable AbstractClientCard card) {
+        if (this.curShownCardPanel != null) {
+            this.cardShowCase.remove(this.curShownCardPanel);
+        }
+
         if (card == null) {
-            if (this.curShownCardPanel != null) {
-                this.cardShowCase.remove(this.curShownCardPanel);
-            }
             this.curShownCardPanel = null;
             return;
         }
 
         this.curShownCardPanel = card.toPanel();
         this.cardShowCase.add(this.curShownCardPanel, BorderLayout.CENTER);
+    }
+
+    public void attackSucceeded() {
+        this.setStatusLabel("アタック成功です。アタックを続けるかステイするかを選んでください");
+        this.attackBtn.setVisible(false);
+        this.attackBtn.setEnabled(false);
+        this.continueBtn.setVisible(true);
+        this.stayBtn.setVisible(true);
+    }
+
+    private void continueAttacking() {
+        this.client.getConnection().sendPacket(new ClientCommandReq(Command.CONTINUE_ATTACKING));
+    }
+
+    private void stay() {
+        this.client.getConnection().sendPacket(new ClientCommandReq(Command.STAY));
     }
 
     private void attack() {
@@ -111,9 +158,11 @@ public class GamePanel extends Panel {
         }
 
         var list = new CardList(model);
+
         var l = new GridBagLayout();
-        var p = new JXPanel(l);
-        var dialog = new JXDialog(this.client.getMainWindow(), p);
+        var dialog = new JDialog(this.client.getMainWindow(), "数字を推理する", true);
+        dialog.setLayout(l);
+
         var attack = new JXButton("アタックする");
         attack.addActionListener(e -> {
             if (list.isSelectionEmpty() || this.client.getConnection() == null) {
@@ -128,31 +177,63 @@ public class GamePanel extends Panel {
         var cancel = new JXButton("キャンセル");
         cancel.addActionListener(e -> dialog.dispose());
 
-        addButton(p, new JXLabel("このカードは...", SwingConstants.CENTER), l, 0, 0, 2, 1, 1.0D, 0.05D);
-        addButton(p, new JScrollPane(list), l, 0, 1, 2, 1, 1.0D);
-        addButton(p, attack, l, 0, 2, 1, 1, 1.0D, 0.05D);
-        addButton(p, cancel, l, 1, 2, 1, 1, 1.0D, 0.05D);
+        addButton(dialog, new JXLabel("このカードは...", SwingConstants.CENTER), l, 0, 0, 2, 1, 1.0D, 0.05D);
+        addButton(dialog, new JScrollPane(list), l, 0, 1, 2, 1, 1.0D);
+        addButton(dialog, attack, l, 0, 2, 1, 1, 1.0D, 0.05D);
+        addButton(dialog, cancel, l, 1, 2, 1, 1, 1.0D, 0.05D);
 
         dialog.pack();
-        dialog.setTitle("数字を推理する");
-        dialog.setModal(true);
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setLocationRelativeTo(this.client.getMainWindow());
         dialog.setVisible(true);
     }
 
+    public void onEndRound() {
+        this.statusLabel.setText("ラウンド終了 全員が準備完了になると次のラウンドを開始します");
+        this.readyBtn.setVisible(true);
+        this.setCardShowCase(null);
+        this.attackBtn.setVisible(false);
+    }
+
+    private void ready() {
+        this.client.getConnection().sendPacket(new ReadyReq());
+    }
+
+    public void onReadySync() {
+        synchronized (this.client.curRoom.getPlayers()) {
+            var players = this.client.curRoom.getPlayers();
+            int readyPlayers = (int) players.stream().filter(Player::isReady).count();
+            this.readyBtn.setText("準備完了（%d / %d）".formatted(readyPlayers, players.size()));
+        }
+    }
+
+    public void onReadyRsp() {
+        this.readyBtn.setEnabled(false);
+    }
+
     @Nullable
     private AbstractClientCard getSelectedCardOnlyRemote() {
         return this.remoteCards.stream()
-                .filter(cardList -> !cardList.isSelectionEmpty())
+                .filter(cardList -> cardList.hasFocus() && !cardList.isSelectionEmpty())
                 .findFirst()
                 .map(cardList -> (AbstractClientCard) cardList.getSelectedValue())
                 .orElse(null);
     }
 
-    private void onCardSelected() {
+    private void clearSelection(CardList exclude) {
+        for (var remoteCard : this.remoteCards) {
+            if (remoteCard == exclude) {
+                continue;
+            }
+
+            remoteCard.clearSelection();
+        }
+    }
+
+    private void onCardSelected(CardList list) {
+        this.clearSelection(list);
         var card = this.getSelectedCardOnlyRemote();
-        if (card == null) {
+        if (card == null || this.selectedCard == card) {
             return;
         }
 
@@ -172,7 +253,7 @@ public class GamePanel extends Panel {
                 return;
             }
 
-            this.onCardSelected();
+            this.onCardSelected(list);
         });
         if (isLocal) {
             this.myCards = list;
@@ -182,7 +263,7 @@ public class GamePanel extends Panel {
 
         addButton(panel, nameLabel, l, 0, 0, 1, 1, 1.0D, 0.05D);
         addButton(panel, new JScrollPane(list), l, 0, 1, 1, 1, 1.0D);
-        addButton(this, panel, (GridBagLayout) this.getLayout(), 0, isLocal ? LOCAL_DECK_INDEX : this.cardListIndex, 1, 1, 1.0D);
+        addButton(this.deckPanel, panel, (GridBagLayout) this.deckPanel.getLayout(), 0, isLocal ? 3 : this.cardListIndex, 1, 1, 1.0D);
         if (!isLocal) {
             this.cardListIndex++;
         }

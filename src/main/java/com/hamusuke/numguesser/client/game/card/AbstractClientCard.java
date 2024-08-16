@@ -7,6 +7,7 @@ import org.jdesktop.swingx.JXPanel;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
+import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
 import static com.hamusuke.numguesser.Constants.*;
@@ -14,9 +15,24 @@ import static com.hamusuke.numguesser.Constants.*;
 public abstract class AbstractClientCard extends Card {
     @Nullable
     protected AbstractClientPlayer selectedBy;
+    private int newLabelTicks;
 
     public AbstractClientCard(CardColor cardColor) {
         super(cardColor);
+    }
+
+    public void tick() {
+        if (this.isNewLabelShown()) {
+            this.newLabelTicks--;
+        }
+    }
+
+    public void showNewLabel() {
+        this.newLabelTicks = 100;
+    }
+
+    public boolean isNewLabelShown() {
+        return this.newLabelTicks > 0;
     }
 
     public abstract void setNum(int num);
@@ -51,7 +67,13 @@ public abstract class AbstractClientCard extends Card {
         p.setAlpha(isSelected && cellHasFocus ? 0.5F : 1.0F);
 
         int heightSub = this.selectedBy == null ? 0 : 50;
-        if (this.isOpened()) {
+        if (this.isNewLabelShown()) {
+            var newLabel = new JXLabel("NEW", SwingConstants.CENTER);
+            newLabel.setBorder(new EtchedBorder());
+            newLabel.setForeground(this.getCardColor().getTextColor());
+            p.add(newLabel, BorderLayout.NORTH);
+            heightSub += 50;
+        } else if (this.isOpened()) {
             var openedLabel = new JXLabel("オープン", SwingConstants.CENTER);
             openedLabel.setForeground(this.getCardColor().getTextColor());
             p.add(openedLabel, BorderLayout.NORTH);

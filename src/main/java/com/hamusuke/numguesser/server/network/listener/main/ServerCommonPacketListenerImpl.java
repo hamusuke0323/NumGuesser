@@ -58,6 +58,8 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     public void handleReady(ReadyReq packet) {
         this.player.setReady(true);
         this.player.sendPacket(new ReadyRsp());
+
+        this.room.onPlayerReady();
     }
 
     @Override

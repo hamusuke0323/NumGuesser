@@ -12,6 +12,8 @@ import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.game.card.Card.CardSerializer;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ReadyRsp;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
 
 import javax.annotation.Nullable;
@@ -26,6 +28,13 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     public ClientPlayPacketListenerImpl(NumGuesser client, ClientRoom room, Connection connection) {
         super(client, room, connection);
         this.clientPlayer = client.clientPlayer;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        this.playerDeckMap.values().forEach(ClientPlayerDeck::tick);
     }
 
     @Override
@@ -95,6 +104,21 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
+    public void handleCardsOpen(CardsOpenNotify packet) {
+        packet.cards().stream()
+                .map(CardSerializer::toClientCard)
+                .forEach(openedCard -> {
+                    var card = this.cardMap.get(openedCard.getId());
+                    if (card == null) {
+                        return;
+                    }
+
+                    card.setNum(openedCard.getNum());
+                    card.open();
+                });
+    }
+
+    @Override
     public void handlePlayerCardSelectionSync(PlayerCardSelectionSyncNotify packet) {
         var player = this.curRoom.getPlayer(packet.playerId());
         var card = this.cardMap.get(packet.cardId());
@@ -133,5 +157,36 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         var card = packet.card().toClientCard();
         this.cardMap.put(card.getId(), card);
         deck.addCard(packet.index(), card);
+        card.showNewLabel();
+    }
+
+    @Override
+    public void handleAttackSucc(AttackSuccNotify packet) {
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.attackSucceeded();
+        }
+    }
+
+    @Override
+    public void handleEndGameRound(EndGameRoundNotify packet) {
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onEndRound();
+        }
+    }
+
+    @Override
+    public void handlePlayerReadySync(PlayerReadySyncNotify packet) {
+        super.handlePlayerReadySync(packet);
+
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onReadySync();
+        }
+    }
+
+    @Override
+    public void handleReadyRsp(ReadyRsp packet) {
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onReadyRsp();
+        }
     }
 }

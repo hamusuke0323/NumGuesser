@@ -1,13 +1,14 @@
 package com.hamusuke.numguesser.game.round;
 
+import com.hamusuke.numguesser.game.NumGuesserGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 public class PairGameRound extends GameRound {
-    public PairGameRound(List<ServerPlayer> players, @Nullable ServerPlayer parent) {
-        super(players, parent);
+    public PairGameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
+        super(game, players, parent);
     }
 
     @Override
@@ -17,7 +18,7 @@ public class PairGameRound extends GameRound {
 
     @Override
     public GameRound newRound() {
-        var game = new PairGameRound(this.players, this.parent);
+        var game = new PairGameRound(this.game, this.players, this.parent);
         game.pulledCardMap.putAll(this.pulledCardMap);
         return game;
     }

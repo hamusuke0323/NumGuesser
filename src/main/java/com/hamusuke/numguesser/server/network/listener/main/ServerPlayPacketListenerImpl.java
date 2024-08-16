@@ -2,7 +2,7 @@ package com.hamusuke.numguesser.server.network.listener.main;
 
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerPlayPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.AttackRsp;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
@@ -18,6 +18,24 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
     public void handleClientCommand(ClientCommandReq packet) {
         switch (packet.command()) {
             case EXIT_GAME -> this.room.exitGame(this.player);
+            case CONTINUE_ATTACKING -> {
+                if (this.room.getGame() != null) {
+                    this.room.getGame().continueAttacking(this.player);
+                }
+            }
+            case STAY -> {
+                if (this.room.getGame() != null) {
+                    this.room.getGame().stay(this.player);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void handleReady(ReadyReq packet) {
+        super.handleReady(packet);
+        if (this.room.getGame() != null) {
+            this.room.getGame().ready();
         }
     }
 
