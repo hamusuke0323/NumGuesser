@@ -46,8 +46,10 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
             FlatAnimatedLafChange.showSnapshot();
             if (FlatLaf.isLafDark()) {
                 FlatLightLaf.setup();
+                this.onThemeChanged(false);
             } else {
                 FlatDarkLaf.setup();
+                this.onThemeChanged(true);
             }
 
             this.updateUI();
@@ -57,6 +59,13 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
 
     public void tick() {
         this.curPanel.tick();
+    }
+
+    private void onThemeChanged(boolean dark) {
+        this.client.sendMsg(() -> {
+            this.client.config.darkTheme.setValue(dark);
+            this.client.config.saveConfig();
+        });
     }
 
     private void updateUI() {

@@ -1,6 +1,5 @@
 package com.hamusuke.numguesser.client;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.hamusuke.numguesser.logging.LogUtil;
 import org.apache.logging.log4j.Level;

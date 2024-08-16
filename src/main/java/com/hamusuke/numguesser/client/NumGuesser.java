@@ -1,11 +1,13 @@
 package com.hamusuke.numguesser.client;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.hamusuke.numguesser.Constants;
+import com.hamusuke.numguesser.client.config.Config;
 import com.hamusuke.numguesser.client.gui.MainWindow;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
@@ -68,6 +70,7 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
     @Nullable
     public ClientRoom curRoom;
     private final File serversFile;
+    public final Config config;
     private final List<ServerInfo> servers = Collections.synchronizedList(Lists.newArrayList());
     private final List<Connection> infoConnections = Collections.synchronizedList(Lists.newArrayList());
 
@@ -83,6 +86,12 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         this.thread = Thread.currentThread();
         this.serversFile = new File("./servers.json");
         this.loadServers();
+        this.config = new Config("./config.json");
+        this.config.loadConfig();
+
+        if (this.config.darkTheme.getValue()) {
+            FlatDarkLaf.setup();
+        }
 
         this.mainWindow = new MainWindow(this);
         this.mainWindow.setPanel(new ServerListPanel());
