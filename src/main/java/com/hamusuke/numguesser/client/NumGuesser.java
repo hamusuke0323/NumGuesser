@@ -9,6 +9,7 @@ import com.google.gson.JsonArray;
 import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.config.Config;
 import com.hamusuke.numguesser.client.gui.MainWindow;
+import com.hamusuke.numguesser.client.gui.component.panel.MainMenuPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
 import com.hamusuke.numguesser.client.gui.component.table.PacketLogTable;
@@ -94,7 +95,7 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         }
 
         this.mainWindow = new MainWindow(this);
-        this.mainWindow.setPanel(new ServerListPanel());
+        this.mainWindow.setPanel(new MainMenuPanel());
         this.mainWindow.setSize(1280, 720);
         this.mainWindow.setLocationRelativeTo(null);
         this.mainWindow.setVisible(true);

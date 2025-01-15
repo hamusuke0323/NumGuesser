@@ -36,6 +36,10 @@ public class RoomPanel extends Panel {
         this.ready.setEnabled(false);
     }
 
+    public void reviveReadyButton() {
+        this.ready.setEnabled(true);
+    }
+
     public void countReadyPlayers() {
         synchronized (this.client.curRoom.getPlayers()) {
             var players = this.client.curRoom.getPlayers();

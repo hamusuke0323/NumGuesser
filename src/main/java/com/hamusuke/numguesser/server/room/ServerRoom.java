@@ -7,6 +7,7 @@ import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerJoinNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerLeaveNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomSuccNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.ExitGameSuccNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
@@ -56,7 +57,7 @@ public class ServerRoom extends Room {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = new NumGuesserGame(this.players);
+                    this.game = new NumGuesserGame(this, this.players);
                     this.players.forEach(player -> {
                         player.sendPacket(new StartGameNotify());
                         new ServerPlayPacketListenerImpl(this.server, player.connection.getConnection(), player);
@@ -84,12 +85,15 @@ public class ServerRoom extends Room {
         this.players.add(serverPlayer);
 
         this.sendPacketToAllInRoom(new ChatNotify("%s が部屋に参加しました".formatted(serverPlayer.getDisplayName())));
+
+        this.players.forEach(sp -> this.sendPacketToAllInRoom(new PlayerReadySyncNotify(sp.getId(), sp.isReady())));
     }
 
     @Override
     public synchronized void leave(Player player) {
         var serverPlayer = (ServerPlayer) player;
         serverPlayer.curRoom = null;
+        serverPlayer.setReady(false);
         this.players.remove(serverPlayer);
 
         if (this.game != null) {
@@ -103,6 +107,10 @@ public class ServerRoom extends Room {
 
         this.sendPacketToAllInRoom(new PlayerLeaveNotify(serverPlayer));
         this.sendPacketToAllInRoom(new ChatNotify("%s が部屋から退出しました".formatted(serverPlayer.getDisplayName())));
+
+        if (this.game == null) {
+            this.players.forEach(sp -> sp.setReady(false));
+        }
     }
 
     @Override

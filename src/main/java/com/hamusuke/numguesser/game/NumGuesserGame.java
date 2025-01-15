@@ -4,16 +4,19 @@ import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.round.GameRound;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.StartGameRoundNotify;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
+import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import java.util.Collections;
 import java.util.List;
 
 public class NumGuesserGame {
+    private final ServerRoom room;
     private GameRound round;
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
 
-    public NumGuesserGame(List<ServerPlayer> players) {
+    public NumGuesserGame(ServerRoom room, List<ServerPlayer> players) {
+        this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
         this.round = this.getFirstRound();
@@ -25,6 +28,11 @@ public class NumGuesserGame {
     }
 
     public void startNextRound() {
+        if (this.getPlayingPlayers().size() <= 1) {
+            this.getPlayingPlayers().forEach(this.room::exitGame);
+            return;
+        }
+
         this.round = this.round.newRound();
         this.startGame();
     }

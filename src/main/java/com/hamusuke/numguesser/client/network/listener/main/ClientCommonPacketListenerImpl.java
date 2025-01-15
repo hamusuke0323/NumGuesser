@@ -45,6 +45,10 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
 
         if (this.client.getPanel() instanceof RoomPanel roomPanel) {
             roomPanel.countReadyPlayers();
+
+            if (!this.clientPlayer.isReady()) {
+                roomPanel.reviveReadyButton();
+            }
         }
     }
 

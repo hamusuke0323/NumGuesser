@@ -276,6 +276,9 @@ public class GameRound {
             return;
         }
 
+        player.setReady(false);
+        this.players.forEach(sp -> sp.setReady(false));
+
         if (this.curAttacker == player) {
             if (this.status == Status.ATTACKING) {
                 this.nextAttacker();

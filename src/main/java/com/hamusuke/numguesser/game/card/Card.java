@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.game.card;
 
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
+import com.hamusuke.numguesser.client.game.card.ClientTransparentCard;
 import com.hamusuke.numguesser.client.game.card.LocalCard;
 import com.hamusuke.numguesser.client.game.card.RemoteCard;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
@@ -114,6 +115,10 @@ public abstract class Card implements Comparable<Card> {
         }
 
         public AbstractClientCard toClientCard() {
+            if (this.num() == -2) {
+                return new ClientTransparentCard();
+            }
+
             var card = this.num() >= 0 ? new LocalCard(this.cardColor(), this.num()) : new RemoteCard(this.cardColor());
             card.setId(this.id);
             return card;
