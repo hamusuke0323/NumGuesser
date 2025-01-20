@@ -3,11 +3,11 @@ package com.hamusuke.numguesser.client.test;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientTransparentCard;
 import com.hamusuke.numguesser.client.game.card.LocalCard;
+import com.hamusuke.numguesser.client.gui.component.JXGameTablePanel;
 import com.hamusuke.numguesser.client.gui.component.list.SinglePlayerGameCardList;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.game.card.Card.CardColor;
 import org.jdesktop.swingx.JXFrame;
-import org.jdesktop.swingx.JXPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,14 +19,17 @@ public class TestFrame extends JXFrame {
         var l = new GridBagLayout();
         this.setLayout(l);
 
-        var p = new JXPanel(new GridLayout(0, 1));
-        p.add(createList(5));
-        p.add(createList(6));
-        p.add(createList(9));
-        p.add(createList(0));
-        p.add(createList(2));
+        var table = new JXGameTablePanel();
+        var list = new DefaultListModel<AbstractClientCard>();
+        list.addElement(new LocalCard(CardColor.BLACK, 5));
+        list.addElement(new LocalCard(CardColor.WHITE, 8));
+        list.addElement(new LocalCard(CardColor.WHITE, 10));
+        table.addCardList(true, list);
+        table.addCardList(false, list);
+        table.addCardList(false, list);
+        table.addCardList(false, list);
 
-        Panel.addButton(this, new JScrollPane(p), l, 0, 0, 1, 1, 1.0D);
+        Panel.addButton(this, table, l, 0, 0, 1, 1, 1.0D);
 
         this.pack();
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
