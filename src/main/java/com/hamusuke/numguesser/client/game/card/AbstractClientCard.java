@@ -46,6 +46,7 @@ public abstract class AbstractClientCard extends Card {
         this.selectedBy = selectedBy;
     }
 
+    @Deprecated
     public JXPanel toPanel() {
         return this.toPanel(false, false);
     }
@@ -54,6 +55,7 @@ public abstract class AbstractClientCard extends Card {
         return new Color(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, hasAlpha ? 0.5F : 1.0F);
     }
 
+    @Deprecated
     public JXPanel toPanel(boolean isSelected, boolean cellHasFocus) {
         var p = new JXPanel() {
             @Override
