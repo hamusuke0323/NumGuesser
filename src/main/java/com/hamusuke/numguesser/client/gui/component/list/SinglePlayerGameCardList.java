@@ -14,7 +14,7 @@ public class SinglePlayerGameCardList extends CardList {
     protected int targetIndex = -1;
 
     public SinglePlayerGameCardList(DefaultListModel<AbstractClientCard> listModel) {
-        super(listModel);
+        super(Direction.SOUTH, listModel);
 
         this.addListSelectionListener(e -> this.clearSelection());
     }

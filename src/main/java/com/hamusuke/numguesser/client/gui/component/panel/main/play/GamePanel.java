@@ -3,7 +3,9 @@ package com.hamusuke.numguesser.client.gui.component.panel.main.play;
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.LocalCard;
+import com.hamusuke.numguesser.client.gui.component.JXGameTablePanel;
 import com.hamusuke.numguesser.client.gui.component.list.CardList;
+import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.network.Player;
@@ -157,7 +159,7 @@ public class GamePanel extends Panel {
             model.addElement(new LocalCard(card.getCardColor(), i));
         }
 
-        var list = new CardList(model);
+        var list = new CardList(Direction.SOUTH, model);
 
         var l = new GridBagLayout();
         var dialog = new JDialog(this.client.getMainWindow(), "数字を推理する", true);
@@ -247,7 +249,8 @@ public class GamePanel extends Panel {
 
         var nameLabel = new JXLabel((isLocal ? "自分の" : name + "の") + "カード (小 → 大)");
         nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        var list = new CardList(cardList);
+        //var list = new CardList(isLocal ? Direction.SOUTH : Direction.values()[(this.cardListIndex + 1) % 4], cardList);
+        var list = new CardList(Direction.SOUTH, cardList);
         list.addListSelectionListener(e -> {
             if (list.isSelectionEmpty() || e.getValueIsAdjusting()) {
                 return;
@@ -263,7 +266,9 @@ public class GamePanel extends Panel {
 
         addButton(panel, nameLabel, l, 0, 0, 1, 1, 1.0D, 0.05D);
         addButton(panel, new JScrollPane(list), l, 0, 1, 1, 1, 1.0D);
+        //this.deckPanel.add(panel, list.getDirection().layoutDir);
         addButton(this.deckPanel, panel, (GridBagLayout) this.deckPanel.getLayout(), 0, isLocal ? 3 : this.cardListIndex, 1, 1, 1.0D);
+
         if (!isLocal) {
             this.cardListIndex++;
         }

@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.game.card;
 
+import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import org.jdesktop.swingx.JXPanel;
 
 import java.awt.*;
@@ -24,7 +25,7 @@ public class ClientTransparentCard extends AbstractClientCard {
 
     @Deprecated
     @Override
-    public JXPanel toPanel(boolean isSelected, boolean cellHasFocus) {
+    public JXPanel toPanel(Direction direction, boolean isSelected, boolean cellHasFocus) {
         var ret = new JXPanel();
         var p = new JXPanel();
         p.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));

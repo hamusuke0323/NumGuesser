@@ -173,6 +173,11 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
     }
 
     private void clearPacketLogs() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(this::clearPacketLogs);
+            return;
+        }
+
         this.client.packetLogTable.clear();
         this.logScroll.getVerticalScrollBar().setValue(0);
         this.revalidate();
@@ -238,7 +243,9 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
         }
 
         if (this.autoScroll.getState()) {
-            this.logScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+            SwingUtilities.invokeLater(() -> {
+                this.logScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+            });
         }
 
         var logSize = new Dimension(c.getWidth() / 4, 100);

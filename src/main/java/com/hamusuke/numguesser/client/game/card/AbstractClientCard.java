@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.game.card;
 
 import com.formdev.flatlaf.FlatLaf;
+import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.game.card.Card;
 import org.jdesktop.swingx.JXLabel;
@@ -46,31 +47,37 @@ public abstract class AbstractClientCard extends Card {
         this.selectedBy = selectedBy;
     }
 
-    @Deprecated
     public JXPanel toPanel() {
-        return this.toPanel(false, false);
+        return this.toPanel(Direction.SOUTH, false, false);
     }
 
     protected static Color getColorWithAlpha(Color color, boolean hasAlpha) {
         return new Color(color.getRed() / 255.0F, color.getGreen() / 255.0F, color.getBlue() / 255.0F, hasAlpha ? 0.5F : 1.0F);
     }
 
-    @Deprecated
-    public JXPanel toPanel(boolean isSelected, boolean cellHasFocus) {
+    public JXPanel toPanel(Direction direction, boolean isSelected, boolean cellHasFocus) {
         var p = new JXPanel() {
             @Override
             protected void paintChildren(Graphics g) {
-                var g2 = (Graphics2D) g.create();
+                var g2 = (Graphics2D) g;
+                var b = g2.getClipBounds();
+                g2.rotate(direction.radToRotate, b.getCenterX(), b.getCenterY());
+                if (direction == Direction.EAST || direction == Direction.WEST) {
+                    g2.translate(15, -10);
+                }
                 g2.setColor(getCardColor().getBgColor());
                 g2.fillRoundRect(1, 1, CARD_WIDTH - 1, CARD_HEIGHT - 1, ARC_WIDTH, ARC_HEIGHT);
                 g2.setColor(getCardColor().getTextColor());
                 g2.setStroke(new BasicStroke(1.5F));
                 g2.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, ARC_WIDTH, ARC_HEIGHT);
-                g2.dispose();
                 super.paintChildren(g);
             }
         };
         p.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        if (direction == Direction.EAST || direction == Direction.WEST) {
+            p.setPreferredSize(new Dimension(CARD_HEIGHT, CARD_WIDTH));
+        }
+
         p.setAlpha(isSelected && cellHasFocus ? 0.5F : 1.0F);
 
         int heightSub = this.selectedBy == null ? 0 : 50;
