@@ -15,6 +15,7 @@ import java.util.List;
 import static com.hamusuke.numguesser.Constants.CARD_HEIGHT;
 import static com.hamusuke.numguesser.Constants.CARD_WIDTH;
 
+@Deprecated
 public class JXGameTablePanel extends JXPanel implements MouseListener, ComponentListener {
     protected final List<DefaultListModel<AbstractClientCard>> cardLists = Lists.newArrayList();
 

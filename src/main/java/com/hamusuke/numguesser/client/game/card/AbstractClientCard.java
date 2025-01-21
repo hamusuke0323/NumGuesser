@@ -118,6 +118,7 @@ public abstract class AbstractClientCard extends Card {
         return ret;
     }
 
+    @Deprecated
     public void paint(Graphics2D g2d, boolean isSelected, boolean cellHasFocus) {
         var g2 = (Graphics2D) g2d.create();
 
