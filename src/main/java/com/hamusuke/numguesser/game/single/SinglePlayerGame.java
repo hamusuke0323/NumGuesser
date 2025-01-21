@@ -16,16 +16,22 @@ public class SinglePlayerGame<C extends Card> {
     private final Difficulty difficulty;
     private final Random random = new SecureRandom();
     private final List<C> deck = Lists.newArrayList();
-    private final Map<Integer, List<C>> cardTable = Maps.newHashMap();
+    public final Map<Integer, Map<Integer, C>> cardTable = Maps.newHashMap();
 
     public SinglePlayerGame(final Difficulty difficulty) {
         this.difficulty = difficulty;
         this.setupDeck();
     }
 
-    private static <C extends Card> boolean isPermutationValid(List<C> list) {
+    private static <C extends Card> boolean isPermutationValid(Map<Integer, C> map) {
+        var keys = map.keySet().stream().sorted().toList();
+        List<C> list = Lists.newArrayList();
+        for (var i : keys) {
+            list.add(map.get(i));
+        }
+
         for (int i = 0; i < list.size() - 1; i++) {
-            if (list.get(i).compareTo(list.get(i + 1)) >= 0) {
+            if (map.get(i).compareTo(map.get(i + 1)) >= 0) {
                 return false;
             }
         }
@@ -47,6 +53,7 @@ public class SinglePlayerGame<C extends Card> {
     protected C createCard(CardColor color, int num) {
         var card = new RemoteCard(color);
         card.setNum(num);
+        card.open();
         return (C) card;
     }
 
@@ -57,21 +64,22 @@ public class SinglePlayerGame<C extends Card> {
 
     private void lineupCards() {
         for (int i = 0; i < this.difficulty.firstOpenedCardNum; i++) {
-            var list = Lists.<C>newArrayList();
-            list.add(this.deck.remove(0));
-            this.cardTable.put(i, list);
+            var col = (this.difficulty.maxRowCardNum * 2 - 1) / 2;
+            var map = Maps.<Integer, C>newHashMap();
+            map.put(col, this.deck.remove(0));
+            this.cardTable.put(i, map);
         }
     }
 
     public void putCard(int listIndex, int cardIndex) {
-        var list = this.cardTable.get(listIndex);
-        if (list == null) {
+        var map = this.cardTable.get(listIndex);
+        if (map == null) {
             return;
         }
 
-        list.add(cardIndex, this.deck.remove(0));
+        map.put(cardIndex, this.deck.remove(0));
 
-        if (!isPermutationValid(list)) {
+        if (!isPermutationValid(map)) {
             this.endGame();
         }
     }
@@ -84,12 +92,14 @@ public class SinglePlayerGame<C extends Card> {
         EASY(8, 3),
         HARD(6, 4);
 
-        private final int firstOpenedCardNum;
-        private final int maxRowCardNum;
+        public final int firstOpenedCardNum;
+        public final int maxRowCardNum;
+        public final int centerIndex;
 
         Difficulty(int firstOpenedCardNum, int maxRowCardNum) {
             this.firstOpenedCardNum = firstOpenedCardNum;
             this.maxRowCardNum = maxRowCardNum;
+            this.centerIndex = (this.maxRowCardNum * 2 - 1) / 2;
         }
     }
 }
