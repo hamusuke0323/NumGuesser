@@ -17,6 +17,7 @@ import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ReadyR
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
 
 import javax.annotation.Nullable;
+import javax.swing.*;
 import java.util.Map;
 
 public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl implements ClientPlayPacketListener {
@@ -82,6 +83,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.prepareAttacking(packet.card().toClientCard());
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -89,6 +92,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onRemotePlayerAttacking(remotePlayer);
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -101,6 +106,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
         card.setNum(openedCard.getNum());
         card.open();
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -116,6 +123,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
                     card.setNum(openedCard.getNum());
                     card.open();
                 });
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -133,6 +142,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
         this.curSelectedCard = card;
         card.select(player);
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -140,6 +151,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.setAttackBtnEnabled(false);
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -158,6 +171,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         this.cardMap.put(card.getId(), card);
         deck.addCard(packet.index(), card);
         card.showNewLabel();
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -165,6 +180,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.attackSucceeded();
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -172,6 +189,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onEndRound();
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -181,6 +200,8 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onReadySync();
         }
+
+        this.repaintGamePanel();
     }
 
     @Override
@@ -188,5 +209,9 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onReadyRsp();
         }
+    }
+
+    protected void repaintGamePanel() {
+        SwingUtilities.invokeLater(this.client.getMainWindow().getPanel()::repaint);
     }
 }

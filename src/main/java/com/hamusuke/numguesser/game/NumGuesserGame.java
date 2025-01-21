@@ -28,8 +28,8 @@ public class NumGuesserGame {
     }
 
     public void startNextRound() {
-        if (this.getPlayingPlayers().size() <= 1) {
-            this.getPlayingPlayers().forEach(this.room::exitGame);
+        if (this.getPlayingPlayers().size() == 1) {
+            this.room.exitGame(this.getPlayingPlayers().get(0));
             return;
         }
 

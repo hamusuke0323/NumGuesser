@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.game.card;
 
 import com.formdev.flatlaf.FlatLaf;
+import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.game.card.Card;
@@ -9,7 +10,6 @@ import org.jdesktop.swingx.JXPanel;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
 import java.awt.*;
 
 import static com.hamusuke.numguesser.Constants.*;
@@ -26,6 +26,10 @@ public abstract class AbstractClientCard extends Card {
     public void tick() {
         if (this.isNewLabelShown()) {
             this.newLabelTicks--;
+
+            if (!this.isNewLabelShown()) {
+                SwingUtilities.invokeLater(NumGuesser.getInstance().getMainWindow().getPanel()::repaint);
+            }
         }
     }
 
@@ -83,7 +87,6 @@ public abstract class AbstractClientCard extends Card {
         int heightSub = this.selectedBy == null ? 0 : 50;
         if (this.isNewLabelShown()) {
             var newLabel = new JXLabel("NEW", SwingConstants.CENTER);
-            newLabel.setBorder(new EtchedBorder());
             newLabel.setForeground(this.getCardColor().getTextColor());
             p.add(newLabel, BorderLayout.NORTH);
             heightSub += 50;

@@ -16,7 +16,7 @@ public class CardList extends JXList {
         super(listModel);
         this.direction = direction;
         this.setLayoutOrientation(this.direction.layoutOrientation);
-        this.setComponentOrientation(this.direction.orientation);
+        this.setComponentOrientation(this.direction == Direction.NORTH ? ComponentOrientation.RIGHT_TO_LEFT : ComponentOrientation.LEFT_TO_RIGHT);
 
         if (this.direction == Direction.SOUTH || this.direction == Direction.NORTH) {
             this.setVisibleRowCount(1);
@@ -43,21 +43,19 @@ public class CardList extends JXList {
     }
 
     public enum Direction {
-        NORTH(Math.toRadians(180), JList.HORIZONTAL_WRAP, BorderLayout.NORTH, ComponentOrientation.RIGHT_TO_LEFT),
-        SOUTH(0.0D, JList.HORIZONTAL_WRAP, BorderLayout.SOUTH, ComponentOrientation.LEFT_TO_RIGHT),
-        EAST(Math.toRadians(-90), JList.VERTICAL_WRAP, BorderLayout.EAST, ComponentOrientation.LEFT_TO_RIGHT),
-        WEST(Math.toRadians(90), JList.VERTICAL_WRAP, BorderLayout.WEST, ComponentOrientation.LEFT_TO_RIGHT);
+        SOUTH(0.0D, JList.HORIZONTAL_WRAP, BorderLayout.SOUTH),
+        NORTH(Math.toRadians(180), JList.HORIZONTAL_WRAP, BorderLayout.NORTH),
+        EAST(Math.toRadians(-90), JList.VERTICAL_WRAP, BorderLayout.EAST),
+        WEST(Math.toRadians(90), JList.VERTICAL_WRAP, BorderLayout.WEST);
 
         public final double radToRotate;
         public final int layoutOrientation;
         public final String layoutDir;
-        public final ComponentOrientation orientation;
 
-        Direction(double rad, int layoutOrientation, String layoutDir, ComponentOrientation orientation) {
+        Direction(double rad, int layoutOrientation, String layoutDir) {
             this.radToRotate = rad;
             this.layoutOrientation = layoutOrientation;
             this.layoutDir = layoutDir;
-            this.orientation = orientation;
         }
     }
 }

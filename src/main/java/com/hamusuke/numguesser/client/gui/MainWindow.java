@@ -68,7 +68,7 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
         });
     }
 
-    private void updateUI() {
+    public void updateUI() {
         FlatLaf.updateUI();
         this.packetLog.updateUI();
         this.autoScroll.updateUI();
@@ -83,14 +83,11 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
         }
 
         if (!this.autoScroll.getState()) {
-            this.revalidate();
-            this.repaint();
             return;
         }
 
-        this.logScroll.getVerticalScrollBar().setValue(this.logScroll.getVerticalScrollBar().getValue() + 10);
-        this.revalidate();
-        this.repaint();
+        this.logScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+        this.logScroll.repaint();
     }
 
     public void setPanel(Panel panel) {

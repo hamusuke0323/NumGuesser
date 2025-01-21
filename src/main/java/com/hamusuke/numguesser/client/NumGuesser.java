@@ -95,6 +95,7 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         }
 
         this.mainWindow = new MainWindow(this);
+        this.mainWindow.updateUI();
         this.mainWindow.setPanel(new MainMenuPanel());
         this.mainWindow.setSize(1280, 720);
         this.mainWindow.setLocationRelativeTo(null);

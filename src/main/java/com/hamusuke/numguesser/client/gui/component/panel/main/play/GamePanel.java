@@ -3,7 +3,6 @@ package com.hamusuke.numguesser.client.gui.component.panel.main.play;
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.LocalCard;
-import com.hamusuke.numguesser.client.gui.component.JXGameTablePanel;
 import com.hamusuke.numguesser.client.gui.component.list.CardList;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
@@ -26,8 +25,6 @@ import java.util.List;
 
 public class GamePanel extends Panel {
     private int cardListIndex;
-    private JXPanel deckPanel;
-    private JXPanel commandPanel;
     private CardList myCards;
     private final List<CardList> remoteCards = Lists.newArrayList();
     private JXLabel statusLabel;
@@ -42,19 +39,12 @@ public class GamePanel extends Panel {
     @Nullable
     private AbstractClientCard selectedCard;
 
-    public GamePanel() {
-        super(new GridBagLayout());
-    }
-
     @Override
     public void init() {
         super.init();
 
-        var l = (GridBagLayout) this.getLayout();
-
-        this.deckPanel = new JXPanel(new GridBagLayout());
-        this.commandPanel = new JXPanel(new GridBagLayout());
-        var commandPanelLayout = (GridBagLayout) this.commandPanel.getLayout();
+        var commandPanel = new JXPanel(new GridBagLayout());
+        var commandPanelLayout = (GridBagLayout) commandPanel.getLayout();
 
         this.statusLabel = new JXLabel();
         this.statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -77,16 +67,15 @@ public class GamePanel extends Panel {
         this.readyBtn.setVisible(false);
         this.readyBtn.addActionListener(e -> this.ready());
 
-        addButton(this.commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 2, 1, 1.0D, 0.05D);
-        addButton(this.commandPanel, this.cardShowCaseForFriend, commandPanelLayout, 0, 1, 1, 1, 1.0D);
-        addButton(this.commandPanel, this.cardShowCase, commandPanelLayout, 1, 1, 1, 1, 1.0D);
-        addButton(this.commandPanel, this.attackBtn, commandPanelLayout, 0, 2, 2, 1, 1.0D, 0.05D);
-        addButton(this.commandPanel, this.continueBtn, commandPanelLayout, 0, 3, 2, 1, 1.0D, 0.05D);
-        addButton(this.commandPanel, this.stayBtn, commandPanelLayout, 0, 4, 2, 1, 1.0D, 0.05D);
-        addButton(this.commandPanel, this.readyBtn, commandPanelLayout, 0, 5, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.cardShowCaseForFriend, commandPanelLayout, 0, 1, 1, 1, 1.0D);
+        addButton(commandPanel, this.cardShowCase, commandPanelLayout, 1, 1, 1, 1, 1.0D);
+        addButton(commandPanel, this.attackBtn, commandPanelLayout, 0, 2, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.continueBtn, commandPanelLayout, 0, 3, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.stayBtn, commandPanelLayout, 0, 4, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.readyBtn, commandPanelLayout, 0, 5, 2, 1, 1.0D, 0.05D);
 
-        addButton(this, this.deckPanel, l, 0, 0, 1, 1, 1.0D);
-        addButton(this, this.commandPanel, l, 1, 0, 1, 1, 1.0D);
+        this.add(commandPanel, BorderLayout.CENTER);
     }
 
     public void prepareAttacking(AbstractClientCard card) {
@@ -247,10 +236,7 @@ public class GamePanel extends Panel {
         var l = new GridBagLayout();
         var panel = new JXPanel(l);
 
-        var nameLabel = new JXLabel((isLocal ? "自分の" : name + "の") + "カード (小 → 大)");
-        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        //var list = new CardList(isLocal ? Direction.SOUTH : Direction.values()[(this.cardListIndex + 1) % 4], cardList);
-        var list = new CardList(Direction.SOUTH, cardList);
+        var list = new CardList(isLocal ? Direction.SOUTH : Direction.values()[(this.cardListIndex + 1) % 4], cardList);
         list.addListSelectionListener(e -> {
             if (list.isSelectionEmpty() || e.getValueIsAdjusting()) {
                 return;
@@ -258,16 +244,32 @@ public class GamePanel extends Panel {
 
             this.onCardSelected(list);
         });
+
         if (isLocal) {
             this.myCards = list;
         } else {
             this.remoteCards.add(list);
         }
 
-        addButton(panel, nameLabel, l, 0, 0, 1, 1, 1.0D, 0.05D);
-        addButton(panel, new JScrollPane(list), l, 0, 1, 1, 1, 1.0D);
-        //this.deckPanel.add(panel, list.getDirection().layoutDir);
-        addButton(this.deckPanel, panel, (GridBagLayout) this.deckPanel.getLayout(), 0, isLocal ? 3 : this.cardListIndex, 1, 1, 1.0D);
+        var scroll = new JScrollPane(list);
+        scroll.getViewport().addChangeListener(e -> {
+            SwingUtilities.invokeLater(list::repaint);
+        });
+
+        if (isLocal) {
+            addButton(panel, scroll, l, 0, 0, 1, 2, 1.0D);
+        } else {
+            var nameLabel = new JXLabel(name);
+            nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            addButton(panel, nameLabel, l, 0, 0, 1, 1, 1.0D, 0.05D);
+            addButton(panel, scroll, l, 0, 1, 1, 1, 1.0D);
+        }
+
+        this.add(panel, list.getDirection().layoutDir);
+        SwingUtilities.invokeLater(() -> {
+            this.revalidate();
+            this.repaint();
+        });
 
         if (!isLocal) {
             this.cardListIndex++;
