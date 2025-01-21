@@ -33,6 +33,11 @@ public class CardList extends JXList {
         });
     }
 
+    @Override
+    public Object getElementAt(int viewIndex) {
+        return this.direction != Direction.EAST ? super.getElementAt(viewIndex) : super.getElementAt(this.getModel().getSize() - 1 - viewIndex);
+    }
+
     public Direction getDirection() {
         return this.direction;
     }
