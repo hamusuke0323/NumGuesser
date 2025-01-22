@@ -41,6 +41,10 @@ public abstract class Card implements Comparable<Card> {
         return this.opened;
     }
 
+    public int getPoint() {
+        return this.getNum() == 6 ? 20 : 10;
+    }
+
     @Override
     public int compareTo(@Nonnull Card card) {
         if (this.equals(card)) {

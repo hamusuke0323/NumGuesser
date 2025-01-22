@@ -19,7 +19,7 @@ public class PairGameRound extends GameRound {
     @Override
     public GameRound newRound() {
         var game = new PairGameRound(this.game, this.players, this.parent);
-        game.pulledCardMap.putAll(this.pulledCardMap);
+        game.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);
         return game;
     }
 }

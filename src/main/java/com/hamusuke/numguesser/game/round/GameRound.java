@@ -15,10 +15,7 @@ import com.hamusuke.numguesser.util.Util;
 
 import javax.annotation.Nullable;
 import java.security.SecureRandom;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -30,7 +27,7 @@ public class GameRound {
     protected final Random random = new SecureRandom();
     protected ServerPlayer parent;
     protected final List<Card> deck;
-    protected final Map<ServerPlayer, Card> pulledCardMap = Maps.newHashMap();
+    protected final Map<ServerPlayer, Card> pulledCardMapForDecidingParent = Maps.newHashMap();
     protected final Map<Integer, Card> playerOwnCardMap = Maps.newConcurrentMap();
     protected ServerPlayer curAttacker;
     protected int curAttackerIndex;
@@ -71,9 +68,9 @@ public class GameRound {
             return;
         }
 
-        this.pulledCardMap.clear();
+        this.pulledCardMapForDecidingParent.clear();
         for (var player : this.players) {
-            this.pulledCardMap.put(player, Util.chooseRandom(this.deck, player.getRandom()));
+            this.pulledCardMapForDecidingParent.put(player, Util.chooseRandom(this.deck, player.getRandom()));
         }
 
         this.nextParent();
@@ -101,13 +98,21 @@ public class GameRound {
 
     protected void startAttacking() {
         var card = this.pullCardFromDeck();
-        if (card == null) {
-            this.sendPacketToAllInGame(new ChatNotify("山がなくなったのでラウンドを強制終了します"));
+        if (card == null && this.shouldAbortRoundWhenDeckIsEmpty()) {
+            this.abortRoundDueToLackOfCard();
             this.endRound();
             return;
         }
 
-        this.decideCardForAttacking(card);
+        this.decideCardForAttacking(Objects.requireNonNull(card));
+    }
+
+    protected void abortRoundDueToLackOfCard() {
+        this.sendPacketToAllInGame(new ChatNotify("山がなくなったのでラウンドを強制終了します"));
+    }
+
+    protected boolean shouldAbortRoundWhenDeckIsEmpty() {
+        return true;
     }
 
     @Nullable
@@ -202,8 +207,8 @@ public class GameRound {
     }
 
     protected boolean shouldEndRound(Card openedCard) {
-        if (this.deck.isEmpty()) {
-            this.sendPacketToAllInGame(new ChatNotify("山がなくなったのでラウンドを強制終了します"));
+        if (this.deck.isEmpty() && this.shouldAbortRoundWhenDeckIsEmpty()) {
+            this.abortRoundDueToLackOfCard();
             return true;
         }
 
@@ -269,7 +274,7 @@ public class GameRound {
         if (!list.isEmpty()) {
             this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
         }
-        this.pulledCardMap.remove(player);
+        this.pulledCardMapForDecidingParent.remove(player);
 
         if (this.players.size() <= 1) {
             this.endRound();
@@ -302,7 +307,7 @@ public class GameRound {
     }
 
     protected boolean shouldPlayNextRound() {
-        return !this.pulledCardMap.isEmpty();
+        return !this.pulledCardMapForDecidingParent.isEmpty();
     }
 
     protected int getGivenCardNumPerPlayer() {
@@ -315,23 +320,25 @@ public class GameRound {
     }
 
     protected ServerPlayer nextParent() {
-        this.pulledCardMap.entrySet().stream()
+        this.pulledCardMapForDecidingParent.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .ifPresent(e -> this.parent = e.getKey());
-        this.pulledCardMap.remove(this.parent);
+        this.pulledCardMapForDecidingParent.remove(this.parent);
 
         return this.parent;
     }
 
     public GameRound newRound() {
         var round = new GameRound(this.game, this.players, this.nextParent());
-        round.pulledCardMap.putAll(this.pulledCardMap);
+        round.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);
         return round;
     }
 
     public enum Status {
         STARTING,
+        SELECTING_TOSS_OR_ATTACKING,
         TOSSING,
+        SELECTING_CARD_FOR_ATTACKING,
         ATTACKING,
         WAITING_PLAYER_CONTINUE_OR_STAY,
         ENDED,
