@@ -7,9 +7,20 @@ import java.awt.*;
 
 import static com.hamusuke.numguesser.Constants.*;
 
-public class ClientTransparentCard extends AbstractClientCard {
-    public ClientTransparentCard() {
+public class ClientFrameCard extends AbstractClientCard {
+    protected int width;
+
+    public ClientFrameCard() {
+        this(CARD_WIDTH);
+    }
+
+    public ClientFrameCard(int width) {
         super(CardColor.BLACK);
+        this.width = width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
     }
 
     @Override
@@ -30,12 +41,12 @@ public class ClientTransparentCard extends AbstractClientCard {
                 var g2 = (Graphics2D) g.create();
                 g2.setStroke(new BasicStroke(1.5F));
                 g2.setColor(isSelected && cellHasFocus ? Color.CYAN : Color.GRAY);
-                g2.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, ARC_WIDTH, ARC_HEIGHT);
+                g2.drawRoundRect(0, 0, ClientFrameCard.this.width, CARD_HEIGHT, ARC_WIDTH, ARC_HEIGHT);
                 g2.dispose();
                 super.paintChildren(g);
             }
         };
-        p.setPreferredSize(new Dimension(CARD_WIDTH, CARD_HEIGHT));
+        p.setPreferredSize(new Dimension(this.width, CARD_HEIGHT));
         ret.add(p, BorderLayout.CENTER);
         return ret;
     }

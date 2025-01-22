@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.client.gui.component.panel.dialog;
 
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
-import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
+import com.hamusuke.numguesser.client.gui.component.panel.menu.ServerListPanel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jdesktop.swingx.JXBusyLabel;

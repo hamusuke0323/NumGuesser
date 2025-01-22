@@ -23,7 +23,7 @@ public class RoomPanel extends Panel {
     public void init() {
         super.init();
 
-        this.client.setWindowTitle(Objects.requireNonNull(this.client.curRoom).getRoomName() + " - " + this.client.getGameTitle());
+        this.client.setWindowTitle(Objects.requireNonNull(this.client.curRoom).getRoomName() + " - " + this.client.getGameTitleWithVersion());
 
         var label = new JXLabel("全員が準備完了になるとゲームが始まります", SwingConstants.CENTER);
         this.add(label);

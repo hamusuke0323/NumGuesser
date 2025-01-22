@@ -11,8 +11,8 @@ import java.util.function.Consumer;
 public class ConfirmPanel extends Panel {
     private final Panel parent;
     private final String text;
-    private final Consumer<Boolean> yesNo;
-    private boolean accepted;
+    protected final Consumer<Boolean> yesNo;
+    protected boolean accepted;
 
     public ConfirmPanel(Panel parent, String text, Consumer<Boolean> yesNo) {
         super(new GridBagLayout());

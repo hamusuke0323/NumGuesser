@@ -9,9 +9,9 @@ import com.google.gson.JsonArray;
 import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.config.Config;
 import com.hamusuke.numguesser.client.gui.MainWindow;
-import com.hamusuke.numguesser.client.gui.component.panel.MainMenuPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
-import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
+import com.hamusuke.numguesser.client.gui.component.panel.menu.MainMenuPanel;
+import com.hamusuke.numguesser.client.gui.component.panel.menu.ServerListPanel;
 import com.hamusuke.numguesser.client.gui.component.table.PacketLogTable;
 import com.hamusuke.numguesser.client.gui.component.table.PlayerTable;
 import com.hamusuke.numguesser.client.network.Chat;
@@ -224,8 +224,16 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         }
     }
 
+    public String getGameTitleWithVersion() {
+        return this.getGameTitle() + " " + this.getVersion();
+    }
+
     public String getGameTitle() {
-        return "NumGuesser " + Constants.VERSION;
+        return "NumGuesser";
+    }
+
+    public String getVersion() {
+        return Constants.VERSION;
     }
 
     public void setWindowTitle(String title) {

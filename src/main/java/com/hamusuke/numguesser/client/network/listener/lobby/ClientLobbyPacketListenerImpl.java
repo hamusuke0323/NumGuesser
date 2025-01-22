@@ -1,12 +1,12 @@
 package com.hamusuke.numguesser.client.network.listener.lobby;
 
 import com.hamusuke.numguesser.client.NumGuesser;
-import com.hamusuke.numguesser.client.gui.component.panel.ServerListPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.EnterPasswordPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.OkPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.lobby.LobbyPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
+import com.hamusuke.numguesser.client.gui.component.panel.menu.ServerListPanel;
 import com.hamusuke.numguesser.client.gui.component.table.PlayerTable;
 import com.hamusuke.numguesser.client.network.Chat;
 import com.hamusuke.numguesser.client.network.listener.main.ClientRoomPacketListenerImpl;

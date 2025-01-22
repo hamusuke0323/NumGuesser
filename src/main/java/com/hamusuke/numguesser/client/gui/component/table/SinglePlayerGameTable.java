@@ -1,10 +1,11 @@
 package com.hamusuke.numguesser.client.gui.component.table;
 
+import com.google.common.collect.Lists;
+import com.hamusuke.numguesser.client.game.SinglePlayerGame.Difficulty;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
-import com.hamusuke.numguesser.client.game.card.ClientTransparentCard;
+import com.hamusuke.numguesser.client.game.card.ClientFrameCard;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.game.card.Card;
-import com.hamusuke.numguesser.game.single.SinglePlayerGame.Difficulty;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
@@ -15,20 +16,23 @@ import javax.swing.table.TableCellRenderer;
 import static com.hamusuke.numguesser.Constants.CARD_HEIGHT;
 
 public class SinglePlayerGameTable extends JTable {
+    public static final Object VOID_CARD = new Object();
     private final DefaultTableModel tableModel;
+    private final Difficulty difficulty;
 
     public SinglePlayerGameTable(Difficulty difficulty) {
-        this.setModel(this.tableModel = this.createTable(difficulty));
+        this.difficulty = difficulty;
+        this.setModel(this.tableModel = this.createTable());
         this.setDragEnabled(false);
         this.setColumnSelectionAllowed(false);
         this.setRowHeight(CARD_HEIGHT + 10);
     }
 
-    private DefaultTableModel createTable(Difficulty difficulty) {
-        var model = new DefaultTableModel(difficulty.firstOpenedCardNum, difficulty.maxRowCardNum * 2 - 1);
+    private DefaultTableModel createTable() {
+        var model = new DefaultTableModel(this.difficulty.firstOpenedCardNum, this.difficulty.columnSize);
         for (int row = 0; row < model.getRowCount(); row++) {
             for (int col = 0; col < model.getColumnCount(); col++) {
-                model.setValueAt(new ClientTransparentCard(), row, col);
+                model.setValueAt(new ClientFrameCard(), row, col);
             }
         }
 
@@ -36,7 +40,89 @@ public class SinglePlayerGameTable extends JTable {
     }
 
     public void setCardTo(Card card, int row, int column) {
+        if (this.isFullInRow(row)) {
+            return;
+        }
+
         this.tableModel.setValueAt(card, row, column);
+        this.clearSelection();
+        this.makeGapsBetweenCards(row, column);
+
+        if (this.isFullInRow(row)) {
+            this.completeRow(row);
+        }
+
+        SwingUtilities.invokeLater(this::repaint);
+    }
+
+    private void makeGapsBetweenCards(int row, int column) {
+        if (this.isFullInRow(row) || column == this.difficulty.centerIndex) {
+            return;
+        }
+
+        boolean leftSide = this.difficulty.centerIndex > column;
+        if (leftSide) {
+            // let cards through 0 ~ center - 1 move left.
+            for (int i = 0; i < column; i++) {
+                this.tableModel.setValueAt(this.tableModel.getValueAt(row, i + 1), row, i);
+            }
+        } else {
+            // move right.
+            for (int i = this.tableModel.getColumnCount() - 1; i > column; i--) {
+                this.tableModel.setValueAt(this.tableModel.getValueAt(row, i - 1), row, i);
+            }
+        }
+
+        this.tableModel.setValueAt(new ClientFrameCard(2), row, column);
+    }
+
+    private void completeRow(int row) {
+        var cards = Lists.newArrayList(this.tableModel.getDataVector().get(row));
+        var left = Lists.newArrayList(cards.subList(0, this.difficulty.centerIndex));
+        var right = Lists.newArrayList(cards.subList(this.difficulty.centerIndex + 1, cards.size()));
+        left.removeIf(o -> o instanceof ClientFrameCard);
+        right.removeIf(o -> o instanceof ClientFrameCard);
+
+        int putCardNum = 0;
+        for (int i = this.difficulty.centerIndex - 1; i >= 0; i--) {
+            if (putCardNum++ < left.size()) {
+                this.tableModel.setValueAt(left.get(left.size() - 1 - (putCardNum - 1)), row, i);
+                continue;
+            }
+
+            this.tableModel.setValueAt(VOID_CARD, row, i);
+        }
+
+        putCardNum = 0;
+        for (int i = this.difficulty.centerIndex + 1; i < this.difficulty.columnSize; i++) {
+            if (putCardNum++ < right.size()) {
+                this.tableModel.setValueAt(right.get(putCardNum - 1), row, i);
+                continue;
+            }
+
+            this.tableModel.setValueAt(VOID_CARD, row, i);
+        }
+    }
+
+    private void completeAllRows() {
+        for (int i = 0; i < this.tableModel.getRowCount(); i++) {
+            this.completeRow(i);
+        }
+    }
+
+    private boolean isFullInRow(int row) {
+        return this.tableModel.getDataVector().get(row).stream().filter(o -> !(o instanceof ClientFrameCard)).count() >= this.difficulty.maxRowCardNum;
+    }
+
+    public boolean isValidPos(int row, int column) {
+        if (this.isFullInRow(row)) {
+            return false;
+        }
+
+        boolean leftCardExists = column > 0 && !(this.tableModel.getValueAt(row, column - 1) instanceof ClientFrameCard);
+        boolean rightCardExists = column < this.tableModel.getColumnCount() - 1 && !(this.tableModel.getValueAt(row, column + 1) instanceof ClientFrameCard);
+
+        return (leftCardExists || rightCardExists) && this.tableModel.getValueAt(row, column) instanceof ClientFrameCard;
     }
 
     @Override
@@ -46,7 +132,7 @@ public class SinglePlayerGameTable extends JTable {
                 return card.toPanel(Direction.SOUTH, isSelected, hasFocus);
             }
 
-            return new JPanel();
+            return null;
         };
     }
 

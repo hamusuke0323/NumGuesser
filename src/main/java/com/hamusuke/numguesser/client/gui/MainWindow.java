@@ -26,7 +26,7 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
     public final JToggleButton themeToggle;
 
     public MainWindow(NumGuesser client) {
-        super(client.getGameTitle());
+        super(client.getGameTitleWithVersion());
         this.client = client;
         this.addWindowListener(this);
         this.addComponentListener(this);

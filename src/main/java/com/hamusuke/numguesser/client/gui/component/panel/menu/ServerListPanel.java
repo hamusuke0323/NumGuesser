@@ -1,5 +1,6 @@
-package com.hamusuke.numguesser.client.gui.component.panel;
+package com.hamusuke.numguesser.client.gui.component.panel.menu;
 
+import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ConfirmPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ConnectingPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ServerInfoPanel;
@@ -30,7 +31,7 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
     public void init() {
         super.init();
 
-        this.client.setWindowTitle(this.client.getGameTitle());
+        this.client.setWindowTitle("マルチプレイ - " + this.client.getGameTitleWithVersion());
         var model = new DefaultListModel<ServerInfo>();
         model.addAll(this.client.getServers());
         this.list = new JXList(model);
@@ -76,11 +77,16 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
         this.refresh.setActionCommand("refresh");
         this.refresh.addActionListener(this);
 
+        var back = new JXButton("戻る");
+        back.setActionCommand("back");
+        back.addActionListener(this);
+
         addButton(south, this.connect, l, 0, 0, 1, 1, 0.125D);
         addButton(south, this.refresh, l, 0, 1, 1, 1, 0.125D);
         addButton(south, this.edit, l, 0, 2, 1, 1, 0.125D);
         addButton(south, this.remove, l, 0, 3, 1, 1, 0.125D);
         addButton(south, add, l, 0, 4, 1, 1, 0.125D);
+        addButton(south, back, l, 0, 5, 1, 1, 0.125D);
 
         this.add(south, BorderLayout.SOUTH);
         this.setSize(new Dimension(this.getWidth() * 2, this.getHeight()));
@@ -184,6 +190,9 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
                 break;
             case "refresh":
                 this.refresh();
+                break;
+            case "back":
+                this.client.setPanel(new MainMenuPanel());
                 break;
         }
     }
