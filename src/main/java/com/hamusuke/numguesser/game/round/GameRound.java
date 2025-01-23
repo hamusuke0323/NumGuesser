@@ -156,11 +156,17 @@ public class GameRound {
         }
 
         attacker.sendPacket(new AttackRsp());
+
+        this.sendAttackDetailToAll(attacker, num);
         if (card.getNum() == num) {
             this.onAttackSucceeded(card);
         } else {
             this.onAttackFailed();
         }
+    }
+
+    protected void sendAttackDetailToAll(ServerPlayer attacker, int num) {
+        this.sendPacketToAllInGame(new ChatNotify("アタック: " + attacker.getDisplayName() + "が" + num + "でアタックしました"));
     }
 
     protected void onAttackSucceeded(Card card) {
