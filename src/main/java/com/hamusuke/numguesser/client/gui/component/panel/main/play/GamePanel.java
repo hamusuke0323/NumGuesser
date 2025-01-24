@@ -232,11 +232,13 @@ public class GamePanel extends Panel {
         this.client.getConnection().sendPacket(new CardSelectReq(card.getId()));
     }
 
-    public void addCardList(boolean isLocal, String name, DefaultListModel<AbstractClientCard> cardList) {
+    public void addCardList(Direction direction, String name, DefaultListModel<AbstractClientCard> cardList) {
         var l = new GridBagLayout();
         var panel = new JXPanel(l);
 
-        var list = new CardList(isLocal ? Direction.SOUTH : Direction.values()[(this.cardListIndex + 1) % 4], cardList);
+        boolean isLocal = direction == Direction.SOUTH;
+
+        var list = new CardList(direction, cardList);
         list.addListSelectionListener(e -> {
             if (list.isSelectionEmpty() || e.getValueIsAdjusting()) {
                 return;

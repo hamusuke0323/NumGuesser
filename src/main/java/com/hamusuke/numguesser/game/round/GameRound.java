@@ -28,16 +28,19 @@ public class GameRound {
     protected ServerPlayer parent;
     protected final List<Card> deck;
     protected final Map<ServerPlayer, Card> pulledCardMapForDecidingParent = Maps.newHashMap();
-    protected final Map<Integer, Card> playerOwnCardMap = Maps.newConcurrentMap();
+    protected final Map<Integer, Card> cardIdMap = Maps.newConcurrentMap();
+    protected final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
     protected ServerPlayer curAttacker;
     protected int curAttackerIndex;
     protected Card curCardForAttacking;
     protected Status status = Status.STARTING;
+    protected ServerPlayer winner;
 
     public GameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
         this.game = game;
         this.players = players;
         this.parent = parent;
+        this.winner = parent;
 
         this.deck = Lists.newArrayList();
         for (var color : CardColor.values()) {
@@ -59,8 +62,13 @@ public class GameRound {
         this.sendPacketToAllInGame(new ChatNotify("親は " + this.parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
 
+        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.getSeatingArrangement()));
         this.giveOutCards();
         this.startAttacking();
+    }
+
+    protected List<Integer> getSeatingArrangement() {
+        return this.players.stream().map(Player::getId).toList();
     }
 
     protected void decideParent() {
@@ -88,7 +96,8 @@ public class GameRound {
 
                 var card = this.deck.remove(0);
                 player.getDeck().addCard(card);
-                this.playerOwnCardMap.put(card.getId(), card);
+                this.cardIdMap.put(card.getId(), card);
+                this.cardIdPlayerMap.put(card.getId(), player);
             }
 
             player.sendPacket(new PlayerDeckSyncNotify(player.getId(), player.getDeck().getCards().stream().map(Card::toSerializer).toList()));
@@ -125,7 +134,8 @@ public class GameRound {
     }
 
     protected void ownCard(ServerPlayer player, Card card) {
-        this.playerOwnCardMap.put(card.getId(), card);
+        this.cardIdMap.put(card.getId(), card);
+        this.cardIdPlayerMap.put(card.getId(), player);
         int index = player.getDeck().addCard(card);
         player.sendPacket(new PlayerNewCardAddNotify(player.getId(), index, card.toSerializer()));
         this.sendPacketToOthersInGame(player, new PlayerNewCardAddNotify(player.getId(), index, card.toSerializerForOthers()));
@@ -134,11 +144,15 @@ public class GameRound {
     public void decideCardForAttacking(Card card) {
         this.status = Status.ATTACKING;
         this.curCardForAttacking = card;
-        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(this.curAttacker.getId(), card.toSerializer()));
-        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackingNotify(this.curAttacker.getId()));
+        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer()));
+        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackingNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
     }
 
     public void onCardSelect(ServerPlayer selector, int id) {
+        if (this.status != Status.ATTACKING) {
+            return;
+        }
+
         if (this.curAttacker == selector) {
             this.sendPacketToAllInGame(new PlayerCardSelectionSyncNotify(this.curAttacker.getId(), id));
         }
@@ -150,14 +164,14 @@ public class GameRound {
             return;
         }
 
-        var card = this.playerOwnCardMap.get(id);
+        var card = this.cardIdMap.get(id);
         if (card == null || card.isOpened()) {
             return;
         }
 
         attacker.sendPacket(new AttackRsp());
 
-        this.sendAttackDetailToAll(attacker, num);
+        this.sendAttackDetailToAll(attacker, num, this.cardIdPlayerMap.get(card.getId()));
         if (card.getNum() == num) {
             this.onAttackSucceeded(card);
         } else {
@@ -165,8 +179,8 @@ public class GameRound {
         }
     }
 
-    protected void sendAttackDetailToAll(ServerPlayer attacker, int num) {
-        this.sendPacketToAllInGame(new ChatNotify("アタック: " + attacker.getDisplayName() + "が" + num + "でアタックしました"));
+    protected void sendAttackDetailToAll(ServerPlayer attacker, int num, ServerPlayer beAttackedPlayer) {
+        this.sendPacketToAllInGame(new ChatNotify("アタック: " + attacker.getDisplayName() + "が" + num + "で" + beAttackedPlayer.getDisplayName() + "にアタックしました"));
     }
 
     protected void onAttackSucceeded(Card card) {
@@ -176,6 +190,7 @@ public class GameRound {
 
         if (this.shouldEndRound(card)) {
             this.ownCard(this.curAttacker, this.curCardForAttacking);
+            this.winner = this.curAttacker;
             this.endRound();
             return;
         }
@@ -218,17 +233,24 @@ public class GameRound {
             return true;
         }
 
-        for (var player : this.players) {
-            if (!player.getDeck().contains(openedCard)) {
-                continue;
-            }
-
-            if (player.getDeck().getCards().stream().allMatch(Card::isOpened)) {
-                return true;
-            }
+        var player = this.cardIdPlayerMap.get(openedCard.getId());
+        if (player == null) {
+            this.sendPacketToAllInGame(new ChatNotify(new NullPointerException("player is null").toString()));
+            this.sendPacketToAllInGame(new ChatNotify("エラーが発生したのでラウンドを終了します"));
+            return true;
         }
 
-        return false;
+        if (player.getDeck().getCards().stream().allMatch(Card::isOpened)) {
+            player.setIsDefeated(true);
+        }
+
+        return this.arePlayersDefeatedBy(this.curAttacker);
+    }
+
+    protected boolean arePlayersDefeatedBy(@Nullable ServerPlayer player) {
+        return this.players.stream()
+                .filter(sp -> !sp.equals(player))
+                .allMatch(ServerPlayer::isDefeated);
     }
 
     protected void endRound() {
@@ -268,10 +290,17 @@ public class GameRound {
             cur = this.curAttackerIndex - 1;
         }
 
-        int nextIndex = cur + 1;
-        nextIndex = nextIndex >= this.players.size() ? 0 : nextIndex;
-        this.curAttacker = this.players.get(nextIndex);
-        this.curAttackerIndex = nextIndex;
+        for (int i = 0; i < this.players.size(); i++) {
+            int nextIndex = (cur + 1 + i) % this.players.size();
+            var player = this.players.get(nextIndex);
+            if (player.isDefeated()) {
+                continue;
+            }
+
+            this.curAttacker = player;
+            this.curAttackerIndex = nextIndex;
+            break;
+        }
     }
 
     public void onPlayerLeft(ServerPlayer player) {
@@ -288,6 +317,7 @@ public class GameRound {
         }
 
         player.setReady(false);
+        player.setIsDefeated(false);
         this.players.forEach(sp -> sp.setReady(false));
 
         if (this.curAttacker == player) {
@@ -299,6 +329,10 @@ public class GameRound {
                 this.continueOrStay(this.curAttacker, false);
                 this.sendPacketToAllInGame(new CardOpenNotify(temp.toSerializer()));
             }
+        }
+
+        if (this.arePlayersDefeatedBy(this.curAttacker)) {
+            this.endRound();
         }
     }
 

@@ -26,6 +26,7 @@ public class ServerPlayer extends Player implements CommandSource {
     public ServerRoom curRoom;
     private final Random random = new SecureRandom();
     private ServerPlayerDeck deck;
+    private boolean isDefeated;
 
     public ServerPlayer(String name, NumGuesserServer server) {
         super(name);
@@ -35,6 +36,7 @@ public class ServerPlayer extends Player implements CommandSource {
     public void makeNewDeck() {
         this.deck = new ServerPlayerDeck(this);
         this.sendPacket(new PlayerNewDeckNotify());
+        this.setIsDefeated(false);
     }
 
     public ServerPlayerDeck getDeck() {
@@ -43,6 +45,14 @@ public class ServerPlayer extends Player implements CommandSource {
 
     public Random getRandom() {
         return this.random;
+    }
+
+    public boolean isDefeated() {
+        return this.isDefeated;
+    }
+
+    public void setIsDefeated(boolean isDefeated) {
+        this.isDefeated = isDefeated;
     }
 
     @Override

@@ -44,8 +44,8 @@ public class CardList extends JXList {
 
     public enum Direction {
         SOUTH(0.0D, JList.HORIZONTAL_WRAP, BorderLayout.SOUTH),
-        NORTH(Math.toRadians(180), JList.HORIZONTAL_WRAP, BorderLayout.NORTH),
         EAST(Math.toRadians(-90), JList.VERTICAL_WRAP, BorderLayout.EAST),
+        NORTH(Math.toRadians(180), JList.HORIZONTAL_WRAP, BorderLayout.NORTH),
         WEST(Math.toRadians(90), JList.VERTICAL_WRAP, BorderLayout.WEST);
 
         public final double radToRotate;
@@ -56,6 +56,23 @@ public class CardList extends JXList {
             this.radToRotate = rad;
             this.layoutOrientation = layoutOrientation;
             this.layoutDir = layoutDir;
+        }
+
+        public static Direction counterClockwiseFromSouth(int count) {
+            return count >= 0 ? values()[count % 4] : clockwiseFromSouth(Math.abs(count));
+        }
+
+        public static Direction clockwiseFromSouth(int count) {
+            return count >= 0 ? values()[(count * 3) % 4] : counterClockwiseFromSouth(Math.abs(count));
+        }
+
+        public Direction opposite() {
+            return switch (this) {
+                case NORTH -> SOUTH;
+                case EAST -> WEST;
+                case SOUTH -> NORTH;
+                case WEST -> EAST;
+            };
         }
     }
 }

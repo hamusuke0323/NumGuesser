@@ -71,7 +71,9 @@ public class SinglePlayerGamePanel extends Panel {
         this.table.clearSelection();
         this.commandPanel.add(this.putButton, BorderLayout.SOUTH);
 
-        this.add(new JScrollPane(this.table), BorderLayout.CENTER);
+        var scroll = new JScrollPane(this.table);
+        scroll.getViewport().addChangeListener(e -> SwingUtilities.invokeLater(this.table::repaint));
+        this.add(scroll, BorderLayout.CENTER);
         this.add(this.commandPanel, BorderLayout.EAST);
     }
 

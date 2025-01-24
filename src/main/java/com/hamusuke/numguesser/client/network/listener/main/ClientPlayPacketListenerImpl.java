@@ -1,9 +1,11 @@
 package com.hamusuke.numguesser.client.network.listener.main;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
+import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
@@ -18,6 +20,7 @@ import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
+import java.util.List;
 import java.util.Map;
 
 public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl implements ClientPlayPacketListener {
@@ -25,6 +28,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     private final Map<Integer, AbstractClientCard> cardMap = Maps.newConcurrentMap();
     @Nullable
     private AbstractClientCard curSelectedCard;
+    private final List<Integer> serverPlayerIdList = Lists.newArrayList();
 
     public ClientPlayPacketListenerImpl(NumGuesser client, ClientRoom room, Connection connection) {
         super(client, room, connection);
@@ -41,6 +45,12 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     @Override
     public void handleStartGameRound(StartGameRoundNotify packet) {
         this.client.setPanel(new GamePanel());
+    }
+
+    @Override
+    public void handleSeatingArrangement(SeatingArrangementNotify packet) {
+        this.serverPlayerIdList.clear();
+        this.serverPlayerIdList.addAll(packet.serverPlayerIdList());
     }
 
     @Override
@@ -64,8 +74,12 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
                     deck.addCard(card);
                 });
 
+        int myIdIndex = this.serverPlayerIdList.indexOf(this.clientPlayer.getId());
+        int targetIdIndex = this.serverPlayerIdList.indexOf(player.getId());
+
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
-            gamePanel.addCardList(deck.getOwner() == this.clientPlayer, deck.getOwner().getName(), deck.getCardModel());
+            // when two-player game, only north and south side are used.
+            gamePanel.addCardList(this.serverPlayerIdList.size() == 2 && player != this.clientPlayer ? Direction.NORTH : Direction.counterClockwiseFromSouth(targetIdIndex - myIdIndex), deck.getOwner().getName(), deck.getCardModel());
         }
     }
 
@@ -80,6 +94,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handlePlayerStartAttacking(PlayerStartAttackingNotify packet) {
+        this.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.prepareAttacking(packet.card().toClientCard());
         }
@@ -89,11 +104,20 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleRemotePlayerStartAttacking(RemotePlayerStartAttackingNotify packet) {
+        this.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
+            remotePlayer.onAttack(packet.cardForAttack().toClientCard());
             gamePanel.onRemotePlayerAttacking(remotePlayer);
         }
 
         this.repaintGamePanel();
+    }
+
+    protected void clearCardSelection() {
+        if (this.curSelectedCard != null) {
+            this.curSelectedCard.select(null);
+            this.curSelectedCard = null;
+        }
     }
 
     @Override

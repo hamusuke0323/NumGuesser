@@ -111,6 +111,7 @@ public enum Protocol {
                     .add(PlayerDeckSyncNotify.class, PlayerDeckSyncNotify::new)
                     .add(PlayerNewDeckNotify.class, PlayerNewDeckNotify::new)
                     .add(StartGameRoundNotify.class, StartGameRoundNotify::new)
+                    .add(SeatingArrangementNotify.class, SeatingArrangementNotify::new)
                     .add(PlayerStartAttackingNotify.class, PlayerStartAttackingNotify::new)
                     .add(RemotePlayerStartAttackingNotify.class, RemotePlayerStartAttackingNotify::new)
                     .add(CardOpenNotify.class, CardOpenNotify::new)
