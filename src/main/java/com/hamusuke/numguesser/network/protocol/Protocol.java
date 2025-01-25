@@ -31,6 +31,7 @@ import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.Encrypt
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
 import com.hamusuke.numguesser.util.Util;
@@ -112,6 +113,8 @@ public enum Protocol {
                     .add(PlayerNewDeckNotify.class, PlayerNewDeckNotify::new)
                     .add(StartGameRoundNotify.class, StartGameRoundNotify::new)
                     .add(SeatingArrangementNotify.class, SeatingArrangementNotify::new)
+                    .add(CardForAttackSelectReq.class, CardForAttackSelectReq::new)
+                    .add(RemotePlayerSelectCardForAttackNotify.class, RemotePlayerSelectCardForAttackNotify::new)
                     .add(PlayerStartAttackingNotify.class, PlayerStartAttackingNotify::new)
                     .add(RemotePlayerStartAttackingNotify.class, RemotePlayerStartAttackingNotify::new)
                     .add(CardOpenNotify.class, CardOpenNotify::new)
@@ -133,6 +136,7 @@ public enum Protocol {
                     // play
                     .add(ClientCommandReq.class, ClientCommandReq::new)
                     .add(CardSelectReq.class, CardSelectReq::new)
+                    .add(CardForAttackSelectRsp.class, CardForAttackSelectRsp::new)
                     .add(AttackReq.class, AttackReq::new)
             )
     ),

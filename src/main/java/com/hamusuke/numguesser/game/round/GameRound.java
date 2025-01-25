@@ -15,7 +15,10 @@ import com.hamusuke.numguesser.util.Util;
 
 import javax.annotation.Nullable;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -24,21 +27,23 @@ public class GameRound {
     private final Supplier<Integer> idGenerator = this.idIncrementer::getAndIncrement;
     protected final NumGuesserGame game;
     protected final List<ServerPlayer> players;
+    protected final List<Integer> seatingArrangement;
     protected final Random random = new SecureRandom();
     protected ServerPlayer parent;
     protected final List<Card> deck;
     protected final Map<ServerPlayer, Card> pulledCardMapForDecidingParent = Maps.newHashMap();
-    protected final Map<Integer, Card> cardIdMap = Maps.newConcurrentMap();
+    protected final Map<Integer, Card> ownCardIdMap = Maps.newConcurrentMap();
     protected final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
     protected ServerPlayer curAttacker;
-    protected int curAttackerIndex;
     protected Card curCardForAttacking;
-    protected Status status = Status.STARTING;
+    protected GameState gameState = GameState.STARTING;
+    protected boolean isAttackCancellable;
     protected ServerPlayer winner;
 
     public GameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
         this.game = game;
         this.players = players;
+        this.seatingArrangement = this.getSeatingArrangement();
         this.parent = parent;
         this.winner = parent;
 
@@ -58,11 +63,10 @@ public class GameRound {
         this.decideParent();
 
         this.curAttacker = this.parent;
-        this.curAttackerIndex = this.players.indexOf(this.parent);
         this.sendPacketToAllInGame(new ChatNotify("親は " + this.parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
 
-        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.getSeatingArrangement()));
+        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArrangement));
         this.giveOutCards();
         this.startAttacking();
     }
@@ -96,7 +100,7 @@ public class GameRound {
 
                 var card = this.deck.remove(0);
                 player.getDeck().addCard(card);
-                this.cardIdMap.put(card.getId(), card);
+                this.ownCardIdMap.put(card.getId(), card);
                 this.cardIdPlayerMap.put(card.getId(), player);
             }
 
@@ -107,21 +111,32 @@ public class GameRound {
 
     protected void startAttacking() {
         var card = this.pullCardFromDeck();
-        if (card == null && this.shouldAbortRoundWhenDeckIsEmpty()) {
-            this.abortRoundDueToLackOfCard();
-            this.endRound();
+        if (card == null) {
+            this.selectCardForAttack();
             return;
         }
 
-        this.decideCardForAttacking(Objects.requireNonNull(card));
+        this.decideCardForAttacking(card);
     }
 
-    protected void abortRoundDueToLackOfCard() {
-        this.sendPacketToAllInGame(new ChatNotify("山がなくなったのでラウンドを強制終了します"));
+    protected void selectCardForAttack() {
+        this.gameState = GameState.SELECTING_CARD_FOR_ATTACKING;
+        this.curAttacker.sendPacket(new CardForAttackSelectReq());
+        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerSelectCardForAttackNotify(this.curAttacker));
     }
 
-    protected boolean shouldAbortRoundWhenDeckIsEmpty() {
-        return true;
+    public void onCardForAttackSelect(ServerPlayer selector, int id) {
+        if (this.curAttacker != selector) { // Not your turn, lol
+            return;
+        }
+
+        var card = this.ownCardIdMap.get(id);
+        if (card == null || card.isOpened()) {
+            this.selectCardForAttack(); // Try again
+            return;
+        }
+
+        this.decideCardForAttacking(card);
     }
 
     @Nullable
@@ -134,22 +149,34 @@ public class GameRound {
     }
 
     protected void ownCard(ServerPlayer player, Card card) {
-        this.cardIdMap.put(card.getId(), card);
-        this.cardIdPlayerMap.put(card.getId(), player);
-        int index = player.getDeck().addCard(card);
-        player.sendPacket(new PlayerNewCardAddNotify(player.getId(), index, card.toSerializer()));
-        this.sendPacketToOthersInGame(player, new PlayerNewCardAddNotify(player.getId(), index, card.toSerializerForOthers()));
+        if (this.ownCardIdMap.put(card.getId(), card) == null) {
+            this.cardIdPlayerMap.put(card.getId(), player);
+            int index = player.getDeck().addCard(card);
+            player.sendPacket(new PlayerNewCardAddNotify(player.getId(), index, card.toSerializer()));
+            this.sendPacketToOthersInGame(player, new PlayerNewCardAddNotify(player.getId(), index, card.toSerializerForOthers()));
+        }
     }
 
-    public void decideCardForAttacking(Card card) {
-        this.status = Status.ATTACKING;
+    protected void decideCardForAttacking(Card card) {
+        this.decideCardForAttacking(card, this.gameState == GameState.SELECTING_CARD_FOR_ATTACKING);
+    }
+
+    protected void decideCardForAttacking(Card card, boolean cancellable) {
+        this.gameState = GameState.ATTACKING;
+        this.isAttackCancellable = cancellable;
         this.curCardForAttacking = card;
-        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer()));
+        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer(), cancellable));
         this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackingNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
     }
 
+    public void onCancelCommand(ServerPlayer canceller) {
+        if (this.isAttackCancellable && this.gameState == GameState.ATTACKING && this.curAttacker == canceller) {
+            this.selectCardForAttack();
+        }
+    }
+
     public void onCardSelect(ServerPlayer selector, int id) {
-        if (this.status != Status.ATTACKING) {
+        if (this.gameState != GameState.ATTACKING) {
             return;
         }
 
@@ -164,7 +191,7 @@ public class GameRound {
             return;
         }
 
-        var card = this.cardIdMap.get(id);
+        var card = this.ownCardIdMap.get(id);
         if (card == null || card.isOpened()) {
             return;
         }
@@ -195,7 +222,7 @@ public class GameRound {
             return;
         }
 
-        this.status = Status.WAITING_PLAYER_CONTINUE_OR_STAY;
+        this.gameState = GameState.WAITING_PLAYER_CONTINUE_OR_STAY;
         this.curAttacker.sendPacket(new AttackSuccNotify());
     }
 
@@ -228,11 +255,6 @@ public class GameRound {
     }
 
     protected boolean shouldEndRound(Card openedCard) {
-        if (this.deck.isEmpty() && this.shouldAbortRoundWhenDeckIsEmpty()) {
-            this.abortRoundDueToLackOfCard();
-            return true;
-        }
-
         var player = this.cardIdPlayerMap.get(openedCard.getId());
         if (player == null) {
             this.sendPacketToAllInGame(new ChatNotify(new NullPointerException("player is null").toString()));
@@ -254,11 +276,11 @@ public class GameRound {
     }
 
     protected void endRound() {
-        if (this.status == Status.ENDED) {
+        if (this.gameState == GameState.ENDED) {
             return;
         }
 
-        this.status = Status.ENDED;
+        this.gameState = GameState.ENDED;
         this.sendPacketToAllInGame(new ChatNotify("ラウンド終了"));
 
         for (var player : this.players) {
@@ -274,7 +296,7 @@ public class GameRound {
     }
 
     public void ready() {
-        if (this.status != Status.ENDED) {
+        if (this.gameState != GameState.ENDED) {
             return;
         }
 
@@ -285,22 +307,26 @@ public class GameRound {
     }
 
     protected void nextAttacker() {
-        int cur = this.players.indexOf(this.curAttacker);
-        if (cur < 0) {
-            cur = this.curAttackerIndex - 1;
-        }
+        int cur = this.seatingArrangement.indexOf(this.curAttacker.getId());
 
-        for (int i = 0; i < this.players.size(); i++) {
-            int nextIndex = (cur + 1 + i) % this.players.size();
-            var player = this.players.get(nextIndex);
-            if (player.isDefeated()) {
+        for (int i = 0; i < this.seatingArrangement.size(); i++) {
+            int nextIndex = (cur + 1 + i) % this.seatingArrangement.size();
+            var player = this.getPlayingPlayerById(this.seatingArrangement.get(nextIndex));
+            if (player == null || player.isDefeated()) {
                 continue;
             }
 
             this.curAttacker = player;
-            this.curAttackerIndex = nextIndex;
             break;
         }
+    }
+
+    @Nullable
+    protected ServerPlayer getPlayingPlayerById(int id) {
+        return this.players.stream()
+                .filter(player -> player.getId() == id)
+                .findFirst()
+                .orElse(null);
     }
 
     public void onPlayerLeft(ServerPlayer player) {
@@ -321,10 +347,9 @@ public class GameRound {
         this.players.forEach(sp -> sp.setReady(false));
 
         if (this.curAttacker == player) {
-            if (this.status == Status.ATTACKING) {
-                this.nextAttacker();
-                this.decideCardForAttacking(this.curCardForAttacking);
-            } else if (this.status == Status.WAITING_PLAYER_CONTINUE_OR_STAY) {
+            if (this.gameState == GameState.SELECTING_CARD_FOR_ATTACKING) {
+                this.endAttacking();
+            } else if (this.gameState == GameState.ATTACKING || this.gameState == GameState.WAITING_PLAYER_CONTINUE_OR_STAY) {
                 var temp = this.curCardForAttacking;
                 this.continueOrStay(this.curAttacker, false);
                 this.sendPacketToAllInGame(new CardOpenNotify(temp.toSerializer()));
@@ -374,7 +399,7 @@ public class GameRound {
         return round;
     }
 
-    public enum Status {
+    public enum GameState {
         STARTING,
         SELECTING_TOSS_OR_ATTACKING,
         TOSSING,

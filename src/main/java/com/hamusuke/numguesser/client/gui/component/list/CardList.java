@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.list;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import org.jdesktop.swingx.JXList;
 
@@ -23,6 +24,7 @@ public class CardList extends JXList {
             this.setFixedCellWidth(CARD_WIDTH + 10);
             this.setFixedCellHeight(CARD_HEIGHT + 10);
         } else {
+            this.setVisibleRowCount(Constants.ALL_CARD_NUM);
             this.setFixedCellWidth(CARD_HEIGHT + 10);
             this.setFixedCellHeight(CARD_WIDTH + 10);
         }

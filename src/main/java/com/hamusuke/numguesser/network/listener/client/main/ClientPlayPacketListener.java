@@ -13,6 +13,10 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handleExitGameSucc(ExitGameSuccNotify packet);
 
+    void handleCardForAttackSelect(CardForAttackSelectReq packet);
+
+    void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet);
+
     void handlePlayerStartAttacking(PlayerStartAttackingNotify packet);
 
     void handleRemotePlayerStartAttacking(RemotePlayerStartAttackingNotify packet);

@@ -47,6 +47,14 @@ public class NumGuesserGame {
         this.round.onCardSelect(selector, id);
     }
 
+    public void onCardForAttackSelect(ServerPlayer selector, int id) {
+        this.round.onCardForAttackSelect(selector, id);
+    }
+
+    public void onCancelCommand(ServerPlayer canceller) {
+        this.round.onCancelCommand(canceller);
+    }
+
     public void onAttack(ServerPlayer player, int id, int num) {
         this.round.onAttack(player, id, num);
     }

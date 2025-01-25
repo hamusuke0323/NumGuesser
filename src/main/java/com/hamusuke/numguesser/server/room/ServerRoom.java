@@ -148,6 +148,12 @@ public class ServerRoom extends Room {
         }
     }
 
+    public void onCancelCommand(ServerPlayer canceller) {
+        if (this.game != null) {
+            this.game.onCancelCommand(canceller);
+        }
+    }
+
     public NumGuesserGame getGame() {
         return this.game;
     }

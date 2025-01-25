@@ -17,11 +17,6 @@ public class PairGameRound extends GameRound {
     }
 
     @Override
-    protected boolean shouldAbortRoundWhenDeckIsEmpty() {
-        return false;
-    }
-
-    @Override
     public GameRound newRound() {
         var game = new PairGameRound(this.game, this.players, this.parent);
         game.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);

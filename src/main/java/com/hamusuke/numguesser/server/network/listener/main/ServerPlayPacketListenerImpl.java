@@ -4,6 +4,7 @@ import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
 import com.hamusuke.numguesser.server.NumGuesserServer;
@@ -18,6 +19,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
     public void handleClientCommand(ClientCommandReq packet) {
         switch (packet.command()) {
             case EXIT_GAME -> this.room.exitGame(this.player);
+            case CANCEL -> this.room.onCancelCommand(this.player);
             case CONTINUE_ATTACKING -> {
                 if (this.room.getGame() != null) {
                     this.room.getGame().continueAttacking(this.player);
@@ -46,6 +48,15 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
         }
 
         this.room.getGame().onCardSelect(this.player, packet.id());
+    }
+
+    @Override
+    public void handleCardForAttackSelect(CardForAttackSelectRsp packet) {
+        if (this.room.getGame() == null) {
+            return;
+        }
+
+        this.room.getGame().onCardForAttackSelect(this.player, packet.id());
     }
 
     @Override
