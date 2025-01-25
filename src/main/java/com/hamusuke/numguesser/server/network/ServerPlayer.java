@@ -6,6 +6,7 @@ import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerTipPointSyncNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.RTTChangeNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.PlayerNewDeckNotify;
 import com.hamusuke.numguesser.server.NumGuesserServer;
@@ -61,6 +62,16 @@ public class ServerPlayer extends Player implements CommandSource {
 
         if (this.curRoom != null) {
             this.curRoom.sendPacketToAllInRoom(new RTTChangeNotify(this.getId(), ping));
+        }
+    }
+
+    @Override
+    public void setTipPoint(int tipPoint) {
+        super.setTipPoint(tipPoint);
+
+        if (this.curRoom != null && this.curRoom.getGame() != null) {
+            this.curRoom.getGame().getPlayingPlayers()
+                    .forEach(p -> p.sendPacket(new PlayerTipPointSyncNotify(this.getId(), this.getTipPoint())));
         }
     }
 

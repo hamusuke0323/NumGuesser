@@ -14,6 +14,7 @@ public class NumGuesserGame {
     private GameRound round;
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
+    private boolean isFirstRound = true;
 
     public NumGuesserGame(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
@@ -23,6 +24,12 @@ public class NumGuesserGame {
     }
 
     public void startGame() {
+        if (this.isFirstRound) {
+            this.isFirstRound = false;
+            int point = this.round.getDefaultTipPointPerPlayer();
+            this.players.forEach(p -> p.setTipPoint(point));
+        }
+
         this.round.sendPacketToAllInGame(new StartGameRoundNotify());
         this.round.startRound();
     }

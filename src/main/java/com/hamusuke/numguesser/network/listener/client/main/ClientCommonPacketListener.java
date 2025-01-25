@@ -21,4 +21,6 @@ public interface ClientCommonPacketListener extends PacketListener {
     void handlePlayerReadySync(PlayerReadySyncNotify packet);
 
     void handleReadyRsp(ReadyRsp packet);
+
+    void handlePlayerTipPointSync(PlayerTipPointSyncNotify packet);
 }

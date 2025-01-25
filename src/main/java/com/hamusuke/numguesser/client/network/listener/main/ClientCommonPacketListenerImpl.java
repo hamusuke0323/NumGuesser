@@ -111,6 +111,14 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
+    public void handlePlayerTipPointSync(PlayerTipPointSyncNotify packet) {
+        var player = this.curRoom.getPlayer(packet.id());
+        if (player != null) {
+            player.setTipPoint(packet.tipPoint());
+        }
+    }
+
+    @Override
     public void onDisconnected(String msg) {
         this.client.disconnect();
 

@@ -216,6 +216,7 @@ public class GameRound {
         card.open();
         this.sendPacketToAllInGame(new CardOpenNotify(card.toSerializer()));
         this.sendPacketToAllInGame(new ChatNotify("アタック成功です！"));
+        this.giveTipToAttacker(card);
 
         if (this.shouldEndRound(card)) {
             this.ownCard(this.curAttacker, this.curCardForAttacking);
@@ -226,6 +227,15 @@ public class GameRound {
 
         this.gameState = GameState.WAITING_PLAYER_CONTINUE_OR_STAY;
         this.curAttacker.sendPacket(new AttackSuccNotify());
+    }
+
+    protected void giveTipToAttacker(Card openedCard) {
+        var cardHolder = this.cardIdPlayerMap.get(openedCard.getId());
+        if (cardHolder != null) {
+            cardHolder.subTipPoint(openedCard.getPoint());
+        }
+
+        this.curAttacker.addTipPoint(openedCard.getPoint());
     }
 
     public void continueOrStay(ServerPlayer player, boolean continueAttacking) {
@@ -285,6 +295,8 @@ public class GameRound {
         this.gameState = GameState.ENDED;
         this.sendPacketToAllInGame(new ChatNotify("ラウンド終了"));
 
+        this.giveTipToRoundWinner();
+
         for (var player : this.players) {
             var list = player.getDeck().openAllCards();
             if (list.isEmpty()) {
@@ -295,6 +307,23 @@ public class GameRound {
         }
 
         this.sendPacketToAllInGame(new EndGameRoundNotify());
+    }
+
+    protected void giveTipToRoundWinner() {
+        int point = this.winner.getDeck().getCards().stream()
+                .mapToInt(Card::getPoint)
+                .sum();
+
+        this.winner.addTipPoint(point);
+
+        // all defeated players give tip to winner.
+        for (var player : this.players) {
+            if (player == this.winner) {
+                continue;
+            }
+
+            player.subTipPoint(point);
+        }
     }
 
     public void ready() {
@@ -382,6 +411,15 @@ public class GameRound {
             case 2 -> 4;
             case 3 -> 3;
             case 4 -> 2;
+            default -> 0;
+        };
+    }
+
+    public int getDefaultTipPointPerPlayer() {
+        return switch (this.players.size()) {
+            case 2 -> 400;
+            case 3 -> 230;
+            case 4 -> 200;
             default -> 0;
         };
     }

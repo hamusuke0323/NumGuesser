@@ -89,6 +89,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         var listener = new ClientRoomPacketListenerImpl(this.client, this.connection);
         this.connection.setListener(listener);
         this.connection.setProtocol(packet.nextProtocol());
+        this.client.playerTable.removePointColumn();
         this.client.setPanel(new RoomPanel());
     }
 

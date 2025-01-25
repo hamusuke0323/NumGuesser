@@ -2,7 +2,6 @@ package com.hamusuke.numguesser.client.network.listener.main;
 
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
-import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientRoomPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
@@ -19,5 +18,6 @@ public class ClientRoomPacketListenerImpl extends ClientCommonPacketListenerImpl
         this.connection.setListener(listener);
         this.connection.setProtocol(packet.nextProtocol());
         this.client.setPanel(new CenteredMessagePanel("ゲームを開始しています..."));
+        this.client.playerTable.addPointColumn();
     }
 }

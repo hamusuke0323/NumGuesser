@@ -9,6 +9,7 @@ public abstract class Player {
     private int ping;
     protected final String name;
     protected boolean ready;
+    protected int tipPoint;
 
     protected Player(String name) {
         this.name = name;
@@ -32,6 +33,22 @@ public abstract class Player {
 
     public void setReady(boolean ready) {
         this.ready = ready;
+    }
+
+    public void addTipPoint(int delta) {
+        this.setTipPoint(this.getTipPoint() + delta);
+    }
+
+    public void subTipPoint(int delta) {
+        this.addTipPoint(-delta);
+    }
+
+    public int getTipPoint() {
+        return this.tipPoint;
+    }
+
+    public void setTipPoint(int tipPoint) {
+        this.tipPoint = tipPoint;
     }
 
     public boolean isReady() {

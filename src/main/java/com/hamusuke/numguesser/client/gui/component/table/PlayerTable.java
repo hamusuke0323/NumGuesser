@@ -2,17 +2,15 @@ package com.hamusuke.numguesser.client.gui.component.table;
 
 import com.hamusuke.numguesser.client.NumGuesser;
 
-import javax.annotation.Nullable;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
-import java.util.function.Consumer;
 
 public class PlayerTable extends JTable {
-    private static final DefaultTableModel MODEL = new DefaultTableModel(new String[]{"プレイヤー"}, 0);
+    private static final String PLAYER_COLUMN = "プレイヤー";
+    private static final String POINT_COLUMN = "得点";
+    private static final DefaultTableModel MODEL = new DefaultTableModel(new String[]{PLAYER_COLUMN}, 0);
     protected final NumGuesser client;
-    @Nullable
-    protected Consumer<DefaultTableModel> overrideRenderer;
 
     public PlayerTable(NumGuesser client) {
         super(MODEL);
@@ -25,7 +23,7 @@ public class PlayerTable extends JTable {
 
     @Override
     public TableCellRenderer getCellRenderer(int row, int column) {
-        return this.getColumnName(column).equals("プレイヤー") ? new PlayerInfoRenderer() : super.getCellRenderer(row, column);
+        return this.getColumnName(column).equals(PLAYER_COLUMN) ? new PlayerInfoRenderer() : super.getCellRenderer(row, column);
     }
 
     @Override
@@ -33,8 +31,12 @@ public class PlayerTable extends JTable {
         return false;
     }
 
-    public void setOverrideRenderer(@Nullable Consumer<DefaultTableModel> overrideRenderer) {
-        this.overrideRenderer = overrideRenderer;
+    public void addPointColumn() {
+        MODEL.addColumn(POINT_COLUMN);
+    }
+
+    public void removePointColumn() {
+        MODEL.setColumnCount(1);
     }
 
     public void update() {
@@ -43,13 +45,8 @@ public class PlayerTable extends JTable {
             return;
         }
 
-        if (this.overrideRenderer != null) {
-            this.overrideRenderer.accept(MODEL);
-            return;
-        }
-
         synchronized (this.client.curRoom.getPlayers()) {
-            this.client.curRoom.getPlayers().forEach(player -> MODEL.addRow(new Object[]{player}));
+            this.client.curRoom.getPlayers().forEach(player -> MODEL.addRow(new Object[]{player, player.getTipPoint()}));
         }
     }
 
