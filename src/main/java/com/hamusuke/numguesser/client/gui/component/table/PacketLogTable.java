@@ -36,7 +36,7 @@ public class PacketLogTable extends JTable {
             MODEL.addRow(new Object[]{details, null});
             this.clearOverflowed();
             var client = NumGuesser.getInstance();
-            client.getMainWindow().onPacketLog();
+            client.sendMsg(client.getMainWindow()::onPacketLog);
         }
     }
 
@@ -47,7 +47,7 @@ public class PacketLogTable extends JTable {
             MODEL.addRow(new Object[]{null, details});
             this.clearOverflowed();
             var client = NumGuesser.getInstance();
-            client.getMainWindow().onPacketLog();
+            client.sendMsg(client.getMainWindow()::onPacketLog);
         }
     }
 

@@ -1,18 +1,24 @@
 package com.hamusuke.numguesser.client.gui.component.panel.main.room;
 
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
+import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.GameModeSelectReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
 import org.jdesktop.swingx.JXButton;
+import org.jdesktop.swingx.JXComboBox;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXPanel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
 import java.util.Objects;
 
 public class RoomPanel extends Panel {
+    private JXComboBox modeBox;
+    private JXLabel modeLabel;
     private JXButton ready;
 
     public RoomPanel() {
@@ -27,9 +33,52 @@ public class RoomPanel extends Panel {
 
         var label = new JXLabel("全員が準備完了になるとゲームが始まります", SwingConstants.CENTER);
         this.add(label);
+
+        this.add(new JXLabel("ゲームモード", SwingConstants.CENTER));
+
+        this.modeBox = new JXComboBox(GameMode.values());
+        this.modeBox.addItemListener(e -> {
+            if (this.client.curRoom.amIOwner() && e.getStateChange() == ItemEvent.SELECTED && this.client.getConnection() != null) {
+                this.client.getConnection().sendPacket(new GameModeSelectReq((GameMode) e.getItem()));
+            }
+        });
+        this.add(this.modeBox);
+
+        this.modeLabel = new JXLabel(this.client.curRoom.getGameMode().name, SwingConstants.CENTER);
+        this.add(this.modeLabel);
+
+        this.setVisibleOfComponents();
+
         this.ready = new JXButton("準備完了");
         this.ready.addActionListener(this);
         this.add(this.ready);
+    }
+
+    private void setVisibleOfComponents() {
+        if (Objects.requireNonNull(this.client.curRoom).amIOwner()) {
+            this.modeBox.setVisible(true);
+            this.modeLabel.setVisible(false);
+        } else {
+            this.modeBox.setVisible(false);
+            this.modeLabel.setVisible(true);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            this.revalidate();
+            this.repaint();
+        });
+    }
+
+    public void onOwnerChanged() {
+        this.setVisibleOfComponents();
+    }
+
+    public void onGameModeChanged() {
+        var mode = Objects.requireNonNull(this.client.curRoom).getGameMode();
+        this.modeBox.setSelectedItem(mode);
+        this.modeLabel.setText(mode.name);
+
+        SwingUtilities.invokeLater(this::repaint);
     }
 
     public void hideReadyButton() {

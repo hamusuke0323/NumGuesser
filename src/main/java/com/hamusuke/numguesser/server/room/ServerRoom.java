@@ -1,13 +1,12 @@
 package com.hamusuke.numguesser.server.room;
 
 import com.google.common.collect.Lists;
+import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.game.NumGuesserGame;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerJoinNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerLeaveNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
+import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomFailNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomSuccNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.ExitGameSuccNotify;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
@@ -28,6 +27,7 @@ public class ServerRoom extends Room {
     private final List<ServerPlayer> playerList;
     private final String password;
     private NumGuesserGame game;
+    private ServerPlayer owner;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
         super(roomName);
@@ -38,6 +38,21 @@ public class ServerRoom extends Room {
 
     public RoomInfo toInfo() {
         return new RoomInfo(this.id, this.roomName, this.getPlayers().size(), this.hasPassword());
+    }
+
+    @Override
+    public void setGameMode(GameMode gameMode) {
+        super.setGameMode(gameMode);
+        this.sendPacketToAllInRoom(new GameModeChangeNotify(gameMode));
+    }
+
+    public ServerPlayer getOwner() {
+        return this.owner;
+    }
+
+    public void setOwner(ServerPlayer owner) {
+        this.owner = owner;
+        this.sendPacketToAllInRoom(new RoomOwnerChangeNotify(this.owner.getId()));
     }
 
     @Override
@@ -76,6 +91,12 @@ public class ServerRoom extends Room {
     @Override
     public synchronized void join(Player player) {
         var serverPlayer = (ServerPlayer) player;
+
+        if (!this.server.getRoomMap().containsKey(this.id)) {
+            serverPlayer.sendPacket(new JoinRoomFailNotify("部屋が見つかりませんでした"));
+            return;
+        }
+
         serverPlayer.curRoom = this;
         serverPlayer.sendPacket(new JoinRoomSuccNotify(this.toInfo()));
         new ServerRoomPacketListenerImpl(this.server, serverPlayer.connection.getConnection(), serverPlayer);
@@ -103,6 +124,10 @@ public class ServerRoom extends Room {
         if (this.players.isEmpty()) {
             this.server.removeRoom(this);
             return;
+        }
+
+        if (serverPlayer == this.owner) {
+            this.setOwner(this.players.get(0));
         }
 
         this.sendPacketToAllInRoom(new PlayerLeaveNotify(serverPlayer));

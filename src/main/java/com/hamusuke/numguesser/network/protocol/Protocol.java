@@ -82,6 +82,8 @@ public enum Protocol {
                     .add(PlayerReadySyncNotify.class, PlayerReadySyncNotify::new)
                     .add(ReadyRsp.class, ReadyRsp::new)
                     .add(PlayerTipPointSyncNotify.class, PlayerTipPointSyncNotify::new)
+                    .add(RoomOwnerChangeNotify.class, RoomOwnerChangeNotify::new)
+                    .add(GameModeChangeNotify.class, GameModeChangeNotify::new)
 
                     // room
                     .add(StartGameNotify.class, StartGameNotify::new)
@@ -93,6 +95,7 @@ public enum Protocol {
                     .add(ChatReq.class, ChatReq::new)
                     .add(LeaveRoomReq.class, LeaveRoomReq::new)
                     .add(ReadyReq.class, ReadyReq::new)
+                    .add(GameModeSelectReq.class, GameModeSelectReq::new)
             )
     ),
     PLAY(2, protocol()
@@ -108,6 +111,8 @@ public enum Protocol {
                     .add(PlayerReadySyncNotify.class, PlayerReadySyncNotify::new)
                     .add(ReadyRsp.class, ReadyRsp::new)
                     .add(PlayerTipPointSyncNotify.class, PlayerTipPointSyncNotify::new)
+                    .add(RoomOwnerChangeNotify.class, RoomOwnerChangeNotify::new)
+                    .add(GameModeChangeNotify.class, GameModeChangeNotify::new)
 
                     // play
                     .add(ExitGameSuccNotify.class, ExitGameSuccNotify::new)
@@ -134,6 +139,7 @@ public enum Protocol {
                     .add(ChatReq.class, ChatReq::new)
                     .add(LeaveRoomReq.class, LeaveRoomReq::new)
                     .add(ReadyReq.class, ReadyReq::new)
+                    .add(GameModeSelectReq.class, GameModeSelectReq::new)
 
                     // play
                     .add(ClientCommandReq.class, ClientCommandReq::new)

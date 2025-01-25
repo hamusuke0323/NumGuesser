@@ -4,6 +4,10 @@ import com.hamusuke.numguesser.network.listener.PacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
 
 public interface ClientCommonPacketListener extends PacketListener {
+    void handleRoomOwnerChange(RoomOwnerChangeNotify packet);
+
+    void handleGameModeChange(GameModeChangeNotify packet);
+
     void handleChatPacket(ChatNotify packet);
 
     void handlePingPacket(PingReq packet);

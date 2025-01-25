@@ -83,6 +83,6 @@ public class NumGuesserGame {
     }
 
     private GameRound getFirstRound() {
-        return new GameRound(this, this.playerList, null);
+        return this.room.getGameMode().gameRoundCreator.createGameRound(this, this.playerList, null);
     }
 }

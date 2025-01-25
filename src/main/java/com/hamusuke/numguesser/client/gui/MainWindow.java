@@ -82,11 +82,11 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
             return;
         }
 
-        if (!this.autoScroll.getState()) {
+        if (!this.autoScroll.isSelected()) {
             return;
         }
 
-        this.logScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
+        this.logScroll.getVerticalScrollBar().setValue(this.logScroll.getVerticalScrollBar().getMaximum());
         this.logScroll.repaint();
     }
 
@@ -239,14 +239,14 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
             this.south.revalidate();
         }
 
-        if (this.autoScroll.getState()) {
-            SwingUtilities.invokeLater(() -> {
-                this.logScroll.getVerticalScrollBar().setValue(Integer.MAX_VALUE);
-            });
-        }
-
         var logSize = new Dimension(c.getWidth() / 4, 100);
         this.logScroll.setPreferredSize(logSize);
+
+        if (this.autoScroll.getState()) {
+            SwingUtilities.invokeLater(() -> {
+                this.logScroll.getVerticalScrollBar().setValue(this.logScroll.getVerticalScrollBar().getMaximum());
+            });
+        }
     }
 
     @Override

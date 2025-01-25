@@ -12,16 +12,27 @@ import java.util.Collections;
 import java.util.List;
 
 public class ClientRoom extends Room {
+    private final NumGuesser client;
     private final List<AbstractClientPlayer> clientPlayers = Collections.synchronizedList(Lists.newArrayList());
     private final List<AbstractClientPlayer> clientPlayerList;
+    private AbstractClientPlayer owner;
 
     public ClientRoom(NumGuesser client, String roomName) {
         super(roomName);
+        this.client = client;
         this.clientPlayerList = Collections.unmodifiableList(this.clientPlayers);
     }
 
     public static ClientRoom fromRoomInfo(NumGuesser client, RoomInfo info) {
         return new ClientRoom(client, info.roomName());
+    }
+
+    public void setOwner(AbstractClientPlayer owner) {
+        this.owner = owner;
+    }
+
+    public boolean amIOwner() {
+        return this.owner == this.client.clientPlayer;
     }
 
     @Override

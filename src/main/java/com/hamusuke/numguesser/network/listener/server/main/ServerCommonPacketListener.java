@@ -13,4 +13,6 @@ public interface ServerCommonPacketListener extends ServerPacketListener {
     void handleLeaveRoom(LeaveRoomReq packet);
 
     void handleReady(ReadyReq packet);
+
+    void handleGameModeSelect(GameModeSelectReq packet);
 }

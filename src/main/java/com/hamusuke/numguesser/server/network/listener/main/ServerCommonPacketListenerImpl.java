@@ -63,6 +63,15 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     }
 
     @Override
+    public void handleGameModeSelect(GameModeSelectReq packet) {
+        if (this.player != this.room.getOwner()) {
+            return;
+        }
+
+        this.room.setGameMode(packet.mode());
+    }
+
+    @Override
     public void handleLeaveRoom(LeaveRoomReq packet) {
         this.room.leave(this.player);
         this.player.sendPacket(new LeaveRoomSuccNotify());

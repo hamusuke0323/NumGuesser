@@ -36,6 +36,28 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
+    public void handleRoomOwnerChange(RoomOwnerChangeNotify packet) {
+        var player = this.curRoom.getPlayer(packet.id());
+        if (player == null) {
+            return;
+        }
+
+        this.curRoom.setOwner(player);
+        if (this.client.getPanel() instanceof RoomPanel roomPanel) {
+            roomPanel.onOwnerChanged();
+        }
+    }
+
+    @Override
+    public void handleGameModeChange(GameModeChangeNotify packet) {
+        this.curRoom.setGameMode(packet.mode());
+
+        if (this.client.getPanel() instanceof RoomPanel roomPanel) {
+            roomPanel.onGameModeChanged();
+        }
+    }
+
+    @Override
     public void handlePlayerReadySync(PlayerReadySyncNotify packet) {
         synchronized (this.curRoom.getPlayers()) {
             this.curRoom.getPlayers().stream()

@@ -168,8 +168,9 @@ public final class NumGuesserServer extends ReentrantThreadExecutor<ServerTask> 
 
     public synchronized void createRoom(ServerPlayer creator, String name, String password) {
         var room = new ServerRoom(this, name, password);
-        room.join(creator);
         this.rooms.put(room.getId(), room);
+        room.join(creator);
+        room.setOwner(creator);
     }
 
     public synchronized void removeRoom(ServerRoom room) {

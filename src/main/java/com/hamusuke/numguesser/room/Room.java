@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.room;
 
+import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
 
 import javax.annotation.Nullable;
@@ -12,6 +13,7 @@ public abstract class Room {
     private static final AtomicInteger ROOM_ID_INCREMENTER = new AtomicInteger();
     protected int id = ROOM_ID_INCREMENTER.getAndIncrement();
     protected final String roomName;
+    protected GameMode gameMode = GameMode.NORMAL_GAME;
 
     protected Room(String roomName) {
         this.roomName = roomName;
@@ -30,6 +32,14 @@ public abstract class Room {
 
     public String getRoomName() {
         return this.roomName;
+    }
+
+    public GameMode getGameMode() {
+        return this.gameMode;
+    }
+
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
     }
 
     public abstract void join(Player player);
