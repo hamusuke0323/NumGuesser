@@ -10,17 +10,28 @@ import java.util.Collections;
 import java.util.List;
 
 public class NumGuesserGame {
+    private static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
     private final ServerRoom room;
     private GameRound round;
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
     private boolean isFirstRound = true;
+    private int waitForForceExitGameTicks;
 
     public NumGuesserGame(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
         this.round = this.getFirstRound();
+    }
+
+    public void tick() {
+        if (this.waitForForceExitGameTicks > 0) {
+            this.waitForForceExitGameTicks--;
+            if (this.waitForForceExitGameTicks <= 0) {
+                this.forceExitGame();
+            }
+        }
     }
 
     public void startGame() {
@@ -42,6 +53,17 @@ public class NumGuesserGame {
 
         this.round = this.round.newRound();
         this.startGame();
+    }
+
+    public void onFinalRoundEnded() {
+        this.waitForForceExitGameTicks = AUTO_FORCE_EXIT_GAME_TICKS;
+    }
+
+    private synchronized void forceExitGame() {
+        var copied = Lists.newArrayList(this.players);
+        for (var player : copied) {
+            this.room.exitGame(player); // Force exit
+        }
     }
 
     public synchronized void leavePlayer(ServerPlayer player) {

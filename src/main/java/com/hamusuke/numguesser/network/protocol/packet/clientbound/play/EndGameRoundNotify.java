@@ -4,13 +4,14 @@ import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 
-public record EndGameRoundNotify() implements Packet<ClientPlayPacketListener> {
+public record EndGameRoundNotify(boolean isFinalRound) implements Packet<ClientPlayPacketListener> {
     public EndGameRoundNotify(IntelligentByteBuf buf) {
-        this();
+        this(buf.readBoolean());
     }
 
     @Override
     public void write(IntelligentByteBuf buf) {
+        buf.writeBoolean(this.isFinalRound);
     }
 
     @Override

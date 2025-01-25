@@ -59,9 +59,13 @@ public class ServerRoom extends Room {
     public void tick() {
         super.tick();
 
-        if (this.game != null && this.game.getPlayingPlayers().isEmpty()) {
-            this.players.forEach(player -> player.setReady(false));
-            this.game = null;
+        if (this.game != null) {
+            this.game.tick();
+
+            if (this.game.getPlayingPlayers().isEmpty()) {
+                this.players.forEach(player -> player.setReady(false));
+                this.game = null;
+            }
         }
     }
 
@@ -85,7 +89,7 @@ public class ServerRoom extends Room {
     }
 
     private boolean isPlayerNumValid() {
-        return this.players.size() > 1 && this.players.size() < 5;
+        return this.players.size() >= this.gameMode.minPlayer && this.players.size() <= this.gameMode.maxPlayer;
     }
 
     @Override
@@ -104,6 +108,12 @@ public class ServerRoom extends Room {
         this.sendPacketToAllInRoom(new PlayerJoinNotify(serverPlayer));
         this.players.forEach(player1 -> serverPlayer.sendPacket(new PlayerJoinNotify(player1)));
         this.players.add(serverPlayer);
+
+        if (this.owner != null) {
+            serverPlayer.sendPacket(new RoomOwnerChangeNotify(this.owner.getId()));
+        }
+
+        serverPlayer.sendPacket(new GameModeChangeNotify(this.gameMode));
 
         this.sendPacketToAllInRoom(new ChatNotify("%s が部屋に参加しました".formatted(serverPlayer.getDisplayName())));
 

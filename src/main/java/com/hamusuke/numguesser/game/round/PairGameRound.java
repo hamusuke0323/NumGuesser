@@ -12,6 +12,16 @@ public class PairGameRound extends GameRound {
     }
 
     @Override
+    protected void startAttacking() {
+        super.startAttacking();
+    }
+
+    @Override
+    protected List<Integer> getSeatingArrangement() {
+        return super.getSeatingArrangement();
+    }
+
+    @Override
     protected int getGivenCardNumPerPlayer() {
         return 6;
     }

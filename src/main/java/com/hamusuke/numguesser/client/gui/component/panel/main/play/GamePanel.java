@@ -37,6 +37,7 @@ public class GamePanel extends Panel {
     private JXButton continueBtn;
     private JXButton stayBtn;
     private JXButton readyBtn;
+    private JXButton backBtn;
     @Nullable
     private AbstractClientCard selectedCard;
     private State state = State.IDLE;
@@ -77,6 +78,10 @@ public class GamePanel extends Panel {
         this.readyBtn.setVisible(false);
         this.readyBtn.addActionListener(e -> this.ready());
 
+        this.backBtn = new JXButton("戻る");
+        this.backBtn.setVisible(false);
+        this.backBtn.addActionListener(this);
+
         addButton(commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 2, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.cardShowCaseForFriend, commandPanelLayout, 0, 1, 1, 1, 1.0D);
         addButton(commandPanel, this.cardShowCase, commandPanelLayout, 1, 1, 1, 1, 1.0D);
@@ -86,11 +91,16 @@ public class GamePanel extends Panel {
         addButton(commandPanel, this.continueBtn, commandPanelLayout, 0, 5, 2, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.stayBtn, commandPanelLayout, 0, 6, 2, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.readyBtn, commandPanelLayout, 0, 7, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.backBtn, commandPanelLayout, 0, 8, 2, 1, 1.0D, 0.05D);
 
         this.add(commandPanel, BorderLayout.CENTER);
     }
 
     private void onCancelBtnPressed() {
+        if (this.client.getConnection() == null) {
+            return;
+        }
+
         this.client.getConnection().sendPacket(new ClientCommandReq(Command.CANCEL));
     }
 
@@ -230,13 +240,15 @@ public class GamePanel extends Panel {
         dialog.setVisible(true);
     }
 
-    public void onEndRound() {
-        this.statusLabel.setText("ラウンド終了 全員が準備完了になると次のラウンドを開始します");
-        this.readyBtn.setVisible(true);
+    public void onEndRound(boolean isFinalRound) {
+        this.statusLabel.setText(isFinalRound ? "全てのラウンドが終了しました" : "ラウンド終了 全員が準備完了になると次のラウンドを開始します");
+        this.readyBtn.setVisible(!isFinalRound);
 
         this.setCardShowCase(null);
         this.cancelBtn.setVisible(false);
         this.setAttackBtnEnabled(false);
+
+        this.backBtn.setVisible(isFinalRound);
     }
 
     private void ready() {

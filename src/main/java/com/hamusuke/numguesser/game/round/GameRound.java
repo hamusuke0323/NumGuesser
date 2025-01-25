@@ -38,6 +38,7 @@ public class GameRound {
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
     protected CancelOperation cancelOperation = CancelOperation.DO_NOTHING;
+    @Nullable
     protected ServerPlayer winner;
 
     public GameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
@@ -62,6 +63,7 @@ public class GameRound {
     public void startRound() {
         this.decideParent();
 
+        this.winner = this.parent;
         this.curAttacker = this.parent;
         this.sendPacketToAllInGame(new ChatNotify("親は " + this.parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
@@ -306,10 +308,23 @@ public class GameRound {
             this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
         }
 
-        this.sendPacketToAllInGame(new EndGameRoundNotify());
+        boolean isFinal = !this.shouldPlayNextRound();
+        this.sendPacketToAllInGame(new EndGameRoundNotify(isFinal));
+
+        if (isFinal) {
+            this.endFinalRound();
+        }
+    }
+
+    protected void endFinalRound() {
+        this.game.onFinalRoundEnded();
     }
 
     protected void giveTipToRoundWinner() {
+        if (this.winner == null) {
+            return;
+        }
+
         int point = this.winner.getDeck().getCards().stream()
                 .mapToInt(Card::getPoint)
                 .sum();
@@ -328,6 +343,10 @@ public class GameRound {
 
     public void ready() {
         if (this.gameState != GameState.ENDED) {
+            return;
+        }
+
+        if (!this.shouldPlayNextRound()) {
             return;
         }
 
@@ -369,6 +388,7 @@ public class GameRound {
         this.pulledCardMapForDecidingParent.remove(player);
 
         if (this.players.size() <= 1) {
+            this.winner = this.players.isEmpty() ? null : this.players.get(0);
             this.endRound();
             return;
         }
@@ -388,6 +408,7 @@ public class GameRound {
         }
 
         if (this.arePlayersDefeatedBy(this.curAttacker)) {
+            this.winner = this.curAttacker;
             this.endRound();
         }
     }
@@ -402,7 +423,7 @@ public class GameRound {
                 .forEach(serverPlayer -> serverPlayer.sendPacket(packet));
     }
 
-    protected boolean shouldPlayNextRound() {
+    public boolean shouldPlayNextRound() {
         return !this.pulledCardMapForDecidingParent.isEmpty();
     }
 
@@ -426,7 +447,7 @@ public class GameRound {
 
     protected ServerPlayer nextParent() {
         this.pulledCardMapForDecidingParent.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
+                .min(Map.Entry.comparingByValue())
                 .ifPresent(e -> this.parent = e.getKey());
         this.pulledCardMapForDecidingParent.remove(this.parent);
 

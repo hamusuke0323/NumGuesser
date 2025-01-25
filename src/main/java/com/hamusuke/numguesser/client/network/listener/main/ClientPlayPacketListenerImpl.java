@@ -230,7 +230,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     @Override
     public void handleEndGameRound(EndGameRoundNotify packet) {
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
-            gamePanel.onEndRound();
+            gamePanel.onEndRound(packet.isFinalRound());
         }
 
         this.repaintGamePanel();

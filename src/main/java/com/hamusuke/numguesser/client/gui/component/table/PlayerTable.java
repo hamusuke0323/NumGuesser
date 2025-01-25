@@ -9,11 +9,11 @@ import javax.swing.table.TableCellRenderer;
 public class PlayerTable extends JTable {
     private static final String PLAYER_COLUMN = "プレイヤー";
     private static final String POINT_COLUMN = "得点";
-    private static final DefaultTableModel MODEL = new DefaultTableModel(new String[]{PLAYER_COLUMN}, 0);
+    private final DefaultTableModel model = new DefaultTableModel(new String[]{PLAYER_COLUMN}, 0);
     protected final NumGuesser client;
 
     public PlayerTable(NumGuesser client) {
-        super(MODEL);
+        this.setModel(this.model);
         this.client = client;
         this.setDragEnabled(false);
         this.setColumnSelectionAllowed(false);
@@ -32,11 +32,11 @@ public class PlayerTable extends JTable {
     }
 
     public void addPointColumn() {
-        MODEL.addColumn(POINT_COLUMN);
+        this.model.addColumn(POINT_COLUMN);
     }
 
     public void removePointColumn() {
-        MODEL.setColumnCount(1);
+        this.model.setColumnCount(1);
     }
 
     public void update() {
@@ -46,12 +46,12 @@ public class PlayerTable extends JTable {
         }
 
         synchronized (this.client.curRoom.getPlayers()) {
-            this.client.curRoom.getPlayers().forEach(player -> MODEL.addRow(new Object[]{player, player.getTipPoint()}));
+            this.client.curRoom.getPlayers().forEach(player -> this.model.addRow(new Object[]{player, player.getTipPoint()}));
         }
     }
 
     public void clear() {
-        MODEL.getDataVector().clear();
-        MODEL.setRowCount(0);
+        this.model.getDataVector().clear();
+        this.model.setRowCount(0);
     }
 }
