@@ -37,7 +37,7 @@ public class GameRound {
     protected ServerPlayer curAttacker;
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
-    protected boolean isAttackCancellable;
+    protected CancelOperation cancelOperation = CancelOperation.DO_NOTHING;
     protected ServerPlayer winner;
 
     public GameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
@@ -116,7 +116,7 @@ public class GameRound {
             return;
         }
 
-        this.decideCardForAttacking(card);
+        this.decideCardForAttacking(card, CancelOperation.DO_NOTHING);
     }
 
     protected void selectCardForAttack() {
@@ -131,12 +131,13 @@ public class GameRound {
         }
 
         var card = this.ownCardIdMap.get(id);
-        if (card == null || card.isOpened()) {
+        var player = this.cardIdPlayerMap.get(id);
+        if (player == this.curAttacker || card == null || card.isOpened()) {
             this.selectCardForAttack(); // Try again
             return;
         }
 
-        this.decideCardForAttacking(card);
+        this.decideCardForAttacking(card, CancelOperation.BACK_TO_SELECTING_CARD_FOR_ATTACKING);
     }
 
     @Nullable
@@ -157,21 +158,22 @@ public class GameRound {
         }
     }
 
-    protected void decideCardForAttacking(Card card) {
-        this.decideCardForAttacking(card, this.gameState == GameState.SELECTING_CARD_FOR_ATTACKING);
-    }
-
-    protected void decideCardForAttacking(Card card, boolean cancellable) {
+    protected void decideCardForAttacking(Card card, CancelOperation cancellable) {
         this.gameState = GameState.ATTACKING;
-        this.isAttackCancellable = cancellable;
+        this.cancelOperation = cancellable;
         this.curCardForAttacking = card;
-        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer(), cancellable));
+        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer(), cancellable.isCancellable()));
         this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackingNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
-        if (this.isAttackCancellable && this.gameState == GameState.ATTACKING && this.curAttacker == canceller) {
-            this.selectCardForAttack();
+        if (!this.cancelOperation.isCancellable() || this.gameState != GameState.ATTACKING || this.curAttacker != canceller) {
+            return;
+        }
+
+        switch (this.cancelOperation) {
+            case BACK_TO_CONTINUE_OR_STAY -> this.curAttacker.sendPacket(new AttackSuccNotify());
+            case BACK_TO_SELECTING_CARD_FOR_ATTACKING -> this.selectCardForAttack();
         }
     }
 
@@ -232,7 +234,7 @@ public class GameRound {
         }
 
         if (continueAttacking) {
-            this.decideCardForAttacking(this.curCardForAttacking);
+            this.decideCardForAttacking(this.curCardForAttacking, CancelOperation.BACK_TO_CONTINUE_OR_STAY);
             return;
         }
 
@@ -407,5 +409,16 @@ public class GameRound {
         ATTACKING,
         WAITING_PLAYER_CONTINUE_OR_STAY,
         ENDED,
+    }
+
+    protected enum CancelOperation {
+        DO_NOTHING,
+        BACK_TO_SELECTING_TOSS_OR_ATTACKING,
+        BACK_TO_CONTINUE_OR_STAY,
+        BACK_TO_SELECTING_CARD_FOR_ATTACKING;
+
+        private boolean isCancellable() {
+            return this != DO_NOTHING;
+        }
     }
 }

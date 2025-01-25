@@ -95,7 +95,7 @@ public class GamePanel extends Panel {
     }
 
     private void selectThisCardForAttack() {
-        if (this.selectedCard == null || this.selectedCard.isOpened()) {
+        if (this.selectedCard == null || !this.client.clientPlayer.getDeck().contains(this.selectedCard) || this.selectedCard.isOpened()) {
             return;
         }
 
@@ -106,6 +106,7 @@ public class GamePanel extends Panel {
 
     public void onSelectCardForAttackReq() {
         this.state = State.SELECTING_CARD_FOR_ATTACKING;
+        this.selectedCard = null;
         this.setStatusLabel("ふせたカードの中から、アタックするためのカードを選んでください");
         this.setCardShowCase(null);
         this.setAttackBtnEnabled(false);
@@ -232,8 +233,10 @@ public class GamePanel extends Panel {
     public void onEndRound() {
         this.statusLabel.setText("ラウンド終了 全員が準備完了になると次のラウンドを開始します");
         this.readyBtn.setVisible(true);
+
         this.setCardShowCase(null);
-        this.attackBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.setAttackBtnEnabled(false);
     }
 
     private void ready() {
@@ -274,8 +277,11 @@ public class GamePanel extends Panel {
     private void onCardSelected(CardList list) {
         this.clearSelection(list);
         var card = this.getSelectedCardOnlyRemote();
-        if (card == null && this.state == State.SELECTING_CARD_FOR_ATTACKING && list.hasFocus() && !list.isSelectionEmpty()) {
-            this.selectedCard = (AbstractClientCard) list.getSelectedValue();
+        if (this.state == State.SELECTING_CARD_FOR_ATTACKING) {
+            if (card == null && list.hasFocus() && !list.isSelectionEmpty()) {
+                this.selectedCard = (AbstractClientCard) list.getSelectedValue();
+            }
+
             return;
         }
 
