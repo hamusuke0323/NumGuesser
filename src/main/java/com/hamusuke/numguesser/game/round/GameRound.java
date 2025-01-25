@@ -131,8 +131,8 @@ public class GameRound {
         }
 
         var card = this.ownCardIdMap.get(id);
-        var player = this.cardIdPlayerMap.get(id);
-        if (player == this.curAttacker || card == null || card.isOpened()) {
+        var cardHolder = this.cardIdPlayerMap.get(id);
+        if (cardHolder != this.curAttacker || card == null || card.isOpened()) {
             this.selectCardForAttack(); // Try again
             return;
         }
