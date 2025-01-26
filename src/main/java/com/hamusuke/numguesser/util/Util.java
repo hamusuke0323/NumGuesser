@@ -1,5 +1,7 @@
 package com.hamusuke.numguesser.util;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.network.listener.PacketListener;
 import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
 import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
@@ -9,14 +11,46 @@ import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.LobbyDi
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.LoginDisconnectNotify;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.function.Consumer;
-import java.util.function.IntPredicate;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 public class Util {
     public static final LongSupplier nanoTimeSupplier = System::nanoTime;
+
+    public static <K, K1, V, V1> Map<K1, V1> transformToNewMap(Map<K, V> from, Function<K, K1> keyTransformer, Function<V, V1> valueTransformer) {
+        Map<K1, V1> newMap = Maps.newHashMapWithExpectedSize(from.size());
+        for (var entry : from.entrySet()) {
+            var key = keyTransformer.apply(entry.getKey());
+            if (key == null) {
+                continue;
+            }
+
+            newMap.put(keyTransformer.apply(entry.getKey()), valueTransformer.apply(entry.getValue()));
+        }
+
+        return newMap;
+    }
+
+    public static <K, K1, V> Map<K1, V> transformToNewMapOnlyKeys(Map<K, V> from, Function<K, K1> keyTransformer) {
+        return transformToNewMap(from, keyTransformer, Function.identity());
+    }
+
+    public static <K, V, V1> Map<K, V1> transformToNewMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
+        return Maps.transformValues(from, valueTransformer::apply);
+    }
+
+    public static <K, K1, V, V1> Map<K1, V1> transformToNewImmutableMap(Map<K, V> from, Function<K, K1> keyTransformer, Function<V, V1> valueTransformer) {
+        return ImmutableMap.copyOf(transformToNewMap(from, keyTransformer, valueTransformer));
+    }
+
+    public static <K, K1, V> Map<K1, V> transformToNewImmutableMapOnlyKeys(Map<K, V> from, Function<K, K1> keyTransformer) {
+        return ImmutableMap.copyOf(transformToNewMapOnlyKeys(from, keyTransformer));
+    }
+
+    public static <K, V, V1> Map<K, V1> transformToNewImmutableMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
+        return ImmutableMap.copyOf(transformToNewMapOnlyValues(from, valueTransformer));
+    }
 
     public static Packet<?> toDisconnectPacket(PacketListener listener, String msg) {
         if (listener instanceof ServerLoginPacketListener) {

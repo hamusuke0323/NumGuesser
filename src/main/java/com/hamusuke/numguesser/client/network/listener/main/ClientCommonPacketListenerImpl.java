@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.network.listener.main;
 
 import com.hamusuke.numguesser.client.NumGuesser;
+import com.hamusuke.numguesser.client.gui.component.panel.OwnerChangeListener;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.OkPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.lobby.LobbyPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
@@ -43,8 +44,8 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
         }
 
         this.curRoom.setOwner(player);
-        if (this.client.getPanel() instanceof RoomPanel roomPanel) {
-            roomPanel.onOwnerChanged();
+        if (this.client.getPanel() instanceof OwnerChangeListener changeListener) {
+            changeListener.onOwnerChanged();
         }
     }
 

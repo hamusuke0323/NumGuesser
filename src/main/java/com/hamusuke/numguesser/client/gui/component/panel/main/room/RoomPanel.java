@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.panel.main.room;
 
+import com.hamusuke.numguesser.client.gui.component.panel.OwnerChangeListener;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
@@ -16,7 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.util.Objects;
 
-public class RoomPanel extends Panel {
+public class RoomPanel extends Panel implements OwnerChangeListener {
     private JXComboBox modeBox;
     private JXLabel modeLabel;
     private JXButton ready;
@@ -37,6 +38,7 @@ public class RoomPanel extends Panel {
         this.add(new JXLabel("ゲームモード", SwingConstants.CENTER));
 
         this.modeBox = new JXComboBox(GameMode.values());
+        this.modeBox.setSelectedItem(this.client.curRoom.getGameMode());
         this.modeBox.addItemListener(e -> {
             if (this.client.curRoom.amIOwner() && e.getStateChange() == ItemEvent.SELECTED && this.client.getConnection() != null) {
                 this.client.getConnection().sendPacket(new GameModeSelectReq((GameMode) e.getItem()));
@@ -69,6 +71,7 @@ public class RoomPanel extends Panel {
         });
     }
 
+    @Override
     public void onOwnerChanged() {
         this.setVisibleOfComponents();
     }

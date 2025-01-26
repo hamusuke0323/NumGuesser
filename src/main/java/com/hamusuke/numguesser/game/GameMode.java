@@ -1,29 +1,29 @@
 package com.hamusuke.numguesser.game;
 
-import com.hamusuke.numguesser.game.round.GameRound;
-import com.hamusuke.numguesser.game.round.PairGameRound;
+import com.hamusuke.numguesser.game.mode.NormalGameMode;
+import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
+import com.hamusuke.numguesser.server.room.ServerRoom;
 
-import javax.annotation.Nullable;
 import java.util.List;
 
 public enum GameMode {
-    NORMAL_GAME("ノーマル", 2, 4, GameRound::new),
-    PAIR_PLAY("ペアプレー", 4, 4, PairGameRound::new);
+    NORMAL_GAME("ノーマル", 2, 4, NormalGameMode::new),
+    PAIR_PLAY("ペアプレー", 4, 4, PairPlayGameMode::new);
 
     public final String name;
     public final int minPlayer;
     public final int maxPlayer;
-    public final GameRoundCreator gameRoundCreator;
+    public final GameCreator gameCreator;
 
-    GameMode(String name, int minPlayer, int maxPlayer, GameRoundCreator gameRoundCreator) {
+    GameMode(String name, int minPlayer, int maxPlayer, GameCreator gameCreator) {
         this.name = name;
         this.minPlayer = minPlayer;
         this.maxPlayer = maxPlayer;
-        this.gameRoundCreator = gameRoundCreator;
+        this.gameCreator = gameCreator;
     }
 
-    public interface GameRoundCreator {
-        GameRound createGameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent);
+    public interface GameCreator {
+        NormalGameMode createGame(ServerRoom serverRoom, List<ServerPlayer> players);
     }
 }

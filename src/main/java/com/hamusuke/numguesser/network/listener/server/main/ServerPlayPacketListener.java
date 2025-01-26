@@ -1,9 +1,6 @@
 package com.hamusuke.numguesser.network.listener.server.main;
 
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
 
 public interface ServerPlayPacketListener extends ServerCommonPacketListener {
     void handleClientCommand(ClientCommandReq packet);
@@ -13,4 +10,8 @@ public interface ServerPlayPacketListener extends ServerCommonPacketListener {
     void handleCardForAttackSelect(CardForAttackSelectRsp packet);
 
     void handleAttack(AttackReq packet);
+
+    void handlePairColorChange(PairColorChangeReq packet);
+
+    void handlePairMakingDone(PairMakingDoneReq packet);
 }

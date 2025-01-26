@@ -30,10 +30,7 @@ import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveRe
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
 import com.hamusuke.numguesser.util.Util;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -118,6 +115,8 @@ public enum Protocol {
                     .add(ExitGameSuccNotify.class, ExitGameSuccNotify::new)
                     .add(PlayerDeckSyncNotify.class, PlayerDeckSyncNotify::new)
                     .add(PlayerNewDeckNotify.class, PlayerNewDeckNotify::new)
+                    .add(PairMakingStartNotify.class, PairMakingStartNotify::new)
+                    .add(PairColorChangeNotify.class, PairColorChangeNotify::new)
                     .add(StartGameRoundNotify.class, StartGameRoundNotify::new)
                     .add(SeatingArrangementNotify.class, SeatingArrangementNotify::new)
                     .add(CardForAttackSelectReq.class, CardForAttackSelectReq::new)
@@ -146,6 +145,8 @@ public enum Protocol {
                     .add(CardSelectReq.class, CardSelectReq::new)
                     .add(CardForAttackSelectRsp.class, CardForAttackSelectRsp::new)
                     .add(AttackReq.class, AttackReq::new)
+                    .add(PairColorChangeReq.class, PairColorChangeReq::new)
+                    .add(PairMakingDoneReq.class, PairMakingDoneReq::new)
             )
     ),
     LOGIN(3, protocol()

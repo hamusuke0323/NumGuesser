@@ -1,12 +1,10 @@
 package com.hamusuke.numguesser.server.network.listener.main;
 
+import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -66,5 +64,23 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
         }
 
         this.room.getGame().onAttack(this.player, packet.id(), packet.num());
+    }
+
+    @Override
+    public void handlePairColorChange(PairColorChangeReq packet) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+            return;
+        }
+
+        pairPlayGameMode.onPairColorChange(packet);
+    }
+
+    @Override
+    public void handlePairMakingDone(PairMakingDoneReq packet) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+            return;
+        }
+
+        pairPlayGameMode.onPairMakingDone();
     }
 }

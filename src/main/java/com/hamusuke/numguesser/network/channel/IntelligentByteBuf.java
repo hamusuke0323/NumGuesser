@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.network.channel;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.network.VarInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
@@ -20,6 +21,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -50,6 +53,24 @@ public class IntelligentByteBuf extends ByteBuf {
             c.add(reader.apply(this));
         }
         return listTransformer.apply(c);
+    }
+
+    public <K, V> void writeMap(Map<K, V> map, BiConsumer<Entry<K, V>, IntelligentByteBuf> writer) {
+        this.writeVarInt(map.size());
+        map.entrySet().forEach(e -> writer.accept(e, this));
+    }
+
+    public <K, V> Map<K, V> readSimpleMap(Function<IntelligentByteBuf, K> keyReader, Function<IntelligentByteBuf, V> valueReader, Function<Map<K, V>, Map<K, V>> mapTransformer) {
+        return this.readMap(keyReader, valueReader, mapTransformer);
+    }
+
+    public <M extends Map<K, V>, K, V> M readMap(Function<IntelligentByteBuf, K> keyReader, Function<IntelligentByteBuf, V> valueReader, Function<Map<K, V>, M> mapTransformer) {
+        int i = this.readVarInt();
+        Map<K, V> m = Maps.newHashMapWithExpectedSize(i);
+        for (int j = 0; j < i; j++) {
+            m.put(keyReader.apply(this), valueReader.apply(this));
+        }
+        return mapTransformer.apply(m);
     }
 
     public int readVarInt() {

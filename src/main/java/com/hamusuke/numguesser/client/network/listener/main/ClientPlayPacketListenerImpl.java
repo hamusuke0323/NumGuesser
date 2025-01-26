@@ -7,11 +7,13 @@ import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
+import com.hamusuke.numguesser.client.gui.component.panel.main.play.PairMakingPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
@@ -40,6 +42,25 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         super.tick();
 
         this.playerDeckMap.values().forEach(ClientPlayerDeck::tick);
+    }
+
+    @Override
+    public void handlePairMakingStart(PairMakingStartNotify packet) {
+        var map = packet.toPlayerPairMap(this.curRoom::getPlayer);
+        map.forEach(Player::setPairColor);
+        this.client.setPanel(new PairMakingPanel(map.keySet().stream().toList()));
+    }
+
+    @Override
+    public void handlePairColorChange(PairColorChangeNotify packet) {
+        var player = this.curRoom.getPlayer(packet.id());
+        if (player != null) {
+            player.setPairColor(packet.color());
+
+            if (this.client.getPanel() instanceof PairMakingPanel panel) {
+                SwingUtilities.invokeLater(panel::repaint);
+            }
+        }
     }
 
     @Override

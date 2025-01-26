@@ -3,6 +3,10 @@ package com.hamusuke.numguesser.network.listener.client.main;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
 
 public interface ClientPlayPacketListener extends ClientCommonPacketListener {
+    void handlePairMakingStart(PairMakingStartNotify packet);
+
+    void handlePairColorChange(PairColorChangeNotify packet);
+
     void handleStartGameRound(StartGameRoundNotify packet);
 
     void handleSeatingArrangement(SeatingArrangementNotify packet);

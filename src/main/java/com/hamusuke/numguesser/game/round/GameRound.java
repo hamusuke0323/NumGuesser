@@ -2,9 +2,9 @@ package com.hamusuke.numguesser.game.round;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.hamusuke.numguesser.game.NumGuesserGame;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.card.Card.CardColor;
+import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
@@ -25,9 +25,9 @@ import java.util.function.Supplier;
 public class GameRound {
     private final AtomicInteger idIncrementer = new AtomicInteger();
     private final Supplier<Integer> idGenerator = this.idIncrementer::getAndIncrement;
-    protected final NumGuesserGame game;
+    protected final NormalGameMode game;
     protected final List<ServerPlayer> players;
-    protected final List<Integer> seatingArrangement;
+    protected final List<Integer> seatingArrangement = Lists.newArrayList();
     protected final Random random = new SecureRandom();
     protected ServerPlayer parent;
     protected final List<Card> deck;
@@ -41,10 +41,9 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(NumGuesserGame game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
+    public GameRound(NormalGameMode game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
         this.game = game;
         this.players = players;
-        this.seatingArrangement = this.getSeatingArrangement();
         this.parent = parent;
         this.winner = parent;
 
@@ -68,13 +67,15 @@ public class GameRound {
         this.sendPacketToAllInGame(new ChatNotify("親は " + this.parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
 
+        this.setSeatingArrangement();
         this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArrangement));
         this.giveOutCards();
         this.startAttacking();
     }
 
-    protected List<Integer> getSeatingArrangement() {
-        return this.players.stream().map(Player::getId).toList();
+    protected void setSeatingArrangement() {
+        this.seatingArrangement.clear();
+        this.seatingArrangement.addAll(this.players.stream().map(Player::getId).toList());
     }
 
     protected void decideParent() {

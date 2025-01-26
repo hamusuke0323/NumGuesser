@@ -1,5 +1,7 @@
 package com.hamusuke.numguesser.network;
 
+import com.hamusuke.numguesser.game.pair.PlayerPair.PairColor;
+
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,6 +12,7 @@ public abstract class Player {
     protected final String name;
     protected boolean ready;
     protected int tipPoint;
+    protected PairColor pairColor = PairColor.BLUE;
 
     protected Player(String name) {
         this.name = name;
@@ -53,6 +56,14 @@ public abstract class Player {
 
     public boolean isReady() {
         return this.ready;
+    }
+
+    public PairColor getPairColor() {
+        return this.pairColor;
+    }
+
+    public void setPairColor(PairColor pairColor) {
+        this.pairColor = pairColor;
     }
 
     @Override

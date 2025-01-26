@@ -2,7 +2,7 @@ package com.hamusuke.numguesser.server.room;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.GameMode;
-import com.hamusuke.numguesser.game.NumGuesserGame;
+import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
@@ -26,7 +26,7 @@ public class ServerRoom extends Room {
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
     private final String password;
-    private NumGuesserGame game;
+    private NormalGameMode game;
     private ServerPlayer owner;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
@@ -61,11 +61,11 @@ public class ServerRoom extends Room {
 
         if (this.game != null) {
             this.game.tick();
+        }
 
-            if (this.game.getPlayingPlayers().isEmpty()) {
-                this.players.forEach(player -> player.setReady(false));
-                this.game = null;
-            }
+        if (this.game != null && this.game.getPlayingPlayers().isEmpty()) {
+            this.players.forEach(player -> player.setReady(false));
+            this.game = null;
         }
     }
 
@@ -76,7 +76,7 @@ public class ServerRoom extends Room {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = new NumGuesserGame(this, this.players);
+                    this.game = this.gameMode.gameCreator.createGame(this, this.players);
                     this.players.forEach(player -> {
                         player.sendPacket(new StartGameNotify());
                         new ServerPlayPacketListenerImpl(this.server, player.connection.getConnection(), player);
@@ -178,8 +178,20 @@ public class ServerRoom extends Room {
     public synchronized void exitGame(ServerPlayer player) {
         if (this.game != null) {
             this.game.leavePlayer(player);
-            player.sendPacket(new ExitGameSuccNotify());
-            new ServerRoomPacketListenerImpl(this.server, player.connection.getConnection(), player);
+            this.letPlayerExit(player);
+        }
+    }
+
+    private void letPlayerExit(ServerPlayer player) {
+        player.sendPacket(new ExitGameSuccNotify());
+        new ServerRoomPacketListenerImpl(this.server, player.connection.getConnection(), player);
+    }
+
+    public synchronized void abortGame() {
+        var tmp = this.game;
+        this.game = null;
+        if (tmp != null) {
+            tmp.getPlayingPlayers().forEach(this::letPlayerExit);
         }
     }
 
@@ -189,7 +201,7 @@ public class ServerRoom extends Room {
         }
     }
 
-    public NumGuesserGame getGame() {
+    public NormalGameMode getGame() {
         return this.game;
     }
 

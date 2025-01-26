@@ -1,7 +1,9 @@
-package com.hamusuke.numguesser.game;
+package com.hamusuke.numguesser.game.mode;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.round.GameRound;
+import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.StartGameRoundNotify;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
@@ -9,33 +11,33 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 import java.util.Collections;
 import java.util.List;
 
-public class NumGuesserGame {
-    private static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
-    private final ServerRoom room;
-    private GameRound round;
-    private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
-    private final List<ServerPlayer> playerList;
-    private boolean isFirstRound = true;
-    private int waitForForceExitGameTicks;
+public class NormalGameMode {
+    protected static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
+    protected final ServerRoom room;
+    protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
+    protected final List<ServerPlayer> playerList;
+    protected GameRound round;
+    protected boolean isFirstRound = true;
+    protected int waitForForceExitGameTicks;
 
-    public NumGuesserGame(ServerRoom room, List<ServerPlayer> players) {
+    public NormalGameMode(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
-        this.round = this.getFirstRound();
     }
 
     public void tick() {
         if (this.waitForForceExitGameTicks > 0) {
             this.waitForForceExitGameTicks--;
             if (this.waitForForceExitGameTicks <= 0) {
-                this.forceExitGame();
+                this.room.abortGame();
             }
         }
     }
 
     public void startGame() {
         if (this.isFirstRound) {
+            this.round = this.getFirstRound();
             this.isFirstRound = false;
             int point = this.round.getDefaultTipPointPerPlayer();
             this.players.forEach(p -> p.setTipPoint(point));
@@ -47,7 +49,7 @@ public class NumGuesserGame {
 
     public void startNextRound() {
         if (this.getPlayingPlayers().size() == 1) {
-            this.room.exitGame(this.getPlayingPlayers().get(0));
+            this.room.abortGame();
             return;
         }
 
@@ -59,17 +61,14 @@ public class NumGuesserGame {
         this.waitForForceExitGameTicks = AUTO_FORCE_EXIT_GAME_TICKS;
     }
 
-    private synchronized void forceExitGame() {
-        var copied = Lists.newArrayList(this.players);
-        for (var player : copied) {
-            this.room.exitGame(player); // Force exit
-        }
-    }
-
     public synchronized void leavePlayer(ServerPlayer player) {
         if (this.players.remove(player)) {
             this.round.onPlayerLeft(player);
         }
+    }
+
+    protected void sendPacketToAllInGame(Packet<? extends ClientCommonPacketListener> packet) {
+        this.players.forEach(p -> p.sendPacket(packet));
     }
 
     public void onCardSelect(ServerPlayer selector, int id) {
@@ -104,7 +103,7 @@ public class NumGuesserGame {
         return this.playerList;
     }
 
-    private GameRound getFirstRound() {
-        return this.room.getGameMode().gameRoundCreator.createGameRound(this, this.playerList, null);
+    protected GameRound getFirstRound() {
+        return new GameRound(this, this.playerList, null);
     }
 }
