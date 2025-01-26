@@ -195,12 +195,6 @@ public class ServerRoom extends Room {
         }
     }
 
-    public void onCancelCommand(ServerPlayer canceller) {
-        if (this.game != null) {
-            this.game.onCancelCommand(canceller);
-        }
-    }
-
     public NormalGameMode getGame() {
         return this.game;
     }

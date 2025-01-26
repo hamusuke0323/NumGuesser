@@ -28,6 +28,7 @@ import java.util.Map;
 public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl implements ClientPlayPacketListener {
     private final Map<AbstractClientPlayer, ClientPlayerDeck> playerDeckMap = Maps.newConcurrentMap();
     private final Map<Integer, AbstractClientCard> cardMap = Maps.newConcurrentMap();
+    private final Map<Integer, AbstractClientPlayer> cardPlayerMap = Maps.newConcurrentMap();
     @Nullable
     private AbstractClientCard curSelectedCard;
     private final List<Integer> serverPlayerIdList = Lists.newArrayList();
@@ -78,6 +79,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     public void handlePlayerNewDeck(PlayerNewDeckNotify packet) {
         this.playerDeckMap.clear();
         this.cardMap.clear();
+        this.cardPlayerMap.clear();
     }
 
     @Override
@@ -92,6 +94,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
                 .map(CardSerializer::toClientCard)
                 .forEach(card -> {
                     this.cardMap.put(card.getId(), card);
+                    this.cardPlayerMap.put(card.getId(), player);
                     deck.addCard(card);
                 });
 
@@ -115,10 +118,42 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
+    public void handleTossOrAttackSelection(TossOrAttackSelectionNotify packet) {
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onSelectTossOrAttack();
+        }
+
+        this.repaintGamePanel();
+    }
+
+    @Override
+    public void handleTossReq(TossReq packet) {
+        if (this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onTossReq();
+        }
+
+        this.repaintGamePanel();
+    }
+
+    @Override
+    public void handleTossNotify(TossNotify packet) {
+        var openedCard = packet.card().toClientCard();
+        var card = this.cardMap.get(openedCard.getId());
+        if (card == null) {
+            return;
+        }
+
+        card.setNum(openedCard.getNum());
+        card.tossed();
+
+        this.repaintGamePanel();
+    }
+
+    @Override
     public void handleCardForAttackSelect(CardForAttackSelectReq packet) {
         this.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
-            gamePanel.onSelectCardForAttackReq();
+            gamePanel.onSelectCardForAttackReq(packet.cancellable());
         }
 
         this.repaintGamePanel();
@@ -233,6 +268,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
         var card = packet.card().toClientCard();
         this.cardMap.put(card.getId(), card);
+        this.cardPlayerMap.put(card.getId(), player);
         deck.addCard(packet.index(), card);
         card.showNewLabel();
 
@@ -273,6 +309,10 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onReadyRsp();
         }
+    }
+
+    public Map<Integer, AbstractClientPlayer> getCardPlayerMap() {
+        return this.cardPlayerMap;
     }
 
     protected void repaintGamePanel() {

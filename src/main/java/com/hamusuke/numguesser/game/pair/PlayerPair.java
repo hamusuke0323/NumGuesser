@@ -1,10 +1,13 @@
 package com.hamusuke.numguesser.game.pair;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.network.Player;
 
 import java.awt.*;
+import java.util.List;
 import java.util.Map;
 
 public abstract class PlayerPair<P extends Player> {
@@ -32,7 +35,7 @@ public abstract class PlayerPair<P extends Player> {
         return this.color;
     }
 
-    public P getBuddyOf(P player) {
+    public P getBuddyFor(P player) {
         return this.left.equals(player) ? this.right : this.left;
     }
 
@@ -54,6 +57,17 @@ public abstract class PlayerPair<P extends Player> {
 
     public P right() {
         return this.right;
+    }
+
+    public List<P> getPlayers() {
+        List<P> players = Lists.newArrayList();
+        if (this.left != null) {
+            players.add(this.left);
+        }
+        if (this.right != null) {
+            players.add(this.right);
+        }
+        return ImmutableList.copyOf(players);
     }
 
     public enum PairColor {

@@ -17,6 +17,7 @@ public abstract class AbstractClientCard extends Card {
     @Nullable
     protected AbstractClientPlayer selectedBy;
     private int newLabelTicks;
+    protected boolean isTossed;
 
     public AbstractClientCard(CardColor cardColor) {
         super(cardColor);
@@ -43,7 +44,11 @@ public abstract class AbstractClientCard extends Card {
     public abstract void setNum(int num);
 
     public boolean canBeSeen() {
-        return this.isOpened();
+        return this.isOpened() || this.isTossed;
+    }
+
+    public void tossed() {
+        this.isTossed = true;
     }
 
     public void select(@Nullable AbstractClientPlayer selectedBy) {
@@ -120,6 +125,8 @@ public abstract class AbstractClientCard extends Card {
                 drawCenteredString(g2, "NEW", b.getCenterX(), 10 + offsetWithAttackerCard);
             } else if (this.card.isOpened() && this.card instanceof LocalCard) {
                 drawCenteredString(g2, "オープン", b.getCenterX(), 10 + offsetWithAttackerCard);
+            } else if (this.card.isTossed && this.card instanceof RemoteCard) {
+                drawCenteredString(g2, "トス", b.getCenterX(), 10 + offsetWithAttackerCard);
             }
 
             if (this.card.canBeSeen()) {

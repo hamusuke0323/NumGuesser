@@ -83,6 +83,15 @@ public class NormalGameMode {
         this.round.onCancelCommand(canceller);
     }
 
+    public void onTossSelected(ServerPlayer selector) {
+    }
+
+    public void onAttackSelected(ServerPlayer selector) {
+    }
+
+    public void onToss(ServerPlayer tosser, int cardId) {
+    }
+
     public void onAttack(ServerPlayer player, int id, int num) {
         this.round.onAttack(player, id, num);
     }
@@ -97,6 +106,10 @@ public class NormalGameMode {
 
     public void ready() {
         this.round.ready();
+    }
+
+    protected GameRound getRound() {
+        return this.round;
     }
 
     public List<ServerPlayer> getPlayingPlayers() {

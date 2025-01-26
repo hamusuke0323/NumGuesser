@@ -4,18 +4,17 @@ import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 
-public record CardForAttackSelectReq(boolean cancellable) implements Packet<ClientPlayPacketListener> {
-    public CardForAttackSelectReq(IntelligentByteBuf buf) {
-        this(buf.readBoolean());
+public record TossReq() implements Packet<ClientPlayPacketListener> {
+    public TossReq(IntelligentByteBuf buf) {
+        this();
     }
 
     @Override
     public void write(IntelligentByteBuf buf) {
-        buf.writeBoolean(this.cancellable);
     }
 
     @Override
     public void handle(ClientPlayPacketListener listener) {
-        listener.handleCardForAttackSelect(this);
+        listener.handleTossReq(this);
     }
 }

@@ -15,10 +15,7 @@ import com.hamusuke.numguesser.util.Util;
 
 import javax.annotation.Nullable;
 import java.security.SecureRandom;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -123,8 +120,13 @@ public class GameRound {
     }
 
     protected void selectCardForAttack() {
+        this.selectCardForAttack(CancelOperation.DO_NOTHING);
+    }
+
+    protected void selectCardForAttack(CancelOperation cancelOperation) {
         this.gameState = GameState.SELECTING_CARD_FOR_ATTACKING;
-        this.curAttacker.sendPacket(new CardForAttackSelectReq());
+        this.cancelOperation = cancelOperation;
+        this.curAttacker.sendPacket(new CardForAttackSelectReq(cancelOperation.isCancellable()));
         this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerSelectCardForAttackNotify(this.curAttacker));
     }
 
@@ -180,13 +182,14 @@ public class GameRound {
         }
     }
 
-    public void onCardSelect(ServerPlayer selector, int id) {
-        if (this.gameState != GameState.ATTACKING) {
+    public void onCardSelect(ServerPlayer selector, int cardId) {
+        if (this.gameState != GameState.ATTACKING || this.curAttacker != selector) {
             return;
         }
 
-        if (this.curAttacker == selector) {
-            this.sendPacketToAllInGame(new PlayerCardSelectionSyncNotify(this.curAttacker.getId(), id));
+        var cardHolder = this.cardIdPlayerMap.get(cardId);
+        if (this.curAttacker != cardHolder) { // attacker must select the others' cards.
+            this.sendPacketToAllInGame(new PlayerCardSelectionSyncNotify(this.curAttacker.getId(), cardId));
         }
     }
 
@@ -197,7 +200,7 @@ public class GameRound {
         }
 
         var card = this.ownCardIdMap.get(id);
-        if (card == null || card.isOpened()) {
+        if (card == null || card.isOpened() || !this.canAttack(card)) {
             return;
         }
 
@@ -209,6 +212,10 @@ public class GameRound {
         } else {
             this.onAttackFailed();
         }
+    }
+
+    protected boolean canAttack(Card card) {
+        return this.cardIdPlayerMap.get(card.getId()) != this.curAttacker;
     }
 
     protected void sendAttackDetailToAll(ServerPlayer attacker, int num, ServerPlayer beAttackedPlayer) {
@@ -318,7 +325,14 @@ public class GameRound {
     }
 
     protected void endFinalRound() {
+        this.showWonMessage();
         this.game.onFinalRoundEnded();
+    }
+
+    protected void showWonMessage() {
+        this.players.stream().max(Comparator.comparingInt(Player::getTipPoint)).ifPresent(winner -> {
+            this.sendPacketToAllInGame(new ChatNotify(winner.getDisplayName() + " が" + winner.getTipPoint() + "点で勝利しました！"));
+        });
     }
 
     protected void giveTipToRoundWinner() {

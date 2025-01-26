@@ -14,20 +14,19 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
     }
 
     @Override
-    public void handleClientCommand(ClientCommandReq packet) {
+    public synchronized void handleClientCommand(ClientCommandReq packet) {
+        var game = this.room.getGame();
+        if (game == null) {
+            return;
+        }
+
         switch (packet.command()) {
             case EXIT_GAME -> this.room.exitGame(this.player);
-            case CANCEL -> this.room.onCancelCommand(this.player);
-            case CONTINUE_ATTACKING -> {
-                if (this.room.getGame() != null) {
-                    this.room.getGame().continueAttacking(this.player);
-                }
-            }
-            case STAY -> {
-                if (this.room.getGame() != null) {
-                    this.room.getGame().stay(this.player);
-                }
-            }
+            case CANCEL -> game.onCancelCommand(this.player);
+            case LET_ALLY_TOSS -> game.onTossSelected(this.player);
+            case ATTACK_WITHOUT_TOSS -> game.onAttackSelected(this.player);
+            case CONTINUE_ATTACKING -> game.continueAttacking(this.player);
+            case STAY -> game.stay(this.player);
         }
     }
 
@@ -55,6 +54,15 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
         }
 
         this.room.getGame().onCardForAttackSelect(this.player, packet.id());
+    }
+
+    @Override
+    public synchronized void handleToss(TossRsp packet) {
+        if (this.room.getGame() == null) {
+            return;
+        }
+
+        this.room.getGame().onToss(this.player, packet.cardId());
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.hamusuke.numguesser.game.mode;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.pair.PlayerPair.PairColor;
@@ -18,17 +17,14 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PairPlayGameMode extends NormalGameMode {
-    private final Set<ServerPlayer> immutableMember;
     private final ServerPlayerPair bluePair = new ServerPlayerPair(PairColor.BLUE);
     private final ServerPlayerPair redPair = new ServerPlayerPair(PairColor.RED);
     private boolean hasMadeTeam;
 
     public PairPlayGameMode(ServerRoom room, List<ServerPlayer> players) {
         super(room, players);
-        this.immutableMember = ImmutableSet.copyOf(players);
     }
 
     @Override
@@ -40,6 +36,21 @@ public class PairPlayGameMode extends NormalGameMode {
         }
 
         super.startGame();
+    }
+
+    @Override
+    public void onTossSelected(ServerPlayer selector) {
+        this.getRound().onTossSelected(selector);
+    }
+
+    @Override
+    public void onAttackSelected(ServerPlayer selector) {
+        this.getRound().onAttackSelected(selector);
+    }
+
+    @Override
+    public void onToss(ServerPlayer tosser, int cardId) {
+        this.getRound().onToss(tosser, cardId);
     }
 
     public void onPairColorChange(PairColorChangeReq req) {
@@ -84,6 +95,11 @@ public class PairPlayGameMode extends NormalGameMode {
         return new PairGameRound(this, this.players, null);
     }
 
+    @Override
+    protected PairGameRound getRound() {
+        return (PairGameRound) super.getRound();
+    }
+
     public ServerPlayerPair getBluePair() {
         return this.bluePair;
     }
@@ -115,22 +131,10 @@ public class PairPlayGameMode extends NormalGameMode {
         }
     }
 
-    public boolean hasAlreadyLeft(ServerPlayer player) {
-        return this.immutableMember.contains(player) && !this.players.contains(player);
-    }
-
     @Override
     public synchronized void leavePlayer(ServerPlayer player) {
-        boolean flag = this.players.remove(player);
-
-        if (!this.hasMadeTeam) {
-            this.sendPacketToAllInGame(new ChatNotify("このゲームモードは少なくとも" + this.room.getGameMode().minPlayer + "人必要です"));
-            this.room.abortGame();
-            return;
-        }
-
-        if (flag) {
-            this.round.onPlayerLeft(player);
-        }
+        this.players.remove(player);
+        this.sendPacketToAllInGame(new ChatNotify("このゲームモードは少なくとも" + this.room.getGameMode().minPlayer + "人必要です"));
+        this.room.abortGame();
     }
 }

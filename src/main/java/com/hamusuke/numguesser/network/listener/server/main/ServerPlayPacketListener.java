@@ -9,6 +9,8 @@ public interface ServerPlayPacketListener extends ServerCommonPacketListener {
 
     void handleCardForAttackSelect(CardForAttackSelectRsp packet);
 
+    void handleToss(TossRsp packet);
+
     void handleAttack(AttackReq packet);
 
     void handlePairColorChange(PairColorChangeReq packet);

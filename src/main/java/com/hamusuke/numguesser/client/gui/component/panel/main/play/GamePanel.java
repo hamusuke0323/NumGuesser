@@ -6,13 +6,12 @@ import com.hamusuke.numguesser.client.game.card.LocalCard;
 import com.hamusuke.numguesser.client.gui.component.list.CardList;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
+import com.hamusuke.numguesser.client.network.listener.main.ClientPlayPacketListenerImpl;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
+import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.AttackReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardForAttackSelectRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.CardSelectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
 import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq.Command;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
@@ -27,12 +26,14 @@ import java.util.List;
 public class GamePanel extends Panel {
     private final List<CardList> remoteCards = Lists.newArrayList();
     private JXLabel statusLabel;
-    private JXPanel cardShowCaseForFriend;
     private JXPanel cardShowCase;
     @Nullable
     private JXPanel curShownCardPanel;
     private JXButton attackBtn;
     private JXButton cancelBtn;
+    private JXButton letAllyToss;
+    private JXButton attackWithoutToss;
+    private JXButton toss;
     private JXButton selectThisCardBtn;
     private JXButton continueBtn;
     private JXButton stayBtn;
@@ -40,7 +41,6 @@ public class GamePanel extends Panel {
     private JXButton backBtn;
     @Nullable
     private AbstractClientCard selectedCard;
-    private State state = State.IDLE;
 
     @Override
     public void init() {
@@ -52,8 +52,6 @@ public class GamePanel extends Panel {
         this.statusLabel = new JXLabel();
         this.statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        this.cardShowCaseForFriend = new JXPanel();
-
         this.cardShowCase = new JXPanel();
 
         this.attackBtn = new JXButton("アタック");
@@ -62,6 +60,18 @@ public class GamePanel extends Panel {
         this.cancelBtn = new JXButton("キャンセル");
         this.cancelBtn.addActionListener(e -> this.onCancelBtnPressed());
         this.cancelBtn.setVisible(false);
+
+        this.letAllyToss = new JXButton("トスしてもらう");
+        this.letAllyToss.addActionListener(e -> this.letAllyToss());
+        this.letAllyToss.setVisible(false);
+
+        this.attackWithoutToss = new JXButton("アタック");
+        this.attackWithoutToss.addActionListener(e -> this.attackWithoutToss());
+        this.attackWithoutToss.setVisible(false);
+
+        this.toss = new JXButton("このカードをトスする");
+        this.toss.addActionListener(e -> this.toss());
+        this.toss.setVisible(false);
 
         this.selectThisCardBtn = new JXButton("このカードでアタックする");
         this.selectThisCardBtn.addActionListener(e -> this.selectThisCardForAttack());
@@ -82,16 +92,18 @@ public class GamePanel extends Panel {
         this.backBtn.setVisible(false);
         this.backBtn.addActionListener(this);
 
-        addButton(commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.cardShowCaseForFriend, commandPanelLayout, 0, 1, 1, 1, 1.0D);
-        addButton(commandPanel, this.cardShowCase, commandPanelLayout, 1, 1, 1, 1, 1.0D);
-        addButton(commandPanel, this.selectThisCardBtn, commandPanelLayout, 0, 2, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.attackBtn, commandPanelLayout, 0, 3, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.cancelBtn, commandPanelLayout, 0, 4, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.continueBtn, commandPanelLayout, 0, 5, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.stayBtn, commandPanelLayout, 0, 6, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.readyBtn, commandPanelLayout, 0, 7, 2, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.backBtn, commandPanelLayout, 0, 8, 2, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.cardShowCase, commandPanelLayout, 0, 1, 1, 1, 1.0D);
+        addButton(commandPanel, this.letAllyToss, commandPanelLayout, 0, 2, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.attackWithoutToss, commandPanelLayout, 0, 3, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.toss, commandPanelLayout, 0, 4, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.selectThisCardBtn, commandPanelLayout, 0, 5, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.attackBtn, commandPanelLayout, 0, 6, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.cancelBtn, commandPanelLayout, 0, 7, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.continueBtn, commandPanelLayout, 0, 8, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.stayBtn, commandPanelLayout, 0, 9, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.readyBtn, commandPanelLayout, 0, 10, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.backBtn, commandPanelLayout, 0, 11, 1, 1, 1.0D, 0.05D);
 
         this.add(commandPanel, BorderLayout.CENTER);
     }
@@ -114,17 +126,65 @@ public class GamePanel extends Panel {
         this.client.getConnection().sendPacket(new CardForAttackSelectRsp(this.selectedCard.getId()));
     }
 
-    public void onSelectCardForAttackReq() {
-        this.state = State.SELECTING_CARD_FOR_ATTACKING;
+    public void onSelectCardForAttackReq(boolean cancellable) {
         this.selectedCard = null;
         this.setStatusLabel("ふせたカードの中から、アタックするためのカードを選んでください");
         this.setCardShowCase(null);
         this.setAttackBtnEnabled(false);
         this.continueBtn.setVisible(false);
         this.stayBtn.setVisible(false);
-        this.cancelBtn.setVisible(false);
+        this.cancelBtn.setVisible(cancellable);
+        this.letAllyToss.setVisible(false);
+        this.attackWithoutToss.setVisible(false);
+        this.toss.setVisible(false);
 
         this.selectThisCardBtn.setVisible(true);
+    }
+
+    public void onSelectTossOrAttack() {
+        this.selectedCard = null;
+        this.setStatusLabel("トスをしてもらうかアタックするかを選んでください");
+        this.setCardShowCase(null);
+        this.setAttackBtnEnabled(false);
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.selectThisCardBtn.setVisible(false);
+        this.toss.setVisible(false);
+
+        this.letAllyToss.setVisible(true);
+        this.attackWithoutToss.setVisible(true);
+    }
+
+    private void letAllyToss() {
+        this.client.getConnection().sendPacket(new ClientCommandReq(Command.LET_ALLY_TOSS));
+    }
+
+    private void attackWithoutToss() {
+        this.client.getConnection().sendPacket(new ClientCommandReq(Command.ATTACK_WITHOUT_TOSS));
+    }
+
+    public void onTossReq() {
+        this.selectedCard = null;
+        this.setStatusLabel("味方にトスするカードを選んでください");
+        this.setCardShowCase(null);
+        this.setAttackBtnEnabled(false);
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.selectThisCardBtn.setVisible(false);
+        this.letAllyToss.setVisible(false);
+        this.attackWithoutToss.setVisible(false);
+
+        this.toss.setVisible(true);
+    }
+
+    private void toss() {
+        if (this.selectedCard == null || !this.client.clientPlayer.getDeck().contains(this.selectedCard) || this.selectedCard.isOpened()) {
+            return;
+        }
+
+        this.client.getConnection().sendPacket(new TossRsp(this.selectedCard.getId()));
     }
 
     public void onRemotePlayerSelectCardForAttack(RemotePlayer remotePlayer) {
@@ -133,11 +193,11 @@ public class GamePanel extends Panel {
         this.continueBtn.setVisible(false);
         this.stayBtn.setVisible(false);
         this.cancelBtn.setVisible(false);
+        this.toss.setVisible(false);
         this.setCardShowCase(null);
     }
 
     public void prepareAttacking(AbstractClientCard card, boolean cancellable) {
-        this.state = State.ATTACKING;
         this.setStatusLabel("あなたの番です。アタックしてください");
         this.setCardShowCase(card);
         this.setAttackBtnEnabled(true);
@@ -200,7 +260,7 @@ public class GamePanel extends Panel {
 
     private void attack() {
         var card = this.selectedCard;
-        if (card == null || card.isOpened()) {
+        if (card == null || card.isOpened() || !this.isAttackable(card)) {
             return;
         }
 
@@ -238,6 +298,19 @@ public class GamePanel extends Panel {
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setLocationRelativeTo(this.client.getMainWindow());
         dialog.setVisible(true);
+    }
+
+    private boolean isAttackable(AbstractClientCard card) {
+        if (this.client.curRoom.getGameMode() == GameMode.NORMAL_GAME) {
+            return !this.client.clientPlayer.getDeck().contains(card);
+        }
+
+        if (this.client.listener instanceof ClientPlayPacketListenerImpl play) {
+            var cardHolder = play.getCardPlayerMap().get(card.getId());
+            return cardHolder != null && this.client.clientPlayer.getPairColor() != cardHolder.getPairColor();
+        }
+
+        return false;
     }
 
     public void onEndRound(boolean isFinalRound) {
@@ -289,11 +362,8 @@ public class GamePanel extends Panel {
     private void onCardSelected(CardList list) {
         this.clearSelection(list);
         var card = this.getSelectedCardOnlyRemote();
-        if (this.state == State.SELECTING_CARD_FOR_ATTACKING) {
-            if (card == null && list.hasFocus() && !list.isSelectionEmpty()) {
-                this.selectedCard = (AbstractClientCard) list.getSelectedValue();
-            }
-
+        if (card == null && list.hasFocus() && !list.isSelectionEmpty()) {
+            this.selectedCard = (AbstractClientCard) list.getSelectedValue();
             return;
         }
 
@@ -372,11 +442,5 @@ public class GamePanel extends Panel {
     @Override
     public void actionPerformed(ActionEvent e) {
         this.client.getConnection().sendPacket(new ClientCommandReq(Command.EXIT_GAME));
-    }
-
-    private enum State {
-        IDLE,
-        SELECTING_CARD_FOR_ATTACKING,
-        ATTACKING,
     }
 }

@@ -4,27 +4,18 @@ import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.listener.server.main.ServerPlayPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 
-public record ClientCommandReq(Command command) implements Packet<ServerPlayPacketListener> {
-    public ClientCommandReq(IntelligentByteBuf buf) {
-        this(buf.readEnum(Command.class));
+public record TossRsp(int cardId) implements Packet<ServerPlayPacketListener> {
+    public TossRsp(IntelligentByteBuf buf) {
+        this(buf.readVarInt());
     }
 
     @Override
     public void write(IntelligentByteBuf buf) {
-        buf.writeEnum(this.command);
+        buf.writeVarInt(this.cardId);
     }
 
     @Override
     public void handle(ServerPlayPacketListener listener) {
-        listener.handleClientCommand(this);
-    }
-
-    public enum Command {
-        EXIT_GAME,
-        CANCEL,
-        LET_ALLY_TOSS,
-        ATTACK_WITHOUT_TOSS,
-        CONTINUE_ATTACKING,
-        STAY,
+        listener.handleToss(this);
     }
 }
