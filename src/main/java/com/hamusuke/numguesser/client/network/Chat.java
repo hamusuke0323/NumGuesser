@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.client.network;
 
 import com.hamusuke.numguesser.client.NumGuesser;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ChatReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ChatReq;
 import org.jdesktop.swingx.JXTextArea;
 import org.jdesktop.swingx.JXTextField;
 

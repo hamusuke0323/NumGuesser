@@ -3,10 +3,10 @@ package com.hamusuke.numguesser.game.round;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.TossNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.TossOrAttackSelectionNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.TossReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossOrAttackSelectionNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossReq;
 import com.hamusuke.numguesser.server.game.ServerPlayerPair;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -36,7 +36,7 @@ public class PairGameRound extends GameRound {
 
     protected void selectTossOrAttack() {
         this.gameState = GameState.SELECTING_TOSS_OR_ATTACKING;
-        this.curAttacker.sendPacket(new TossOrAttackSelectionNotify());
+        this.curAttacker.sendPacket(TossOrAttackSelectionNotify.INSTANCE);
     }
 
     public void onTossSelected(ServerPlayer selector) {
@@ -51,7 +51,7 @@ public class PairGameRound extends GameRound {
         }
 
         this.gameState = GameState.TOSSING;
-        buddy.sendPacket(new TossReq());
+        buddy.sendPacket(TossReq.INSTANCE);
     }
 
     public void onToss(ServerPlayer tosser, int cardId) {

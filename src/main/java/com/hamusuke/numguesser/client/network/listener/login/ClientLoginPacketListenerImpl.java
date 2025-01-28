@@ -7,19 +7,23 @@ import com.hamusuke.numguesser.client.gui.component.panel.lobby.LobbyPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.menu.ServerListPanel;
 import com.hamusuke.numguesser.client.network.listener.lobby.ClientLobbyPacketListenerImpl;
 import com.hamusuke.numguesser.client.network.player.LocalPlayer;
+import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.login.ClientLoginPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EncryptionSetupReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.AliveReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.Cipher;
 import java.util.function.Consumer;
 
-public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener {
+public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener, TickablePacketListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final NumGuesser client;
     private final Consumer<String> statusConsumer;
@@ -36,7 +40,7 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
     @Override
     public void tick() {
         if (this.waitingAuthComplete && this.ticks % 20 == 0) {
-            this.connection.sendPacket(new AliveReq());
+            this.connection.sendPacket(AliveReq.INSTANCE);
         }
 
         this.ticks++;
@@ -59,7 +63,7 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
         }
 
         this.statusConsumer.accept("通信を暗号化しています...");
-        this.connection.sendPacket(req, future -> this.connection.setupEncryption(cipher, cipher2));
+        this.connection.sendPacket(req, PacketSendListener.thenRun(() -> this.connection.setEncryptionKey(cipher, cipher2)));
     }
 
     @Override
@@ -69,8 +73,9 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
         this.client.clientPlayer = new LocalPlayer(packet.name());
         this.client.clientPlayer.setId(packet.id());
         var listener = new ClientLobbyPacketListenerImpl(this.client, this.connection);
-        this.connection.setListener(listener);
-        this.connection.setProtocol(packet.nextProtocol());
+        this.connection.setupInboundProtocol(LobbyProtocols.CLIENTBOUND, listener);
+        this.connection.sendPacket(LobbyJoinedNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(LobbyProtocols.SERVERBOUND);
         this.client.setPanel(new LobbyPanel());
     }
 
@@ -81,7 +86,7 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
 
     @Override
     public void handleCompression(LoginCompressionNotify packet) {
-        this.connection.setCompression(packet.threshold(), false);
+        this.connection.setupCompression(packet.threshold(), false);
     }
 
     @Override
@@ -96,11 +101,16 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         var list = new ServerListPanel();
         var panel = msg.isEmpty() ? list : new OkPanel(list, "エラー", msg);
         this.client.getMainWindow().reset();
         this.client.setPanel(panel);
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override

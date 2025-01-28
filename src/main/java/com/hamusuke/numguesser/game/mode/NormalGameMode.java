@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.round.GameRound;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.StartGameRoundNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.StartGameRoundNotify;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
@@ -43,7 +43,7 @@ public class NormalGameMode {
             this.players.forEach(p -> p.setTipPoint(point));
         }
 
-        this.round.sendPacketToAllInGame(new StartGameRoundNotify());
+        this.round.sendPacketToAllInGame(StartGameRoundNotify.INSTANCE);
         this.round.startRound();
     }
 

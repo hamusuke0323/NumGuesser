@@ -1,13 +1,13 @@
 package com.hamusuke.numguesser.server.network.listener.login;
 
+import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EncryptionSetupReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.network.listener.lobby.ServerLobbyPacketListenerImpl;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Function;
 
-public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener {
+public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener, TickablePacketListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int TIMEOUT_TICKS = 600;
     private static final int ENCRYPTION_WAIT_TICKS = 60;
@@ -82,29 +82,37 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
     }
 
     public void acceptPlayer() {
+        if (this.state == State.PROTOCOL_SWITCHING) {
+            return;
+        }
+
         this.state = State.ACCEPTED;
         if (this.server.getCompressionThreshold() >= 0) {
-            this.connection.sendPacket(new LoginCompressionNotify(this.server.getCompressionThreshold()), future -> {
-                this.connection.setCompression(this.server.getCompressionThreshold(), true);
-            });
+            this.connection.sendPacket(new LoginCompressionNotify(this.server.getCompressionThreshold()), PacketSendListener.thenRun(() -> {
+                this.connection.setupCompression(this.server.getCompressionThreshold(), true);
+            }));
         }
 
         if (this.server.getPlayerManager().canJoin(this.serverPlayer)) {
+            this.state = State.PROTOCOL_SWITCHING;
             this.connection.sendPacket(new LoginSuccessNotify(this.serverPlayer));
-            new ServerLobbyPacketListenerImpl(this.server, this.connection, this.serverPlayer);
-            this.server.getPlayerManager().addPlayer(this.serverPlayer);
         } else {
             this.disconnect();
         }
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         LOGGER.info("{} lost connection", this.getConnectionInfo());
     }
 
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
+    }
+
     public String getConnectionInfo() {
-        return String.valueOf(this.connection.getAddress());
+        return String.valueOf(this.connection.getLoggableAddress(true));
     }
 
     @Override
@@ -143,7 +151,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
             var secretKey = packet.decryptSecretKey(privateKey);
             var cipher = NetworkEncryptionUtil.cipherFromKey(2, secretKey);
             var cipher2 = NetworkEncryptionUtil.cipherFromKey(1, secretKey);
-            this.connection.setupEncryption(cipher, cipher2);
+            this.connection.setEncryptionKey(cipher, cipher2);
             this.state = State.ENTER_NAME;
             this.encWaitTicks = ENCRYPTION_WAIT_TICKS;
         } catch (Exception e) {
@@ -153,7 +161,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
 
     @Override
     public void handlePing(AliveReq packet) {
-        this.connection.sendPacket(new AliveRsp());
+        this.connection.sendPacket(AliveRsp.INSTANCE);
     }
 
     @Override
@@ -170,6 +178,15 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
             case DUPLICATED_NAME, INVALID_CHARS_IN_NAME ->
                     this.connection.sendPacket(new EnterNameReq(res.messageFactory.apply(packet.name())));
         }
+    }
+
+    @Override
+    public void handleLobbyJoined(LobbyJoinedNotify packet) {
+        Validate.validState(this.state == State.PROTOCOL_SWITCHING, "Unexpected lobby joined packet");
+
+        this.connection.setupOutboundProtocol(LobbyProtocols.CLIENTBOUND);
+        new ServerLobbyPacketListenerImpl(this.server, this.connection, this.serverPlayer);
+        this.server.getPlayerManager().addPlayer(this.serverPlayer);
     }
 
     private LoginResult tryLogin(String name) {
@@ -189,7 +206,8 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener 
         ENCRYPTION,
         ENTER_NAME,
         READY,
-        ACCEPTED
+        ACCEPTED,
+        PROTOCOL_SWITCHING,
     }
 
     private enum LoginResult {

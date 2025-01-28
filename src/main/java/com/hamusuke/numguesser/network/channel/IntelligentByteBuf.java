@@ -2,11 +2,12 @@ package com.hamusuke.numguesser.network.channel;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.hamusuke.numguesser.network.Utf8String;
 import com.hamusuke.numguesser.network.VarInt;
+import com.hamusuke.numguesser.network.VarLong;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.handler.codec.DecoderException;
-import io.netty.handler.codec.EncoderException;
 import io.netty.util.ByteProcessor;
 
 import java.io.IOException;
@@ -18,7 +19,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
@@ -60,8 +60,8 @@ public class IntelligentByteBuf extends ByteBuf {
         map.entrySet().forEach(e -> writer.accept(e, this));
     }
 
-    public <K, V> Map<K, V> readSimpleMap(Function<IntelligentByteBuf, K> keyReader, Function<IntelligentByteBuf, V> valueReader, Function<Map<K, V>, Map<K, V>> mapTransformer) {
-        return this.readMap(keyReader, valueReader, mapTransformer);
+    public static byte[] readByteArray(ByteBuf buf) {
+        return readByteArray(buf, buf.readableBytes());
     }
 
     public <M extends Map<K, V>, K, V> M readMap(Function<IntelligentByteBuf, K> keyReader, Function<IntelligentByteBuf, V> valueReader, Function<Map<K, V>, M> mapTransformer) {
@@ -77,24 +77,36 @@ public class IntelligentByteBuf extends ByteBuf {
         return VarInt.read(this.parent);
     }
 
+    public static void writeByteArray(ByteBuf buf, byte[] bytes) {
+        VarInt.write(buf, bytes.length);
+        buf.writeBytes(bytes);
+    }
+
+    public static byte[] readByteArray(ByteBuf buf, int size) {
+        int i = VarInt.read(buf);
+        if (i > size) {
+            throw new DecoderException("ByteArray with size " + i + " is bigger than allowed " + size);
+        } else {
+            byte[] abyte = new byte[i];
+            buf.readBytes(abyte);
+            return abyte;
+        }
+    }
+
+    public <K, V> Map<K, V> readJustMap(Function<IntelligentByteBuf, K> keyReader, Function<IntelligentByteBuf, V> valueReader, Function<Map<K, V>, Map<K, V>> mapTransformer) {
+        return this.readMap(keyReader, valueReader, mapTransformer);
+    }
+
     public byte[] readByteArray() {
-        return this.readByteArray(this.readableBytes());
+        return readByteArray(this);
     }
 
     public void writeByteArray(byte[] array) {
-        this.writeVarInt(array.length);
-        this.writeBytes(array);
+        writeByteArray(this, array);
     }
 
     public byte[] readByteArray(int maxSize) {
-        int i = this.readVarInt();
-        if (i > maxSize) {
-            throw new DecoderException("ByteArray with size " + i + " is bigger than allowed " + maxSize);
-        } else {
-            byte[] bs = new byte[i];
-            this.readBytes(bs);
-            return bs;
-        }
+        return readByteArray(this, maxSize);
     }
 
     public IntelligentByteBuf writeVarInt(int value) {
@@ -102,25 +114,20 @@ public class IntelligentByteBuf extends ByteBuf {
         return this;
     }
 
+    public void writeVarLong(long l) {
+        VarLong.write(this.parent, l);
+    }
+
+    public long readVarLong() {
+        return VarLong.read(this.parent);
+    }
+
     public String readString() {
         return this.readString(32767);
     }
 
     public String readString(int maxLength) {
-        int i = this.readVarInt();
-        if (i > maxLength * 4) {
-            throw new DecoderException("The received encoded string buffer length is longer than maximum allowed (" + i + " > " + maxLength * 4 + ")");
-        } else if (i < 0) {
-            throw new DecoderException("The received encoded string buffer length is less than zero! Weird string!");
-        } else {
-            var string = this.toString(this.readerIndex(), i, StandardCharsets.UTF_8);
-            this.readerIndex(this.readerIndex() + i);
-            if (string.length() > maxLength) {
-                throw new DecoderException("The received string length is longer than maximum allowed (" + i + " > " + maxLength + ")");
-            } else {
-                return string;
-            }
-        }
+        return Utf8String.read(this, maxLength);
     }
 
     public void writeString(String string) {
@@ -128,13 +135,7 @@ public class IntelligentByteBuf extends ByteBuf {
     }
 
     public void writeString(String string, int maxLength) {
-        var bs = string.getBytes(StandardCharsets.UTF_8);
-        if (bs.length > maxLength) {
-            throw new EncoderException("String too big (was " + bs.length + " bytes encoded, max " + maxLength + ")");
-        } else {
-            this.writeVarInt(bs.length);
-            this.writeBytes(bs);
-        }
+        Utf8String.write(this, string, maxLength);
     }
 
     public ByteBuf getParent() {

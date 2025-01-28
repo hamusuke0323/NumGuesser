@@ -13,14 +13,17 @@ import com.hamusuke.numguesser.client.network.listener.main.ClientRoomPacketList
 import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.lobby.ClientLobbyPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.EnterPasswordRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.LobbyPingReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.EnterPasswordRsp;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.LobbyPingReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.RoomJoinedNotify;
+import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
 
 import javax.swing.*;
 
-public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener {
+public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener, TickablePacketListener {
     private final NumGuesser client;
     private final Connection connection;
     private final LocalPlayer clientPlayer;
@@ -36,7 +39,7 @@ public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener 
     public void tick() {
         this.tickCount++;
         if (this.tickCount % 20 == 0) {
-            this.connection.sendPacket(new LobbyPingReq());
+            this.connection.sendPacket(LobbyPingReq.INSTANCE);
         }
     }
 
@@ -70,8 +73,9 @@ public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener 
         this.client.chat = new Chat(this.client);
         this.client.setPanel(new RoomPanel());
         var listener = new ClientRoomPacketListenerImpl(this.client, this.connection);
-        this.connection.setListener(listener);
-        this.connection.setProtocol(packet.nextProtocol());
+        this.connection.setupInboundProtocol(RoomProtocols.CLIENTBOUND, listener);
+        this.connection.sendPacket(RoomJoinedNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(RoomProtocols.SERVERBOUND);
     }
 
     @Override
@@ -95,12 +99,17 @@ public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener 
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         this.client.disconnect();
         var list = new ServerListPanel();
         var panel = msg.isEmpty() ? list : new OkPanel(list, "エラー", msg);
         this.client.getMainWindow().reset();
         this.client.setPanel(panel);
         this.client.clientPlayer = null;
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 }

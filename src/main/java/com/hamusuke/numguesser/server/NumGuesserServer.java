@@ -8,7 +8,7 @@ import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.command.CommandSource;
 import com.hamusuke.numguesser.command.Commands;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.server.gui.NumGuesserServerGui;
 import com.hamusuke.numguesser.server.network.ServerPlayer;

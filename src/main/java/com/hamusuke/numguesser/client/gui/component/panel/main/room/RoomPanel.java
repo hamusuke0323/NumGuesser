@@ -4,8 +4,8 @@ import com.hamusuke.numguesser.client.gui.component.panel.OwnerChangeListener;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.GameModeSelectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.GameModeSelectReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyReq;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXComboBox;
 import org.jdesktop.swingx.JXLabel;
@@ -133,6 +133,6 @@ public class RoomPanel extends Panel implements OwnerChangeListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        this.client.getConnection().sendPacket(new ReadyReq());
+        this.client.getConnection().sendPacket(ReadyReq.INSTANCE);
     }
 }

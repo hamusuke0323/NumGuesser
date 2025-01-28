@@ -2,13 +2,13 @@ package com.hamusuke.numguesser.util;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PingReq;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.RTTChangeNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.LobbyPongRsp;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.AliveRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.PongRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.LobbyPingReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.PongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.LobbyPongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.LobbyPingReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.AliveRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.AliveReq;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

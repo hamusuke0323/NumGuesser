@@ -11,13 +11,16 @@ import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.PongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.LeftRoomNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.PongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 
 import javax.swing.*;
 
-public abstract class ClientCommonPacketListenerImpl implements ClientCommonPacketListener {
+public abstract class ClientCommonPacketListenerImpl implements ClientCommonPacketListener, TickablePacketListener {
     protected final Connection connection;
     protected final NumGuesser client;
     protected LocalPlayer clientPlayer;
@@ -128,8 +131,9 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     public void handleLeaveRoomSucc(LeaveRoomSuccNotify packet) {
         this.client.getMainWindow().reset(false);
         var listener = new ClientLobbyPacketListenerImpl(this.client, this.connection);
-        this.connection.setListener(listener);
-        this.connection.setProtocol(packet.nextProtocol());
+        this.connection.setupInboundProtocol(LobbyProtocols.CLIENTBOUND, listener);
+        this.connection.sendPacket(LeftRoomNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(LobbyProtocols.SERVERBOUND);
         this.client.setPanel(new LobbyPanel());
     }
 
@@ -142,7 +146,7 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         this.client.disconnect();
 
         var list = new ServerListPanel();
@@ -155,12 +159,12 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
         this.client.curRoom = null;
     }
 
-    public NumGuesser getClient() {
-        return this.client;
-    }
-
     @Override
     public Connection getConnection() {
         return this.connection;
+    }
+
+    public NumGuesser getClient() {
+        return this.client;
     }
 }

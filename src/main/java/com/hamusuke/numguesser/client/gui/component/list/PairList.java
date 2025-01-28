@@ -2,7 +2,7 @@ package com.hamusuke.numguesser.client.gui.component.list;
 
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.PairColorChangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColorChangeReq;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXList;
 import org.jdesktop.swingx.JXPanel;

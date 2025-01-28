@@ -1,19 +1,18 @@
 package com.hamusuke.numguesser.server.network;
 
 import com.hamusuke.numguesser.command.CommandSource;
+import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
+import com.hamusuke.numguesser.network.listener.server.ServerboundPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerTipPointSyncNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.RTTChangeNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.PlayerNewDeckNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.PlayerReadySyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.PlayerTipPointSyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PlayerNewDeckNotify;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.game.ServerPlayerDeck;
 import com.hamusuke.numguesser.server.room.ServerRoom;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import javax.annotation.Nullable;
 import java.security.SecureRandom;
@@ -21,7 +20,7 @@ import java.util.Random;
 
 public class ServerPlayer extends Player implements CommandSource {
     public final NumGuesserServer server;
-    public ServerPacketListener connection;
+    public ServerboundPacketListener connection;
     private boolean isAuthorized;
     @Nullable
     public ServerRoom curRoom;
@@ -36,7 +35,7 @@ public class ServerPlayer extends Player implements CommandSource {
 
     public void makeNewDeck() {
         this.deck = new ServerPlayerDeck(this);
-        this.sendPacket(new PlayerNewDeckNotify());
+        this.sendPacket(PlayerNewDeckNotify.INSTANCE);
         this.setIsDefeated(false);
     }
 
@@ -96,7 +95,7 @@ public class ServerPlayer extends Player implements CommandSource {
         this.sendPacket(packet, null);
     }
 
-    public void sendPacket(Packet<?> packet, GenericFutureListener<? extends Future<? super Void>> callback) {
+    public void sendPacket(Packet<?> packet, PacketSendListener callback) {
         this.connection.getConnection().sendPacket(packet, callback);
     }
 

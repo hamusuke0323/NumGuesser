@@ -2,8 +2,10 @@ package com.hamusuke.numguesser.server;
 
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.hamusuke.numguesser.network.HandlerNames;
 import com.hamusuke.numguesser.network.PacketLogger;
-import com.hamusuke.numguesser.network.channel.*;
+import com.hamusuke.numguesser.network.PacketSendListener;
+import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.protocol.PacketDirection;
 import com.hamusuke.numguesser.server.network.listener.handshake.ServerHandshakePacketListenerImpl;
 import com.hamusuke.numguesser.util.Lazy;
@@ -15,7 +17,6 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.flow.FlowControlHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,11 +67,12 @@ public class ServerNetworkIo {
                     } catch (ChannelException ignored) {
                     }
 
-                    channel.pipeline().addLast("timeout", new ReadTimeoutHandler(30)).addLast("splitter", new PacketSplitter()).addLast("decoder", new PacketDecoder(PacketDirection.SERVERBOUND, PacketLogger.EMPTY)).addLast("prepender", new PacketPrepender()).addLast("encoder", new PacketEncoder(PacketDirection.CLIENTBOUND, PacketLogger.EMPTY));
-                    var connection = new Connection(PacketDirection.SERVERBOUND);
+                    var pipeline = channel.pipeline().addLast(HandlerNames.TIMEOUT, new ReadTimeoutHandler(30));
+                    var connection = new Connection(PacketDirection.SERVERBOUND, PacketLogger.EMPTY);
+                    connection.configureSerialization(pipeline, PacketDirection.SERVERBOUND, false);
                     ServerNetworkIo.this.connections.add(connection);
-                    channel.pipeline().addLast(new FlowControlHandler()).addLast("packet_handler", connection);
-                    connection.setListener(new ServerHandshakePacketListenerImpl(ServerNetworkIo.this.server, connection));
+                    connection.configurePacketHandler(pipeline);
+                    connection.setListenerForServerboundHandshake(new ServerHandshakePacketListenerImpl(ServerNetworkIo.this.server, connection));
                 }
             }).group(lazy.get()).localAddress(address, port).bind().syncUninterruptibly());
         }
@@ -95,10 +97,10 @@ public class ServerNetworkIo {
                     try {
                         connection.tick();
                     } catch (Exception e) {
-                        LOGGER.warn("Failed to handle packet for " + connection.getAddress(), e);
+                        LOGGER.warn("Failed to handle packet for " + connection.getLoggableAddress(true), e);
                         var msg = "パケットの処理に失敗しました\n" + e;
-                        connection.sendPacket(Util.toDisconnectPacket(connection.getPacketListener(), msg), future -> connection.disconnect(msg));
-                        connection.disableAutoRead();
+                        connection.sendPacket(Util.toDisconnectPacket(connection.getPacketListener(), msg), PacketSendListener.thenRun(() -> connection.disconnect(msg)));
+                        connection.setReadOnly();
                     }
                 }
             }

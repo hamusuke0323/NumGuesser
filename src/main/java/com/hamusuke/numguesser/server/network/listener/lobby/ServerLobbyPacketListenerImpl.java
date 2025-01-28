@@ -2,13 +2,15 @@ package com.hamusuke.numguesser.server.network.listener.lobby;
 
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.EnterPasswordReq;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomFailNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.LobbyPongRsp;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.RoomListNotify;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.*;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.EnterPasswordReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomFailNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.LobbyPongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.RoomListNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
+import com.hamusuke.numguesser.server.network.listener.main.ServerRoomPacketListenerImpl;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,7 +26,7 @@ public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener 
     public ServerLobbyPacketListenerImpl(NumGuesserServer server, Connection connection, ServerPlayer serverPlayer) {
         this.server = server;
         this.connection = connection;
-        connection.setListener(this);
+        connection.setupInboundProtocol(LobbyProtocols.SERVERBOUND, this);
         this.serverPlayer = serverPlayer;
         this.serverPlayer.connection = this;
     }
@@ -36,7 +38,7 @@ public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener 
 
     @Override
     public void handlePing(LobbyPingReq packet) {
-        this.connection.sendPacket(new LobbyPongRsp());
+        this.connection.sendPacket(LobbyPongRsp.INSTANCE);
     }
 
     @Override
@@ -103,9 +105,19 @@ public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener 
     }
 
     @Override
-    public void onDisconnected(String msg) {
-        LOGGER.info("{} lost connection", this.connection.getAddress());
+    public void handleRoomJoined(RoomJoinedNotify packet) {
+        new ServerRoomPacketListenerImpl(this.server, this.serverPlayer.connection.getConnection(), this.serverPlayer);
+    }
+
+    @Override
+    public void onDisconnect(String msg) {
+        LOGGER.info("{} lost connection", this.connection.getLoggableAddress(true));
         this.server.getPlayerManager().removePlayer(this.serverPlayer);
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override

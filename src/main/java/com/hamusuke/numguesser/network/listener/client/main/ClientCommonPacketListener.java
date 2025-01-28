@@ -1,9 +1,9 @@
 package com.hamusuke.numguesser.network.listener.client.main;
 
-import com.hamusuke.numguesser.network.listener.PacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
+import com.hamusuke.numguesser.network.listener.client.ClientboundPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
 
-public interface ClientCommonPacketListener extends PacketListener {
+public interface ClientCommonPacketListener extends ClientboundPacketListener {
     void handleRoomOwnerChange(RoomOwnerChangeNotify packet);
 
     void handleGameModeChange(GameModeChangeNotify packet);

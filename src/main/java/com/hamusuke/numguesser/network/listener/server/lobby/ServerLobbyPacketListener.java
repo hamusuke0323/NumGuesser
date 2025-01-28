@@ -1,10 +1,15 @@
 package com.hamusuke.numguesser.network.listener.server.lobby;
 
-import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
-import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.*;
+import com.hamusuke.numguesser.network.listener.server.ServerboundPacketListener;
+import com.hamusuke.numguesser.network.protocol.Protocol;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.*;
 
-public interface ServerLobbyPacketListener extends ServerPacketListener {
+public interface ServerLobbyPacketListener extends ServerboundPacketListener {
+    @Override
+    default Protocol protocol() {
+        return Protocol.LOBBY;
+    }
+
     void handlePing(LobbyPingReq packet);
 
     void handleDisconnect(LobbyDisconnectReq packet);
@@ -14,6 +19,8 @@ public interface ServerLobbyPacketListener extends ServerPacketListener {
     void handleRoomListQuery(RoomListQueryReq packet);
 
     void handleCreateRoom(CreateRoomReq packet);
+
+    void handleRoomJoined(RoomJoinedNotify packet);
 
     void handleJoinRoom(JoinRoomReq packet);
 

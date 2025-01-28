@@ -3,8 +3,8 @@ package com.hamusuke.numguesser.server.network.listener.info;
 import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.info.ServerInfoPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.info.ServerInfoRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.info.ServerInfoReq;
+import com.hamusuke.numguesser.network.protocol.packet.info.clientbound.ServerInfoRsp;
+import com.hamusuke.numguesser.network.protocol.packet.info.serverbound.ServerInfoReq;
 
 public class ServerInfoPacketListenerImpl implements ServerInfoPacketListener {
     private final Connection connection;
@@ -19,7 +19,12 @@ public class ServerInfoPacketListenerImpl implements ServerInfoPacketListener {
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override

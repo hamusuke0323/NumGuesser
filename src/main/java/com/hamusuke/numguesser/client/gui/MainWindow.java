@@ -7,7 +7,7 @@ import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.LeaveRoomReq;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.LeaveRoomReq;
 import org.jdesktop.swingx.JXFrame;
 import org.jdesktop.swingx.JXPanel;
 
@@ -184,7 +184,7 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
     private void leaveRoom() {
         this.reset(false);
         this.client.setPanel(new CenteredMessagePanel("部屋を出ています..."));
-        this.client.getConnection().sendPacket(new LeaveRoomReq());
+        this.client.getConnection().sendPacket(LeaveRoomReq.INSTANCE);
     }
 
     public void reset() {

@@ -2,47 +2,44 @@ package com.hamusuke.numguesser.network.channel;
 
 import com.hamusuke.numguesser.network.PacketLogger;
 import com.hamusuke.numguesser.network.PacketLogger.PacketDetails;
-import com.hamusuke.numguesser.network.protocol.PacketDirection;
+import com.hamusuke.numguesser.network.listener.PacketListener;
+import com.hamusuke.numguesser.network.protocol.ProtocolInfo;
+import com.hamusuke.numguesser.network.protocol.TerminalPacketHandlers;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
+import com.hamusuke.numguesser.network.protocol.packet.SkipPacketException;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class PacketEncoder extends MessageToByteEncoder<Packet<?>> {
+public class PacketEncoder<T extends PacketListener> extends MessageToByteEncoder<Packet<T>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final PacketDirection direction;
+    private final ProtocolInfo<T> protocolInfo;
     private final PacketLogger logger;
 
-    public PacketEncoder(PacketDirection direction, PacketLogger logger) {
-        this.direction = direction;
+    public PacketEncoder(ProtocolInfo<T> protocolInfo, PacketLogger logger) {
+        this.protocolInfo = protocolInfo;
         this.logger = logger;
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet<?> msg, ByteBuf out) throws Exception {
-        var protocol = ctx.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get();
-        if (protocol == null) {
-            throw new RuntimeException("Protocol unknown: " + msg);
-        } else {
-            var integer = protocol.getPacketId(this.direction, msg);
+    protected void encode(ChannelHandlerContext ctx, Packet<T> msg, ByteBuf out) {
+        var type = msg.type();
 
-            if (integer == null) {
-                LOGGER.warn("Can't serialize unregistered packet: {}", msg.getClass().getName());
-                return;
+        try {
+            this.protocolInfo.codec().encode(out, msg);
+            int i = out.readableBytes();
+            this.logger.send(new PacketDetails(msg, i));
+        } catch (Throwable e) {
+            LOGGER.error("Error sending packet {}", type, e);
+            if (msg.isSkippable()) {
+                throw new SkipPacketException(e);
             }
 
-            var buf = new IntelligentByteBuf(out);
-            buf.writeVarInt(integer);
-            int i = buf.writerIndex();
-            msg.write(buf);
-            int j = buf.writerIndex() - i;
-            if (j > PacketInflater.MAXIMUM_UNCOMPRESSED_LENGTH) {
-                throw new IllegalArgumentException("Packet too big (is " + j + ", should be less than " + PacketInflater.MAXIMUM_UNCOMPRESSED_LENGTH + "): " + msg);
-            }
-
-            this.logger.send(new PacketDetails(msg, buf.readableBytes()));
+            throw e;
+        } finally {
+            TerminalPacketHandlers.handleOutboundTerminalPacket(ctx, msg);
         }
     }
 }
