@@ -25,10 +25,8 @@ import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.ServerInfo;
 import com.hamusuke.numguesser.network.ServerInfo.Status;
 import com.hamusuke.numguesser.network.channel.Connection;
-import com.hamusuke.numguesser.network.listener.client.lobby.ClientLobbyPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.DisconnectReq;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.LobbyDisconnectReq;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
 import com.hamusuke.numguesser.util.Util;
 import com.hamusuke.numguesser.util.thread.ReentrantThreadExecutor;
@@ -331,11 +329,6 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
 
     public void disconnect() {
         if (this.connection == null) {
-            return;
-        }
-
-        if (this.connection.getPacketListener() instanceof ClientLobbyPacketListener) {
-            this.connection.sendPacket(LobbyDisconnectReq.INSTANCE, PacketSendListener.thenRun(() -> this.connection.disconnect("")));
             return;
         }
 

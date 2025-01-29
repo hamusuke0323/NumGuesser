@@ -3,6 +3,7 @@ package com.hamusuke.numguesser.server.network.listener.lobby;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.EnterPasswordReq;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomFailNotify;
@@ -42,7 +43,7 @@ public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener,
     }
 
     @Override
-    public void handleDisconnect(LobbyDisconnectReq packet) {
+    public void handleDisconnect(DisconnectReq packet) {
         this.connection.disconnect("");
     }
 

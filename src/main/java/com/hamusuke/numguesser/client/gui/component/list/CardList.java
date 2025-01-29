@@ -67,14 +67,5 @@ public class CardList extends JXList {
         public static Direction clockwiseFromSouth(int count) {
             return count >= 0 ? values()[(count * 3) % 4] : counterClockwiseFromSouth(Math.abs(count));
         }
-
-        public Direction opposite() {
-            return switch (this) {
-                case NORTH -> SOUTH;
-                case EAST -> WEST;
-                case SOUTH -> NORTH;
-                case WEST -> EAST;
-            };
-        }
     }
 }

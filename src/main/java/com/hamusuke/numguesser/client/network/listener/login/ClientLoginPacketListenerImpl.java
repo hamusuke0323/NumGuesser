@@ -11,8 +11,12 @@ import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
 import com.hamusuke.numguesser.network.listener.client.login.ClientLoginPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.EnterNameReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.KeyExchangeRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginCompressionNotify;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginSuccessNotify;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
@@ -70,7 +74,7 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener 
     }
 
     @Override
-    public void handleDisconnect(LoginDisconnectNotify packet) {
+    public void handleDisconnect(DisconnectNotify packet) {
         this.connection.disconnect(packet.msg());
     }
 

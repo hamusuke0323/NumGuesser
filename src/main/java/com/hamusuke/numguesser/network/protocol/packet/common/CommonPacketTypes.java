@@ -10,7 +10,6 @@ import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.*;
 
 public class CommonPacketTypes {
     public static final PacketType<ChatNotify> CHAT_NOTIFY = createClientbound("chat_notify");
-    public static final PacketType<DisconnectNotify> DISCONNECT_NOTIFY = createClientbound("disconnect_notify");
     public static final PacketType<GameModeChangeNotify> GAME_MODE_CHANGE = createClientbound("game_mode_change");
     public static final PacketType<LeaveRoomSuccNotify> LEAVE_ROOM_SUCC = createClientbound("leave_room_succ");
     public static final PacketType<PlayerJoinNotify> PLAYER_JOIN = createClientbound("player_join");
@@ -20,7 +19,6 @@ public class CommonPacketTypes {
     public static final PacketType<ReadyRsp> READY_RSP = createClientbound("ready_rsp");
     public static final PacketType<RoomOwnerChangeNotify> ROOM_OWNER_CHANGE = createClientbound("room_owner_change");
     public static final PacketType<ChatReq> CHAT_REQ = createServerbound("chat_req");
-    public static final PacketType<DisconnectReq> DISCONNECT_REQ = createServerbound("disconnect_req");
     public static final PacketType<GameModeSelectReq> GAME_MODE_SELECT_REQ = createServerbound("game_mode_select_req");
     public static final PacketType<LeaveRoomReq> LEAVE_ROOM_REQ = createServerbound("leave_room_req");
     public static final PacketType<LeftRoomNotify> LEFT_ROOM = createServerbound("left_room");

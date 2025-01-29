@@ -5,7 +5,10 @@ import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketLi
 import com.hamusuke.numguesser.network.protocol.PacketDirection;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.PacketType;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.EnterNameReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.KeyExchangeRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginCompressionNotify;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginSuccessNotify;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
@@ -15,7 +18,6 @@ public class LoginPacketTypes {
     public static final PacketType<EnterNameReq> ENTER_NAME_REQ = createClientbound("enter_name_req");
     public static final PacketType<KeyExchangeRsp> KEY_EXCHANGE_RSP = createClientbound("key_exchange_rsp");
     public static final PacketType<LoginCompressionNotify> LOGIN_COMPRESSION = createClientbound("login_compression");
-    public static final PacketType<LoginDisconnectNotify> LOGIN_DISCONNECT = createClientbound("login_disconnect");
     public static final PacketType<LoginSuccessNotify> LOGIN_SUCCESS = createClientbound("login_success");
     public static final PacketType<EncryptionSetupReq> ENCRYPTION_SETUP = createServerbound("encryption_setup");
     public static final PacketType<EnterNameRsp> ENTER_NAME_RSP = createServerbound("enter_name_rsp");

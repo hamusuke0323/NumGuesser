@@ -19,7 +19,7 @@ public record SeatingArrangementNotify(
     }
 
     private void write(IntelligentByteBuf buf) {
-        buf.writeList(this.serverPlayerIdList, (id, buf1) -> buf1.writeVarInt(id));
+        buf.writeList(this.serverPlayerIdList, IntelligentByteBuf::writeVarInt);
     }
 
     @Override

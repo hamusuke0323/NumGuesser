@@ -14,7 +14,11 @@ import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.lobby.ClientLobbyPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.EnterPasswordReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomFailNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.RoomListNotify;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.EnterPasswordRsp;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.RoomJoinedNotify;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
@@ -40,7 +44,7 @@ public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener 
     }
 
     @Override
-    public void handleDisconnectPacket(LobbyDisconnectNotify packet) {
+    public void handleDisconnect(DisconnectNotify packet) {
         this.connection.disconnect(packet.msg());
     }
 

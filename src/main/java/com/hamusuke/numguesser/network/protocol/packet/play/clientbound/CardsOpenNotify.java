@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.network.protocol.packet.play.clientbound;
 
 import com.google.common.collect.ImmutableList;
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
@@ -15,11 +15,11 @@ public record CardsOpenNotify(List<CardSerializer> cards) implements Packet<Clie
     public static final StreamCodec<IntelligentByteBuf, CardsOpenNotify> STREAM_CODEC = Packet.codec(CardsOpenNotify::write, CardsOpenNotify::new);
 
     private CardsOpenNotify(IntelligentByteBuf buf) {
-        this((List<CardSerializer>) buf.readList(CardSerializer::new, ImmutableList::copyOf));
+        this((List<CardSerializer>) buf.readList(CardSerializer.STREAM_CODEC::decode, ImmutableList::copyOf));
     }
 
     private void write(IntelligentByteBuf buf) {
-        buf.writeList(this.cards, CardSerializer::writeTo);
+        buf.writeList(this.cards, CardSerializer.STREAM_CODEC::encode);
     }
 
     @Override

@@ -171,10 +171,6 @@ public class ServerRoom extends Room {
         return this.password;
     }
 
-    public boolean doesPlayerExist(String name) {
-        return this.players.stream().anyMatch(player -> player.getName().equals(name));
-    }
-
     public synchronized void exitGame(ServerPlayer player) {
         if (this.game != null) {
             this.game.leavePlayer(player);

@@ -15,11 +15,11 @@ public record RoomListNotify(List<RoomInfo> infoList) implements Packet<ClientLo
     public static final StreamCodec<IntelligentByteBuf, RoomListNotify> STREAM_CODEC = Packet.codec(RoomListNotify::write, RoomListNotify::new);
 
     private RoomListNotify(IntelligentByteBuf buf) {
-        this(buf.<List<RoomInfo>, RoomInfo>readList(RoomInfo::new, ImmutableList::copyOf));
+        this(buf.<List<RoomInfo>, RoomInfo>readList(RoomInfo.STREAM_CODEC::decode, ImmutableList::copyOf));
     }
 
     private void write(IntelligentByteBuf buf) {
-        buf.writeList(this.infoList, RoomInfo::writeTo);
+        buf.writeList(this.infoList, RoomInfo.STREAM_CODEC::encode);
     }
 
     @Override

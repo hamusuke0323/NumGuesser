@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.network.protocol.packet.play.clientbound;
 
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
@@ -12,11 +12,11 @@ public record TossNotify(CardSerializer card) implements Packet<ClientPlayPacket
     public static final StreamCodec<IntelligentByteBuf, TossNotify> STREAM_CODEC = Packet.codec(TossNotify::write, TossNotify::new);
 
     private TossNotify(IntelligentByteBuf buf) {
-        this(new CardSerializer(buf));
+        this(CardSerializer.STREAM_CODEC.decode(buf));
     }
 
     private void write(IntelligentByteBuf buf) {
-        this.card.writeTo(buf);
+        CardSerializer.STREAM_CODEC.encode(buf, this.card);
     }
 
     @Override

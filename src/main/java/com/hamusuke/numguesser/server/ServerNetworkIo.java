@@ -7,9 +7,9 @@ import com.hamusuke.numguesser.network.PacketLogger;
 import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.protocol.PacketDirection;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.server.network.listener.handshake.ServerHandshakePacketListenerImpl;
 import com.hamusuke.numguesser.util.Lazy;
-import com.hamusuke.numguesser.util.Util;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -99,7 +99,7 @@ public class ServerNetworkIo {
                     } catch (Exception e) {
                         LOGGER.warn("Failed to handle packet for " + connection.getLoggableAddress(true), e);
                         var msg = "パケットの処理に失敗しました\n" + e;
-                        connection.sendPacket(Util.toDisconnectPacket(connection.getPacketListener(), msg), PacketSendListener.thenRun(() -> connection.disconnect(msg)));
+                        connection.sendPacket(new DisconnectNotify(msg), PacketSendListener.thenRun(() -> connection.disconnect(msg)));
                         connection.setReadOnly();
                     }
                 }

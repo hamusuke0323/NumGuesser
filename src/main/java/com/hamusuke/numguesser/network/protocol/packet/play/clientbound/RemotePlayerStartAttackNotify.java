@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.network.protocol.packet.play.clientbound;
 
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
@@ -13,12 +13,12 @@ public record RemotePlayerStartAttackNotify(int id,
     public static final StreamCodec<IntelligentByteBuf, RemotePlayerStartAttackNotify> STREAM_CODEC = Packet.codec(RemotePlayerStartAttackNotify::write, RemotePlayerStartAttackNotify::new);
 
     private RemotePlayerStartAttackNotify(IntelligentByteBuf buf) {
-        this(buf.readVarInt(), new CardSerializer(buf));
+        this(buf.readVarInt(), CardSerializer.STREAM_CODEC.decode(buf));
     }
 
     private void write(IntelligentByteBuf buf) {
         buf.writeVarInt(this.id);
-        this.cardForAttack.writeTo(buf);
+        CardSerializer.STREAM_CODEC.encode(buf, this.cardForAttack);
     }
 
     @Override

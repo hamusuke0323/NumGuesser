@@ -14,6 +14,7 @@ import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.LeftRoomNotify;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
@@ -161,6 +162,11 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
         this.client.playerTable = null;
         this.client.chat = null;
         this.client.curRoom = null;
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override

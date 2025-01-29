@@ -41,9 +41,9 @@ public class IntelligentByteBuf extends ByteBuf {
         return clazz.getEnumConstants()[this.readVarInt()];
     }
 
-    public <E> void writeList(Collection<E> list, BiConsumer<E, IntelligentByteBuf> writer) {
+    public <E> void writeList(Collection<E> list, BiConsumer<IntelligentByteBuf, E> writer) {
         this.writeVarInt(list.size());
-        list.forEach(t -> writer.accept(t, this));
+        list.forEach(t -> writer.accept(this, t));
     }
 
     public <C extends Collection<E>, E> C readList(Function<IntelligentByteBuf, E> reader, Function<ArrayList<E>, C> listTransformer) {

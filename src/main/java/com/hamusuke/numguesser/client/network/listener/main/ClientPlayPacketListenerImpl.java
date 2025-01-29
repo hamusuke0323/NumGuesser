@@ -12,7 +12,7 @@ import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
@@ -320,10 +320,5 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     protected void repaintGamePanel() {
         SwingUtilities.invokeLater(this.client.getMainWindow().getPanel()::repaint);
-    }
-
-    @Override
-    public boolean isAcceptingMessages() {
-        return this.connection.isConnected();
     }
 }

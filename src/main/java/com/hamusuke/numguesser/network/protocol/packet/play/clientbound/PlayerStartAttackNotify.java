@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.network.protocol.packet.play.clientbound;
 
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
@@ -13,11 +13,11 @@ public record PlayerStartAttackNotify(CardSerializer card,
     public static final StreamCodec<IntelligentByteBuf, PlayerStartAttackNotify> STREAM_CODEC = Packet.codec(PlayerStartAttackNotify::write, PlayerStartAttackNotify::new);
 
     private PlayerStartAttackNotify(IntelligentByteBuf buf) {
-        this(new CardSerializer(buf), buf.readBoolean());
+        this(CardSerializer.STREAM_CODEC.decode(buf), buf.readBoolean());
     }
 
     private void write(IntelligentByteBuf buf) {
-        this.card.writeTo(buf);
+        CardSerializer.STREAM_CODEC.encode(buf, this.card);
         buf.writeBoolean(this.cancellable);
     }
 

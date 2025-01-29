@@ -5,8 +5,6 @@ import com.hamusuke.numguesser.network.listener.server.ServerboundBasePacketList
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.*;
 
 public interface ServerCommonPacketListener extends ServerboundBasePacketListener, TickablePacketListener {
-    void handleDisconnect(DisconnectReq packet);
-
     void handleChatPacket(ChatReq packet);
 
     void handleLeaveRoom(LeaveRoomReq packet);

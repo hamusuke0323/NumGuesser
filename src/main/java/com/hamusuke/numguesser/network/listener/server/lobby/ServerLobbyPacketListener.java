@@ -10,8 +10,6 @@ public interface ServerLobbyPacketListener extends ServerboundBasePacketListener
         return Protocol.LOBBY;
     }
 
-    void handleDisconnect(LobbyDisconnectReq packet);
-
     void handleRoomList(RoomListReq packet);
 
     void handleRoomListQuery(RoomListQueryReq packet);

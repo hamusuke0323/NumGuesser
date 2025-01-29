@@ -5,8 +5,12 @@ import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
 import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.EnterNameReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.KeyExchangeRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginCompressionNotify;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginSuccessNotify;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
@@ -82,7 +86,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
     private void disconnect(String msg) {
         try {
             LOGGER.info("Disconnecting {}", this.getConnectionInfo());
-            this.connection.sendPacket(new LoginDisconnectNotify(msg));
+            this.connection.sendPacket(new DisconnectNotify(msg));
             this.connection.disconnect(msg);
         } catch (Exception e) {
             LOGGER.error("Error while disconnecting player", e);

@@ -23,9 +23,4 @@ public class ClientRoomPacketListenerImpl extends ClientCommonPacketListenerImpl
         this.client.setPanel(new CenteredMessagePanel("ゲームを開始しています..."));
         this.client.playerTable.addPointColumn();
     }
-
-    @Override
-    public boolean isAcceptingMessages() {
-        return this.connection.isConnected();
-    }
 }

@@ -5,7 +5,13 @@ import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketLi
 import com.hamusuke.numguesser.network.protocol.Protocol;
 import com.hamusuke.numguesser.network.protocol.ProtocolInfo;
 import com.hamusuke.numguesser.network.protocol.ProtocolInfoBuilder;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.DisconnectPacketTypes;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.EnterNameReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.KeyExchangeRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginCompressionNotify;
+import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginSuccessNotify;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
@@ -24,16 +30,19 @@ public class LoginProtocols {
                         .addPacket(LoginPacketTypes.LOBBY_JOINED, LobbyJoinedNotify.STREAM_CODEC);
 
                 builder.addPacket(LoopPacketTypes.PONG, PongRsp.STREAM_CODEC);
+
+                builder.addPacket(DisconnectPacketTypes.DISCONNECT_REQ, DisconnectReq.STREAM_CODEC);
             });
     public static final ProtocolInfo<ClientLoginPacketListener> CLIENTBOUND = ProtocolInfoBuilder
             .clientboundProtocol(Protocol.LOGIN, builder -> {
                 builder.addPacket(LoginPacketTypes.ENTER_NAME_REQ, EnterNameReq.STREAM_CODEC)
                         .addPacket(LoginPacketTypes.KEY_EXCHANGE_RSP, KeyExchangeRsp.STREAM_CODEC)
                         .addPacket(LoginPacketTypes.LOGIN_COMPRESSION, LoginCompressionNotify.STREAM_CODEC)
-                        .addPacket(LoginPacketTypes.LOGIN_DISCONNECT, LoginDisconnectNotify.STREAM_CODEC)
                         .addPacket(LoginPacketTypes.LOGIN_SUCCESS, LoginSuccessNotify.STREAM_CODEC);
 
                 builder.addPacket(LoopPacketTypes.PING, PingReq.STREAM_CODEC)
                         .addPacket(LoopPacketTypes.RTT_CHANGE, RTTChangeNotify.STREAM_CODEC);
+
+                builder.addPacket(DisconnectPacketTypes.DISCONNECT_NOTIFY, DisconnectNotify.STREAM_CODEC);
             });
 }

@@ -23,14 +23,12 @@ import com.hamusuke.numguesser.network.protocol.Protocol;
 import com.hamusuke.numguesser.network.protocol.ProtocolInfo;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.SkipPacketException;
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.network.protocol.packet.handshake.HandshakeProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.handshake.serverbound.ClientIntent;
 import com.hamusuke.numguesser.network.protocol.packet.handshake.serverbound.HandshakeReq;
 import com.hamusuke.numguesser.network.protocol.packet.info.InfoProtocols;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.LobbyDisconnectNotify;
 import com.hamusuke.numguesser.network.protocol.packet.login.LoginProtocols;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginDisconnectNotify;
 import com.hamusuke.numguesser.util.Util;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -208,11 +206,7 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
                     if (flag) {
                         LOGGER.debug("Failed to send packet", cause);
                         if (this.getSending() == PacketDirection.CLIENTBOUND) {
-                            var packet = (this.sendLoginDisconnect ? new LoginDisconnectNotify(str) :
-                                    this.inboundProtocol.id().id().equals(Protocol.LOBBY.id()) ? new LobbyDisconnectNotify(str) :
-                                            new DisconnectNotify(str));
-
-                            this.sendPacket(packet, PacketSendListener.thenRun(() -> this.disconnect(str)));
+                            this.sendPacket(new DisconnectNotify(str), PacketSendListener.thenRun(() -> this.disconnect(str)));
                         } else {
                             this.disconnect(str);
                         }

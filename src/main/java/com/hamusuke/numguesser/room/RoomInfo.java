@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.room;
 
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
+import com.hamusuke.numguesser.network.codec.StreamCodec;
 import com.hamusuke.numguesser.util.Util;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXPanel;
@@ -9,11 +10,13 @@ import javax.swing.*;
 import java.awt.*;
 
 public record RoomInfo(int id, String roomName, int population, boolean hasPassword) {
-    public RoomInfo(IntelligentByteBuf buf) {
+    public static final StreamCodec<IntelligentByteBuf, RoomInfo> STREAM_CODEC = StreamCodec.ofMember(RoomInfo::write, RoomInfo::new);
+
+    private RoomInfo(IntelligentByteBuf buf) {
         this(buf.readVarInt(), buf.readString(), buf.readInt(), buf.readBoolean());
     }
 
-    public void writeTo(IntelligentByteBuf buf) {
+    private void write(IntelligentByteBuf buf) {
         buf.writeVarInt(this.id);
         buf.writeString(this.roomName);
         buf.writeInt(this.population);

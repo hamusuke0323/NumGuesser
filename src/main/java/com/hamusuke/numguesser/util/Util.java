@@ -3,13 +3,6 @@ package com.hamusuke.numguesser.util;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
-import com.hamusuke.numguesser.network.listener.PacketListener;
-import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
-import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.DisconnectNotify;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.LobbyDisconnectNotify;
-import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.LoginDisconnectNotify;
 
 import java.net.Inet6Address;
 import java.net.InetSocketAddress;
@@ -74,16 +67,6 @@ public class Util {
 
     public static <K, V, V1> Map<K, V1> transformToNewImmutableMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
         return ImmutableMap.copyOf(transformToNewMapOnlyValues(from, valueTransformer));
-    }
-
-    public static Packet<?> toDisconnectPacket(PacketListener listener, String msg) {
-        if (listener instanceof ServerLoginPacketListener) {
-            return new LoginDisconnectNotify(msg);
-        } else if (listener instanceof ServerLobbyPacketListener) {
-            return new LobbyDisconnectNotify(msg);
-        } else {
-            return new DisconnectNotify(msg);
-        }
     }
 
     public static String toHTML(String s) {

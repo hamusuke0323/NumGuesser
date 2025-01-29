@@ -12,11 +12,11 @@ public record JoinRoomSuccNotify(RoomInfo info) implements Packet<ClientLobbyPac
     public static final StreamCodec<IntelligentByteBuf, JoinRoomSuccNotify> STREAM_CODEC = Packet.codec(JoinRoomSuccNotify::write, JoinRoomSuccNotify::new);
 
     private JoinRoomSuccNotify(IntelligentByteBuf buf) {
-        this(new RoomInfo(buf));
+        this(RoomInfo.STREAM_CODEC.decode(buf));
     }
 
     private void write(IntelligentByteBuf buf) {
-        this.info.writeTo(buf);
+        RoomInfo.STREAM_CODEC.encode(buf, this.info);
     }
 
     @Override
