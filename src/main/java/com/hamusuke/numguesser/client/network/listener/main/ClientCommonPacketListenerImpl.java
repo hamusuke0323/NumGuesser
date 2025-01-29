@@ -11,16 +11,17 @@ import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
-import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.LeftRoomNotify;
-import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.PongRsp;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 
 import javax.swing.*;
 
-public abstract class ClientCommonPacketListenerImpl implements ClientCommonPacketListener, TickablePacketListener {
+public abstract class ClientCommonPacketListenerImpl implements ClientCommonPacketListener {
     protected final Connection connection;
     protected final NumGuesser client;
     protected LocalPlayer clientPlayer;
@@ -91,7 +92,7 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void handlePingPacket(PingReq packet) {
+    public void handlePing(PingReq packet) {
         if (!this.client.isSameThread()) {
             this.client.executeSync(() -> packet.handle(this));
         }
@@ -100,11 +101,14 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void handleRTTPacket(RTTChangeNotify packet) {
+    public void handleRTTChange(RTTChangeNotify packet) {
         synchronized (this.curRoom.getPlayers()) {
-            this.curRoom.getPlayers().stream()
-                    .filter(p -> p.getId() == packet.id())
-                    .forEach(player -> player.setPing(packet.rtt()));
+            var player = this.curRoom.getPlayer(packet.id());
+            if (player == null) {
+                return;
+            }
+
+            player.setPing(packet.rtt());
         }
 
         SwingUtilities.invokeLater(this.client.playerTable::update);

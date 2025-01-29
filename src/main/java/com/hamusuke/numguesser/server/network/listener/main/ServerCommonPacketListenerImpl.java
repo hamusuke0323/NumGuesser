@@ -2,9 +2,14 @@ package com.hamusuke.numguesser.server.network.listener.main;
 
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerCommonPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.LeaveRoomSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ReadyRsp;
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.*;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.network.listener.lobby.ServerLobbyPacketListenerImpl;
@@ -99,7 +104,7 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     }
 
     @Override
-    public void handlePongPacket(PongRsp packet) {
+    public void handlePong(PongRsp packet) {
         this.timeoutTicks = 0;
         this.player.setPing((int) (Util.getMeasuringTimeMs() - packet.serverTime()));
     }

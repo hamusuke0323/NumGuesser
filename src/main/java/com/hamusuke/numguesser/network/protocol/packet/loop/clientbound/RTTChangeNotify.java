@@ -1,13 +1,13 @@
-package com.hamusuke.numguesser.network.protocol.packet.common.clientbound;
+package com.hamusuke.numguesser.network.protocol.packet.loop.clientbound;
 
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
-import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
+import com.hamusuke.numguesser.network.listener.client.ClientboundLoopPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.PacketType;
-import com.hamusuke.numguesser.network.protocol.packet.common.CommonPacketTypes;
+import com.hamusuke.numguesser.network.protocol.packet.loop.LoopPacketTypes;
 
-public record RTTChangeNotify(int id, int rtt) implements Packet<ClientCommonPacketListener> {
+public record RTTChangeNotify(int id, int rtt) implements Packet<ClientboundLoopPacketListener> {
     public static final StreamCodec<IntelligentByteBuf, RTTChangeNotify> STREAM_CODEC = Packet.codec(RTTChangeNotify::write, RTTChangeNotify::new);
 
     private RTTChangeNotify(IntelligentByteBuf byteBuf) {
@@ -21,11 +21,11 @@ public record RTTChangeNotify(int id, int rtt) implements Packet<ClientCommonPac
 
     @Override
     public PacketType<RTTChangeNotify> type() {
-        return CommonPacketTypes.RTT_CHANGE;
+        return LoopPacketTypes.RTT_CHANGE;
     }
 
     @Override
-    public void handle(ClientCommonPacketListener listener) {
-        listener.handleRTTPacket(this);
+    public void handle(ClientboundLoopPacketListener listener) {
+        listener.handleRTTChange(this);
     }
 }

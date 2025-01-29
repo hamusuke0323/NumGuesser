@@ -10,40 +10,30 @@ import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.encryption.NetworkEncryptionUtil;
-import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.login.ClientLoginPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
-import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.AliveReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.Cipher;
 import java.util.function.Consumer;
 
-public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener, TickablePacketListener {
+public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final NumGuesser client;
     private final Consumer<String> statusConsumer;
     private final Connection connection;
     private boolean waitingAuthComplete;
-    private int ticks;
 
     public ClientLoginPacketListenerImpl(Connection connection, NumGuesser client, Consumer<String> statusConsumer) {
         this.client = client;
         this.connection = connection;
         this.statusConsumer = statusConsumer;
-    }
-
-    @Override
-    public void tick() {
-        if (this.waitingAuthComplete && this.ticks % 20 == 0) {
-            this.connection.sendPacket(AliveReq.INSTANCE);
-        }
-
-        this.ticks++;
     }
 
     @Override
@@ -98,6 +88,11 @@ public class ClientLoginPacketListenerImpl implements ClientLoginPacketListener,
         var login = new LoginPanel();
         var panel = packet.msg().isEmpty() ? login : new OkPanel(login, "エラー", packet.msg());
         this.client.setPanel(panel);
+    }
+
+    @Override
+    public void handlePing(PingReq packet) {
+        this.connection.sendPacket(new PongRsp(0L));
     }
 
     @Override

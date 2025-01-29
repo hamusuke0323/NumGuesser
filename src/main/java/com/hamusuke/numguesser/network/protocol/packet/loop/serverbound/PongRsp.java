@@ -1,13 +1,13 @@
-package com.hamusuke.numguesser.network.protocol.packet.common.serverbound;
+package com.hamusuke.numguesser.network.protocol.packet.loop.serverbound;
 
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import com.hamusuke.numguesser.network.codec.StreamCodec;
-import com.hamusuke.numguesser.network.listener.server.main.ServerCommonPacketListener;
+import com.hamusuke.numguesser.network.listener.server.ServerboundLoopPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.PacketType;
-import com.hamusuke.numguesser.network.protocol.packet.common.CommonPacketTypes;
+import com.hamusuke.numguesser.network.protocol.packet.loop.LoopPacketTypes;
 
-public record PongRsp(long serverTime) implements Packet<ServerCommonPacketListener> {
+public record PongRsp(long serverTime) implements Packet<ServerboundLoopPacketListener> {
     public static final StreamCodec<IntelligentByteBuf, PongRsp> STREAM_CODEC = Packet.codec(PongRsp::write, PongRsp::new);
 
     private PongRsp(IntelligentByteBuf byteBuf) {
@@ -20,11 +20,11 @@ public record PongRsp(long serverTime) implements Packet<ServerCommonPacketListe
 
     @Override
     public PacketType<PongRsp> type() {
-        return CommonPacketTypes.PONG;
+        return LoopPacketTypes.PONG;
     }
 
     @Override
-    public void handle(ServerCommonPacketListener listener) {
-        listener.handlePongPacket(this);
+    public void handle(ServerboundLoopPacketListener listener) {
+        listener.handlePong(this);
     }
 }

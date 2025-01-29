@@ -1,10 +1,13 @@
 package com.hamusuke.numguesser.network.listener.server.login;
 
-import com.hamusuke.numguesser.network.listener.server.ServerboundPacketListener;
+import com.hamusuke.numguesser.network.listener.server.ServerboundBasePacketListener;
 import com.hamusuke.numguesser.network.protocol.Protocol;
-import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
 
-public interface ServerLoginPacketListener extends ServerboundPacketListener {
+public interface ServerLoginPacketListener extends ServerboundBasePacketListener {
     @Override
     default Protocol protocol() {
         return Protocol.LOGIN;
@@ -13,8 +16,6 @@ public interface ServerLoginPacketListener extends ServerboundPacketListener {
     void handleKeyEx(KeyExchangeReq packet);
 
     void handleEncryption(EncryptionSetupReq packet);
-
-    void handlePing(AliveReq packet);
 
     void handleEnterName(EnterNameRsp packet);
 

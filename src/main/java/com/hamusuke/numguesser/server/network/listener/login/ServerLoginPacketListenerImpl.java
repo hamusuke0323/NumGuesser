@@ -7,7 +7,11 @@ import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
-import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.network.listener.lobby.ServerLobbyPacketListenerImpl;
@@ -53,6 +57,10 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
             }
         } else if (this.state == State.READY) {
             this.acceptPlayer();
+        }
+
+        if (this.state == State.ENTER_NAME && this.ticks % 20 == 0) {
+            this.connection.sendPacket(new PingReq(0L));
         }
 
         this.ticks++;
@@ -157,11 +165,6 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener,
         } catch (Exception e) {
             throw new IllegalStateException("Protocol error", e);
         }
-    }
-
-    @Override
-    public void handlePing(AliveReq packet) {
-        this.connection.sendPacket(AliveRsp.INSTANCE);
     }
 
     @Override

@@ -13,34 +13,25 @@ import com.hamusuke.numguesser.client.network.listener.main.ClientRoomPacketList
 import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
-import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.lobby.ClientLobbyPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.*;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.EnterPasswordRsp;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.LobbyPingReq;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.RoomJoinedNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
 
 import javax.swing.*;
 
-public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener, TickablePacketListener {
+public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener {
     private final NumGuesser client;
     private final Connection connection;
     private final LocalPlayer clientPlayer;
-    private int tickCount;
 
     public ClientLobbyPacketListenerImpl(NumGuesser client, Connection connection) {
         this.client = client;
         this.connection = connection;
         this.clientPlayer = client.clientPlayer;
-    }
-
-    @Override
-    public void tick() {
-        this.tickCount++;
-        if (this.tickCount % 20 == 0) {
-            this.connection.sendPacket(LobbyPingReq.INSTANCE);
-        }
     }
 
     @Override
@@ -54,7 +45,8 @@ public class ClientLobbyPacketListenerImpl implements ClientLobbyPacketListener,
     }
 
     @Override
-    public void handlePong(LobbyPongRsp packet) {
+    public void handlePing(PingReq packet) {
+        this.connection.sendPacket(new PongRsp(0L));
     }
 
     @Override

@@ -1,10 +1,10 @@
 package com.hamusuke.numguesser.network.listener.client.login;
 
-import com.hamusuke.numguesser.network.listener.client.ClientboundPacketListener;
+import com.hamusuke.numguesser.network.listener.client.ClientboundBasePacketListener;
 import com.hamusuke.numguesser.network.protocol.Protocol;
 import com.hamusuke.numguesser.network.protocol.packet.login.clientbound.*;
 
-public interface ClientLoginPacketListener extends ClientboundPacketListener {
+public interface ClientLoginPacketListener extends ClientboundBasePacketListener {
     @Override
     default Protocol protocol() {
         return Protocol.LOGIN;

@@ -1,15 +1,13 @@
 package com.hamusuke.numguesser.network.listener.server.main;
 
 import com.hamusuke.numguesser.network.listener.TickablePacketListener;
-import com.hamusuke.numguesser.network.listener.server.ServerboundPacketListener;
+import com.hamusuke.numguesser.network.listener.server.ServerboundBasePacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.*;
 
-public interface ServerCommonPacketListener extends ServerboundPacketListener, TickablePacketListener {
+public interface ServerCommonPacketListener extends ServerboundBasePacketListener, TickablePacketListener {
     void handleDisconnect(DisconnectReq packet);
 
     void handleChatPacket(ChatReq packet);
-
-    void handlePongPacket(PongRsp packet);
 
     void handleLeaveRoom(LeaveRoomReq packet);
 

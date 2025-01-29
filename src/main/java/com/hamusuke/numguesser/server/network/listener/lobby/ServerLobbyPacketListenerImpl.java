@@ -1,13 +1,14 @@
 package com.hamusuke.numguesser.server.network.listener.lobby;
 
 import com.hamusuke.numguesser.network.channel.Connection;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.EnterPasswordReq;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomFailNotify;
-import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.LobbyPongRsp;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.RoomListNotify;
 import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.network.listener.main.ServerRoomPacketListenerImpl;
@@ -17,11 +18,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 
-public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener {
+public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener, TickablePacketListener {
     private static final Logger LOGGER = LogManager.getLogger();
     private final NumGuesserServer server;
     private final Connection connection;
     private final ServerPlayer serverPlayer;
+    private int ticks;
 
     public ServerLobbyPacketListenerImpl(NumGuesserServer server, Connection connection, ServerPlayer serverPlayer) {
         this.server = server;
@@ -32,13 +34,16 @@ public class ServerLobbyPacketListenerImpl implements ServerLobbyPacketListener 
     }
 
     @Override
-    public void handleDisconnect(LobbyDisconnectReq packet) {
-        this.connection.disconnect("");
+    public void tick() {
+        this.ticks++;
+        if (this.ticks % 20 == 0) {
+            this.connection.sendPacket(new PingReq(0L));
+        }
     }
 
     @Override
-    public void handlePing(LobbyPingReq packet) {
-        this.connection.sendPacket(LobbyPongRsp.INSTANCE);
+    public void handleDisconnect(LobbyDisconnectReq packet) {
+        this.connection.disconnect("");
     }
 
     @Override
