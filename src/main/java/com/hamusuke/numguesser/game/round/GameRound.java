@@ -210,7 +210,7 @@ public class GameRound {
         if (card.getNum() == num) {
             this.onAttackSucceeded(card);
         } else {
-            this.onAttackFailed();
+            this.onAttackFailed(card);
         }
     }
 
@@ -262,11 +262,19 @@ public class GameRound {
         this.endAttacking();
     }
 
-    protected void onAttackFailed() {
+    protected void onAttackFailed(Card closedCard) {
         this.ownCard(this.curAttacker, this.curCardForAttacking);
         this.curCardForAttacking.open();
         this.sendPacketToAllInGame(new CardOpenNotify(this.curCardForAttacking.toSerializer()));
         this.sendPacketToAllInGame(new ChatNotify("アタック失敗です"));
+
+        var closedCardHolder = this.cardIdPlayerMap.get(closedCard.getId());
+        if (this.shouldEndRound(this.curCardForAttacking) || this.arePlayersDefeatedBy(closedCardHolder)) {
+            // when all players excluding closed card owner are defeated, end the round.
+            this.winner = closedCardHolder;
+            this.endRound();
+            return;
+        }
 
         this.endAttacking();
     }

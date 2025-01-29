@@ -57,6 +57,8 @@ public class PlayProtocols {
                         .addPacket(PlayPacketTypes.PLAYER_NEW_DECK, PlayerNewDeckNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_START_ATTACK, PlayerStartAttackNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_CARD_FOR_ATTACK, RemotePlayerSelectCardForAttackNotify.STREAM_CODEC)
+                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_CARD_FOR_TOSS, RemotePlayerSelectCardForTossNotify.STREAM_CODEC)
+                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_TOSS_OR_ATTACK, RemotePlayerSelectTossOrAttackNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.REMOTE_PLAYER_START_ATTACK, RemotePlayerStartAttackNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.SEATING_ARRANGEMENT, SeatingArrangementNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.START_GAME_ROUND, StartGameRoundNotify.STREAM_CODEC)

@@ -163,6 +163,22 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
+    public void handleRemotePlayerSelectTossOrAttack(RemotePlayerSelectTossOrAttackNotify packet) {
+        this.clearCardSelection();
+        if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onRemotePlayerSelectTossOrAttack(remotePlayer);
+        }
+    }
+
+    @Override
+    public void handleRemotePlayerSelectCardForToss(RemotePlayerSelectCardForTossNotify packet) {
+        this.clearCardSelection();
+        if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
+            gamePanel.onRemotePlayerSelectCardForToss(remotePlayer);
+        }
+    }
+
+    @Override
     public void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet) {
         this.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {

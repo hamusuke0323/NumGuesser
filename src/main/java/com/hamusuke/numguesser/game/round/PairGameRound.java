@@ -4,9 +4,7 @@ import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossOrAttackSelectionNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
 import com.hamusuke.numguesser.server.game.ServerPlayerPair;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -37,6 +35,7 @@ public class PairGameRound extends GameRound {
     protected void selectTossOrAttack() {
         this.gameState = GameState.SELECTING_TOSS_OR_ATTACKING;
         this.curAttacker.sendPacket(TossOrAttackSelectionNotify.INSTANCE);
+        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerSelectTossOrAttackNotify(this.curAttacker.getId()));
     }
 
     public void onTossSelected(ServerPlayer selector) {
@@ -52,6 +51,7 @@ public class PairGameRound extends GameRound {
 
         this.gameState = GameState.TOSSING;
         buddy.sendPacket(TossReq.INSTANCE);
+        this.sendPacketToOthersInGame(buddy, new RemotePlayerSelectCardForTossNotify(buddy.getId()));
     }
 
     public void onToss(ServerPlayer tosser, int cardId) {
@@ -180,7 +180,7 @@ public class PairGameRound extends GameRound {
 
     @Override
     public GameRound newRound() {
-        var game = new PairGameRound((PairPlayGameMode) this.game, this.players, this.parent);
+        var game = new PairGameRound((PairPlayGameMode) this.game, this.players, this.nextParent());
         game.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);
         game.seatingArrangement.addAll(this.seatingArrangement);
         return game;
