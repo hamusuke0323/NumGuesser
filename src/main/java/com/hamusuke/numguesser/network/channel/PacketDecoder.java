@@ -2,42 +2,38 @@ package com.hamusuke.numguesser.network.channel;
 
 import com.hamusuke.numguesser.network.PacketLogger;
 import com.hamusuke.numguesser.network.PacketLogger.PacketDetails;
-import com.hamusuke.numguesser.network.protocol.PacketDirection;
+import com.hamusuke.numguesser.network.listener.PacketListener;
+import com.hamusuke.numguesser.network.protocol.ProtocolInfo;
+import com.hamusuke.numguesser.network.protocol.TerminalPacketHandlers;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.List;
 
-public class PacketDecoder extends ByteToMessageDecoder {
-    private static final Logger LOGGER = LogManager.getLogger();
-    private final PacketDirection direction;
+public class PacketDecoder<T extends PacketListener> extends ByteToMessageDecoder {
+    private final ProtocolInfo<T> protocolInfo;
     private final PacketLogger logger;
 
-    public PacketDecoder(PacketDirection direction, PacketLogger logger) {
-        this.direction = direction;
+    public PacketDecoder(ProtocolInfo<T> protocolInfo, PacketLogger logger) {
+        this.protocolInfo = protocolInfo;
         this.logger = logger;
     }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        int i = in.readableBytes();
-        if (i != 0) {
-            var buf = new IntelligentByteBuf(in);
-            int j = buf.readVarInt();
-            var packet = ctx.channel().attr(Connection.ATTRIBUTE_PROTOCOL).get().createPacket(this.direction, j, buf);
-            if (packet == null) {
-                LOGGER.warn("Bad packet id: {}", j);
-                return;
-            }
-
-            if (buf.readableBytes() > 0) {
-                LOGGER.warn("Packet {} was larger than expected, found {}", packet.getClass().getSimpleName(), buf.readableBytes());
+        int size = in.readableBytes();
+        if (size != 0) {
+            var packet = this.protocolInfo.codec().decode(in);
+            var type = packet.type();
+            if (in.readableBytes() > 0) {
+                var s = this.protocolInfo.id().id();
+                throw new IOException("Packet " + s + "/" + type + " (" + packet.getClass().getSimpleName() + ") was larger than I expected, found " + in.readableBytes() + " bytes extra whilst reading packet " + type);
             } else {
                 out.add(packet);
-                this.logger.receive(new PacketDetails(packet, i));
+                TerminalPacketHandlers.handleInboundTerminalPacket(ctx, packet);
+                this.logger.receive(new PacketDetails(packet, size));
             }
         }
     }

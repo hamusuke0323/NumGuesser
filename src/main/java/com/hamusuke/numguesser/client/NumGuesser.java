@@ -21,16 +21,13 @@ import com.hamusuke.numguesser.client.network.listener.login.ClientLoginPacketLi
 import com.hamusuke.numguesser.client.network.listener.main.ClientCommonPacketListenerImpl;
 import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
+import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.ServerInfo;
 import com.hamusuke.numguesser.network.ServerInfo.Status;
 import com.hamusuke.numguesser.network.channel.Connection;
-import com.hamusuke.numguesser.network.listener.client.lobby.ClientLobbyPacketListener;
-import com.hamusuke.numguesser.network.protocol.Protocol;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.DisconnectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.handshake.HandshakeReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.LobbyDisconnectReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
 import com.hamusuke.numguesser.util.Util;
 import com.hamusuke.numguesser.util.thread.ReentrantThreadExecutor;
 import org.apache.logging.log4j.LogManager;
@@ -178,9 +175,8 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
             info.status = Status.CONNECTING;
             this.onServerInfoChanged();
             var address = new InetSocketAddress(info.address, info.port);
-            var connection = Connection.connect(new ClientPacketLogger(this), address);
-            connection.setListener(new ClientInfoPacketListenerImpl(this, connection, info));
-            connection.sendPacket(new HandshakeReq(Protocol.INFO));
+            var connection = Connection.connectToServer(address, new ClientPacketLogger(this));
+            connection.initiateServerboundInfoConnection(new ClientInfoPacketListenerImpl(this, connection, info));
             this.infoConnections.add(connection);
         }, this).exceptionally(throwable -> {
             info.status = Status.FAILED;
@@ -297,10 +293,9 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
     public void connectToServer(String host, int port, Consumer<String> consumer) {
         this.clientPlayer = null;
         var address = new InetSocketAddress(host, port);
-        this.connection = Connection.connect(new ClientPacketLogger(this), address);
-        this.connection.setListener(new ClientLoginPacketListenerImpl(this.connection, this, consumer));
-        this.connection.sendPacket(new HandshakeReq(Protocol.LOGIN));
-        this.connection.sendPacket(new KeyExchangeReq());
+        this.connection = Connection.connectToServer(address, new ClientPacketLogger(this));
+        this.connection.initiateServerboundLoginConnection(new ClientLoginPacketListenerImpl(this.connection, this, consumer));
+        this.connection.sendPacket(KeyExchangeReq.INSTANCE);
     }
 
     public boolean isPacketTrash(Packet<?> packet) {
@@ -337,11 +332,6 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
             return;
         }
 
-        if (this.connection.getPacketListener() instanceof ClientLobbyPacketListener) {
-            this.connection.sendPacket(new LobbyDisconnectReq(), future -> this.connection.disconnect(""));
-            return;
-        }
-
-        this.connection.sendPacket(new DisconnectReq(), future -> this.connection.disconnect(""));
+        this.connection.sendPacket(DisconnectReq.INSTANCE, PacketSendListener.thenRun(() -> this.connection.disconnect("")));
     }
 }

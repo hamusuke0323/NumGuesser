@@ -5,17 +5,17 @@ import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomFailNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.JoinRoomSuccNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.ExitGameSuccNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.room.StartGameNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomFailNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.clientbound.JoinRoomSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.ExitGameSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGameNotify;
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
-import com.hamusuke.numguesser.server.network.listener.main.ServerPlayPacketListenerImpl;
-import com.hamusuke.numguesser.server.network.listener.main.ServerRoomPacketListenerImpl;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -78,8 +78,8 @@ public class ServerRoom extends Room {
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
                     this.game = this.gameMode.gameCreator.createGame(this, this.players);
                     this.players.forEach(player -> {
-                        player.sendPacket(new StartGameNotify());
-                        new ServerPlayPacketListenerImpl(this.server, player.connection.getConnection(), player);
+                        player.sendPacket(StartGameNotify.INSTANCE);
+                        player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
                     });
 
                     this.game.startGame();
@@ -103,7 +103,7 @@ public class ServerRoom extends Room {
 
         serverPlayer.curRoom = this;
         serverPlayer.sendPacket(new JoinRoomSuccNotify(this.toInfo()));
-        new ServerRoomPacketListenerImpl(this.server, serverPlayer.connection.getConnection(), serverPlayer);
+        serverPlayer.connection.getConnection().setupOutboundProtocol(RoomProtocols.CLIENTBOUND);
 
         this.sendPacketToAllInRoom(new PlayerJoinNotify(serverPlayer));
         this.players.forEach(player1 -> serverPlayer.sendPacket(new PlayerJoinNotify(player1)));
@@ -171,10 +171,6 @@ public class ServerRoom extends Room {
         return this.password;
     }
 
-    public boolean doesPlayerExist(String name) {
-        return this.players.stream().anyMatch(player -> player.getName().equals(name));
-    }
-
     public synchronized void exitGame(ServerPlayer player) {
         if (this.game != null) {
             this.game.leavePlayer(player);
@@ -183,8 +179,8 @@ public class ServerRoom extends Room {
     }
 
     private void letPlayerExit(ServerPlayer player) {
-        player.sendPacket(new ExitGameSuccNotify());
-        new ServerRoomPacketListenerImpl(this.server, player.connection.getConnection(), player);
+        player.sendPacket(ExitGameSuccNotify.INSTANCE);
+        player.connection.getConnection().setupOutboundProtocol(RoomProtocols.CLIENTBOUND);
     }
 
     public synchronized void abortGame() {

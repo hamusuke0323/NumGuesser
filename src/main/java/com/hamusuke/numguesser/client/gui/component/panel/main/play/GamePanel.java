@@ -10,9 +10,9 @@ import com.hamusuke.numguesser.client.network.listener.main.ClientPlayPacketList
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.ReadyReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq.Command;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.ClientCommandReq.Command;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXPanel;
@@ -325,7 +325,7 @@ public class GamePanel extends Panel {
     }
 
     private void ready() {
-        this.client.getConnection().sendPacket(new ReadyReq());
+        this.client.getConnection().sendPacket(ReadyReq.INSTANCE);
     }
 
     public void onReadySync() {

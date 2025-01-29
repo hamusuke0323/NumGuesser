@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.client.gui.component.panel.dialog;
 
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
 import com.mojang.brigadier.StringReader;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
@@ -13,7 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-import static com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp.MAX_NAME_LENGTH;
+import static com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp.MAX_NAME_LENGTH;
 
 public class LoginPanel extends Panel {
     private JXTextField nameField;

@@ -5,13 +5,14 @@ import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.network.ServerInfo;
 import com.hamusuke.numguesser.network.ServerInfo.Status;
 import com.hamusuke.numguesser.network.channel.Connection;
+import com.hamusuke.numguesser.network.listener.TickablePacketListener;
 import com.hamusuke.numguesser.network.listener.client.info.ClientInfoPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.info.InfoHandshakeDoneNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.info.ServerInfoRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.info.ServerInfoReq;
+import com.hamusuke.numguesser.network.protocol.packet.info.clientbound.InfoHandshakeDoneNotify;
+import com.hamusuke.numguesser.network.protocol.packet.info.clientbound.ServerInfoRsp;
+import com.hamusuke.numguesser.network.protocol.packet.info.serverbound.ServerInfoReq;
 import com.hamusuke.numguesser.util.Util;
 
-public class ClientInfoPacketListenerImpl implements ClientInfoPacketListener {
+public class ClientInfoPacketListenerImpl implements ClientInfoPacketListener, TickablePacketListener {
     private static final int TIMEOUT_TICKS = 100;
     private final NumGuesser client;
     private final Connection connection;
@@ -36,7 +37,7 @@ public class ClientInfoPacketListenerImpl implements ClientInfoPacketListener {
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         if (!msg.equals("Success")) {
             this.target.status = Status.FAILED;
         }
@@ -47,6 +48,11 @@ public class ClientInfoPacketListenerImpl implements ClientInfoPacketListener {
     @Override
     public Connection getConnection() {
         return this.connection;
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override

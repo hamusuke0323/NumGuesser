@@ -1,8 +1,14 @@
 package com.hamusuke.numguesser.network.listener.server.info;
 
-import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.info.ServerInfoReq;
+import com.hamusuke.numguesser.network.listener.server.ServerboundBasePacketListener;
+import com.hamusuke.numguesser.network.protocol.Protocol;
+import com.hamusuke.numguesser.network.protocol.packet.info.serverbound.ServerInfoReq;
 
-public interface ServerInfoPacketListener extends ServerPacketListener {
+public interface ServerInfoPacketListener extends ServerboundBasePacketListener {
+    @Override
+    default Protocol protocol() {
+        return Protocol.INFO;
+    }
+
     void handleInfoReq(ServerInfoReq packet);
 }

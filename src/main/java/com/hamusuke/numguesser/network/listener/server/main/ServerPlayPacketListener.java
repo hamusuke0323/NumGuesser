@@ -1,8 +1,14 @@
 package com.hamusuke.numguesser.network.listener.server.main;
 
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.*;
+import com.hamusuke.numguesser.network.protocol.Protocol;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 
 public interface ServerPlayPacketListener extends ServerCommonPacketListener {
+    @Override
+    default Protocol protocol() {
+        return Protocol.PLAY;
+    }
+
     void handleClientCommand(ClientCommandReq packet);
 
     void handleCardSelect(CardSelectReq packet);
@@ -16,4 +22,6 @@ public interface ServerPlayPacketListener extends ServerCommonPacketListener {
     void handlePairColorChange(PairColorChangeReq packet);
 
     void handlePairMakingDone(PairMakingDoneReq packet);
+
+    void handleGameExited(GameExitedNotify packet);
 }

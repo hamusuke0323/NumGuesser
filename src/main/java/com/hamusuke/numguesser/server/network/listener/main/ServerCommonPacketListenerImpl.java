@@ -2,8 +2,15 @@ package com.hamusuke.numguesser.server.network.listener.main;
 
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerCommonPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.LeaveRoomSuccNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ReadyRsp;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.network.listener.lobby.ServerLobbyPacketListenerImpl;
@@ -25,7 +32,6 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     protected ServerCommonPacketListenerImpl(NumGuesserServer server, Connection connection, ServerPlayer player) {
         this.server = server;
         this.connection = connection;
-        connection.setListener(this);
         this.player = player;
         this.room = this.player.curRoom;
         player.connection = this;
@@ -57,7 +63,7 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     @Override
     public void handleReady(ReadyReq packet) {
         this.player.setReady(true);
-        this.player.sendPacket(new ReadyRsp());
+        this.player.sendPacket(ReadyRsp.INSTANCE);
 
         this.room.onPlayerReady();
     }
@@ -74,7 +80,12 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     @Override
     public void handleLeaveRoom(LeaveRoomReq packet) {
         this.room.leave(this.player);
-        this.player.sendPacket(new LeaveRoomSuccNotify());
+        this.player.sendPacket(LeaveRoomSuccNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(LobbyProtocols.CLIENTBOUND);
+    }
+
+    @Override
+    public void handleLeftRoom(LeftRoomNotify packet) {
         new ServerLobbyPacketListenerImpl(this.server, this.connection, this.player);
     }
 
@@ -94,14 +105,14 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     }
 
     @Override
-    public void handlePongPacket(PongRsp packet) {
+    public void handlePong(PongRsp packet) {
         this.timeoutTicks = 0;
         this.player.setPing((int) (Util.getMeasuringTimeMs() - packet.serverTime()));
     }
 
     @Override
-    public void onDisconnected(String msg) {
-        LOGGER.info("{} lost connection", this.connection.getAddress());
+    public void onDisconnect(String msg) {
+        LOGGER.info("{} lost connection", this.connection.getLoggableAddress(true));
 
         this.room.leave(this.player);
         this.server.getPlayerManager().removePlayer(this.player);
@@ -110,5 +121,10 @@ public abstract class ServerCommonPacketListenerImpl implements ServerCommonPack
     @Override
     public Connection getConnection() {
         return this.connection;
+    }
+
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 }

@@ -12,8 +12,13 @@ import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.*;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.PongRsp;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.LeftRoomNotify;
+import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyProtocols;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 
 import javax.swing.*;
 
@@ -88,7 +93,7 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void handlePingPacket(PingReq packet) {
+    public void handlePing(PingReq packet) {
         if (!this.client.isSameThread()) {
             this.client.executeSync(() -> packet.handle(this));
         }
@@ -97,11 +102,14 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void handleRTTPacket(RTTChangeNotify packet) {
+    public void handleRTTChange(RTTChangeNotify packet) {
         synchronized (this.curRoom.getPlayers()) {
-            this.curRoom.getPlayers().stream()
-                    .filter(p -> p.getId() == packet.id())
-                    .forEach(player -> player.setPing(packet.rtt()));
+            var player = this.curRoom.getPlayer(packet.id());
+            if (player == null) {
+                return;
+            }
+
+            player.setPing(packet.rtt());
         }
 
         SwingUtilities.invokeLater(this.client.playerTable::update);
@@ -128,8 +136,9 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     public void handleLeaveRoomSucc(LeaveRoomSuccNotify packet) {
         this.client.getMainWindow().reset(false);
         var listener = new ClientLobbyPacketListenerImpl(this.client, this.connection);
-        this.connection.setListener(listener);
-        this.connection.setProtocol(packet.nextProtocol());
+        this.connection.setupInboundProtocol(LobbyProtocols.CLIENTBOUND, listener);
+        this.connection.sendPacket(LeftRoomNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(LobbyProtocols.SERVERBOUND);
         this.client.setPanel(new LobbyPanel());
     }
 
@@ -142,7 +151,7 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void onDisconnected(String msg) {
+    public void onDisconnect(String msg) {
         this.client.disconnect();
 
         var list = new ServerListPanel();
@@ -155,12 +164,17 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
         this.client.curRoom = null;
     }
 
-    public NumGuesser getClient() {
-        return this.client;
+    @Override
+    public boolean isAcceptingMessages() {
+        return this.connection.isConnected();
     }
 
     @Override
     public Connection getConnection() {
         return this.connection;
+    }
+
+    public NumGuesser getClient() {
+        return this.client;
     }
 }

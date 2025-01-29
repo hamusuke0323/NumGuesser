@@ -3,9 +3,9 @@ package com.hamusuke.numguesser.client.gui.component.panel.main.play;
 import com.hamusuke.numguesser.client.gui.component.list.PairList;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.ClientCommandReq.Command;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.play.PairMakingDoneReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.ClientCommandReq.Command;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairMakingDoneReq;
 import org.jdesktop.swingx.JXBusyLabel;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
@@ -53,7 +53,7 @@ public class PairMakingPanel extends Panel {
     }
 
     private void startGame() {
-        this.client.getConnection().sendPacket(new PairMakingDoneReq());
+        this.client.getConnection().sendPacket(PairMakingDoneReq.INSTANCE);
     }
 
     @Override

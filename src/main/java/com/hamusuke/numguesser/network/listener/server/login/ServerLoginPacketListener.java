@@ -1,17 +1,23 @@
 package com.hamusuke.numguesser.network.listener.server.login;
 
-import com.hamusuke.numguesser.network.listener.server.ServerPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EncryptionSetupReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.EnterNameRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.KeyExchangeReq;
+import com.hamusuke.numguesser.network.listener.server.ServerboundBasePacketListener;
+import com.hamusuke.numguesser.network.protocol.Protocol;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EncryptionSetupReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.EnterNameRsp;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
+import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.LobbyJoinedNotify;
 
-public interface ServerLoginPacketListener extends ServerPacketListener {
+public interface ServerLoginPacketListener extends ServerboundBasePacketListener {
+    @Override
+    default Protocol protocol() {
+        return Protocol.LOGIN;
+    }
+
     void handleKeyEx(KeyExchangeReq packet);
 
     void handleEncryption(EncryptionSetupReq packet);
 
-    void handlePing(AliveReq packet);
-
     void handleEnterName(EnterNameRsp packet);
+
+    void handleLobbyJoined(LobbyJoinedNotify packet);
 }

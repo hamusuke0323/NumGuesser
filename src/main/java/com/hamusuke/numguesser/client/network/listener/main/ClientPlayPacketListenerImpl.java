@@ -12,13 +12,15 @@ import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
-import com.hamusuke.numguesser.game.card.Card.CardSerializer;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.client.main.ClientPlayPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PlayerReadySyncNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ReadyRsp;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.PlayerReadySyncNotify;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ReadyRsp;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.GameExitedNotify;
+import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
@@ -111,8 +113,9 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     public void handleExitGameSucc(ExitGameSuccNotify packet) {
         this.client.getMainWindow().reset(false);
         var listener = new ClientRoomPacketListenerImpl(this.client, this.connection);
-        this.connection.setListener(listener);
-        this.connection.setProtocol(packet.nextProtocol());
+        this.connection.setupInboundProtocol(RoomProtocols.CLIENTBOUND, listener);
+        this.connection.sendPacket(GameExitedNotify.INSTANCE);
+        this.connection.setupOutboundProtocol(RoomProtocols.SERVERBOUND);
         this.client.playerTable.removePointColumn();
         this.client.setPanel(new RoomPanel());
     }
@@ -168,7 +171,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
-    public void handlePlayerStartAttacking(PlayerStartAttackingNotify packet) {
+    public void handlePlayerStartAttacking(PlayerStartAttackNotify packet) {
         this.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.prepareAttacking(packet.card().toClientCard(), packet.cancellable());
@@ -178,7 +181,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
-    public void handleRemotePlayerStartAttacking(RemotePlayerStartAttackingNotify packet) {
+    public void handleRemotePlayerStartAttacking(RemotePlayerStartAttackNotify packet) {
         this.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             remotePlayer.onAttack(packet.cardForAttack().toClientCard());

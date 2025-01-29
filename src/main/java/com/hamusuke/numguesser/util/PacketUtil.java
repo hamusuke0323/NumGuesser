@@ -2,13 +2,9 @@ package com.hamusuke.numguesser.util;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.PingReq;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.RTTChangeNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.LobbyPongRsp;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.AliveRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.common.PongRsp;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.LobbyPingReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.login.AliveReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
+import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
+import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,10 +15,6 @@ import java.util.List;
 public class PacketUtil {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final List<String> LOOP_PACKETS = Lists.newArrayList(
-            AliveReq.class.getSimpleName(),
-            AliveRsp.class.getSimpleName(),
-            LobbyPingReq.class.getSimpleName(),
-            LobbyPongRsp.class.getSimpleName(),
             PongRsp.class.getSimpleName(),
             PingReq.class.getSimpleName(),
             RTTChangeNotify.class.getSimpleName()

@@ -1,8 +1,14 @@
 package com.hamusuke.numguesser.network.listener.client.main;
 
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
+import com.hamusuke.numguesser.network.protocol.Protocol;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
 
 public interface ClientPlayPacketListener extends ClientCommonPacketListener {
+    @Override
+    default Protocol protocol() {
+        return Protocol.PLAY;
+    }
+
     void handlePairMakingStart(PairMakingStartNotify packet);
 
     void handlePairColorChange(PairColorChangeNotify packet);
@@ -27,9 +33,9 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet);
 
-    void handlePlayerStartAttacking(PlayerStartAttackingNotify packet);
+    void handlePlayerStartAttacking(PlayerStartAttackNotify packet);
 
-    void handleRemotePlayerStartAttacking(RemotePlayerStartAttackingNotify packet);
+    void handleRemotePlayerStartAttacking(RemotePlayerStartAttackNotify packet);
 
     void handleCardOpen(CardOpenNotify packet);
 

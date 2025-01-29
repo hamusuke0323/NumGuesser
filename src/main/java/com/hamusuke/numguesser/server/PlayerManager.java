@@ -1,10 +1,9 @@
 package com.hamusuke.numguesser.server;
 
 import com.google.common.collect.Lists;
+import com.hamusuke.numguesser.network.PacketSendListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
@@ -32,7 +31,7 @@ public class PlayerManager {
         this.sendPacketToAll(packet, null);
     }
 
-    public void sendPacketToAll(Packet<?> packet, @Nullable GenericFutureListener<? extends Future<? super Void>> callback) {
+    public void sendPacketToAll(Packet<?> packet, @Nullable PacketSendListener callback) {
         synchronized (this.players) {
             this.players.forEach(serverPlayer -> serverPlayer.sendPacket(packet, callback));
         }

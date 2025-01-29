@@ -2,14 +2,11 @@ package com.hamusuke.numguesser.util;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.hamusuke.numguesser.network.listener.PacketListener;
-import com.hamusuke.numguesser.network.listener.server.lobby.ServerLobbyPacketListener;
-import com.hamusuke.numguesser.network.listener.server.login.ServerLoginPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.DisconnectNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.lobby.LobbyDisconnectNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.login.LoginDisconnectNotify;
+import com.google.common.net.InetAddresses;
 
+import java.net.Inet6Address;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -17,6 +14,26 @@ import java.util.function.*;
 
 public class Util {
     public static final LongSupplier nanoTimeSupplier = System::nanoTime;
+
+    public static String getAddressString(SocketAddress address) {
+        if (address instanceof InetSocketAddress inetAddress) {
+            String formatted;
+            if (inetAddress.isUnresolved()) {
+                formatted = inetAddress.getHostName() + "/<unresolved>";
+            } else {
+                formatted = InetAddresses.toAddrString(inetAddress.getAddress());
+                if (inetAddress.getAddress() instanceof Inet6Address) {
+                    formatted = "[" + formatted + "]";
+                }
+
+                formatted = "/" + formatted;
+            }
+
+            return formatted + ":" + inetAddress.getPort();
+        }
+
+        return address.toString();
+    }
 
     public static <K, K1, V, V1> Map<K1, V1> transformToNewMap(Map<K, V> from, Function<K, K1> keyTransformer, Function<V, V1> valueTransformer) {
         Map<K1, V1> newMap = Maps.newHashMapWithExpectedSize(from.size());
@@ -50,16 +67,6 @@ public class Util {
 
     public static <K, V, V1> Map<K, V1> transformToNewImmutableMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
         return ImmutableMap.copyOf(transformToNewMapOnlyValues(from, valueTransformer));
-    }
-
-    public static Packet<?> toDisconnectPacket(PacketListener listener, String msg) {
-        if (listener instanceof ServerLoginPacketListener) {
-            return new LoginDisconnectNotify(msg);
-        } else if (listener instanceof ServerLobbyPacketListener) {
-            return new LobbyDisconnectNotify(msg);
-        } else {
-            return new DisconnectNotify(msg);
-        }
     }
 
     public static String toHTML(String s) {

@@ -3,10 +3,10 @@ package com.hamusuke.numguesser.client.gui.component.panel.lobby;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.NewRoomPanel;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.CreateRoomReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.JoinRoomReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.RoomListQueryReq;
-import com.hamusuke.numguesser.network.protocol.packet.serverbound.lobby.RoomListReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.CreateRoomReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.JoinRoomReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.RoomListQueryReq;
+import com.hamusuke.numguesser.network.protocol.packet.lobby.serverbound.RoomListReq;
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import org.jdesktop.swingx.JXButton;
@@ -157,7 +157,7 @@ public class LobbyPanel extends Panel implements ListSelectionListener {
     private void refresh() {
         this.getModel().clear();
         this.onRoomListChanged();
-        this.client.getConnection().sendPacket(new RoomListReq());
+        this.client.getConnection().sendPacket(RoomListReq.INSTANCE);
         this.join.setEnabled(false);
         this.refresh.setEnabled(false);
         this.refreshTicks = 60;

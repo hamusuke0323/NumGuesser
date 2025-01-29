@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.network.channel;
 
+import com.hamusuke.numguesser.network.VarInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
@@ -8,9 +9,10 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.zip.Deflater;
 
+import static com.hamusuke.numguesser.network.channel.PacketInflater.MAXIMUM_UNCOMPRESSED_LENGTH;
+
 public class PacketDeflater extends MessageToByteEncoder<ByteBuf> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int MAXIMUM_COMPRESSED_LENGTH = 2097152;
     private final byte[] encodeBuf = new byte[8192];
     private final Deflater deflater;
     private int threshold;
@@ -23,25 +25,23 @@ public class PacketDeflater extends MessageToByteEncoder<ByteBuf> {
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) {
         int i = msg.readableBytes();
-        var byteBuf = new IntelligentByteBuf(out);
+        if (i > MAXIMUM_UNCOMPRESSED_LENGTH) {
+            throw new IllegalArgumentException("Packet too big (is " + i + ", should be less than " + MAXIMUM_UNCOMPRESSED_LENGTH + ")");
+        }
+
         if (i < this.threshold) {
-            byteBuf.writeVarInt(0);
-            byteBuf.writeBytes(msg);
+            VarInt.write(out, 0);
+            out.writeBytes(msg);
         } else {
-            if (i > MAXIMUM_COMPRESSED_LENGTH) {
-                msg.markReaderIndex();
-                LOGGER.error("Attempted to send packet over maximum protocol size: {} > {}}", i, MAXIMUM_COMPRESSED_LENGTH);
-                msg.resetReaderIndex();
-            }
-            var bytes = new byte[i];
-            msg.readBytes(bytes);
-            byteBuf.writeVarInt(bytes.length);
-            this.deflater.setInput(bytes, 0, i);
+            byte[] abyte = new byte[i];
+            msg.readBytes(abyte);
+            VarInt.write(out, abyte.length);
+            this.deflater.setInput(abyte, 0, i);
             this.deflater.finish();
 
             while (!this.deflater.finished()) {
                 int j = this.deflater.deflate(this.encodeBuf);
-                byteBuf.writeBytes(this.encodeBuf, 0, j);
+                out.writeBytes(this.encodeBuf, 0, j);
             }
 
             this.deflater.reset();

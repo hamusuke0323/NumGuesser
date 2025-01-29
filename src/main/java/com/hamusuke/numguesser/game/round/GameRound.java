@@ -7,8 +7,8 @@ import com.hamusuke.numguesser.game.card.Card.CardColor;
 import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.common.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.clientbound.play.*;
+import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
 import com.hamusuke.numguesser.server.game.ServerCard;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -167,8 +167,8 @@ public class GameRound {
         this.gameState = GameState.ATTACKING;
         this.cancelOperation = cancellable;
         this.curCardForAttacking = card;
-        this.curAttacker.sendPacket(new PlayerStartAttackingNotify(card.toSerializer(), cancellable.isCancellable()));
-        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackingNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
+        this.curAttacker.sendPacket(new PlayerStartAttackNotify(card.toSerializer(), cancellable.isCancellable()));
+        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
@@ -177,7 +177,7 @@ public class GameRound {
         }
 
         switch (this.cancelOperation) {
-            case BACK_TO_CONTINUE_OR_STAY -> this.curAttacker.sendPacket(new AttackSuccNotify());
+            case BACK_TO_CONTINUE_OR_STAY -> this.curAttacker.sendPacket(AttackSuccNotify.INSTANCE);
             case BACK_TO_SELECTING_CARD_FOR_ATTACKING -> this.selectCardForAttack();
         }
     }
@@ -195,7 +195,7 @@ public class GameRound {
 
     public void onAttack(ServerPlayer attacker, int id, int num) {
         if (this.curAttacker != attacker) {
-            attacker.sendPacket(new AttackRsp());
+            attacker.sendPacket(AttackRsp.INSTANCE);
             return;
         }
 
@@ -204,7 +204,7 @@ public class GameRound {
             return;
         }
 
-        attacker.sendPacket(new AttackRsp());
+        attacker.sendPacket(AttackRsp.INSTANCE);
 
         this.sendAttackDetailToAll(attacker, num, this.cardIdPlayerMap.get(card.getId()));
         if (card.getNum() == num) {
@@ -236,7 +236,7 @@ public class GameRound {
         }
 
         this.gameState = GameState.WAITING_PLAYER_CONTINUE_OR_STAY;
-        this.curAttacker.sendPacket(new AttackSuccNotify());
+        this.curAttacker.sendPacket(AttackSuccNotify.INSTANCE);
     }
 
     protected void giveTipToAttacker(Card openedCard) {
