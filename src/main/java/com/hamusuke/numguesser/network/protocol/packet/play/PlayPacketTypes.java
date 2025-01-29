@@ -24,6 +24,8 @@ public class PlayPacketTypes {
     public static final PacketType<PlayerNewDeckNotify> PLAYER_NEW_DECK = createClientbound("player_new_deck");
     public static final PacketType<PlayerStartAttackNotify> PLAYER_START_ATTACK = createClientbound("player_start_attack");
     public static final PacketType<RemotePlayerSelectCardForAttackNotify> REMOTE_PLAYER_SELECT_CARD_FOR_ATTACK = createClientbound("remote_player_select_card_for_attack");
+    public static final PacketType<RemotePlayerSelectCardForTossNotify> REMOTE_PLAYER_SELECT_CARD_FOR_TOSS = createClientbound("remote_player_select_card_for_toss");
+    public static final PacketType<RemotePlayerSelectTossOrAttackNotify> REMOTE_PLAYER_SELECT_TOSS_OR_ATTACK = createClientbound("remote_player_select_toss_or_attack");
     public static final PacketType<RemotePlayerStartAttackNotify> REMOTE_PLAYER_START_ATTACK = createClientbound("remote_player_start_attack");
     public static final PacketType<SeatingArrangementNotify> SEATING_ARRANGEMENT = createClientbound("seating_arrangement");
     public static final PacketType<StartGameRoundNotify> START_GAME_ROUND = createClientbound("start_game_round");

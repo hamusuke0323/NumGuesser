@@ -127,7 +127,6 @@ public class GamePanel extends Panel {
     }
 
     public void onSelectCardForAttackReq(boolean cancellable) {
-        this.selectedCard = null;
         this.setStatusLabel("ふせたカードの中から、アタックするためのカードを選んでください");
         this.setCardShowCase(null);
         this.setAttackBtnEnabled(false);
@@ -142,7 +141,6 @@ public class GamePanel extends Panel {
     }
 
     public void onSelectTossOrAttack() {
-        this.selectedCard = null;
         this.setStatusLabel("トスをしてもらうかアタックするかを選んでください");
         this.setCardShowCase(null);
         this.setAttackBtnEnabled(false);
@@ -165,7 +163,6 @@ public class GamePanel extends Panel {
     }
 
     public void onTossReq() {
-        this.selectedCard = null;
         this.setStatusLabel("味方にトスするカードを選んでください");
         this.setCardShowCase(null);
         this.setAttackBtnEnabled(false);
@@ -197,6 +194,32 @@ public class GamePanel extends Panel {
         this.setCardShowCase(null);
     }
 
+    public void onRemotePlayerSelectTossOrAttack(RemotePlayer remotePlayer) {
+        this.setAttackBtnEnabled(false);
+        this.setStatusLabel(remotePlayer.getName() + "がトスかアタックかを選んでいます");
+        this.setCardShowCase(null);
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.selectThisCardBtn.setVisible(false);
+        this.toss.setVisible(false);
+        this.letAllyToss.setVisible(false);
+        this.attackWithoutToss.setVisible(false);
+    }
+
+    public void onRemotePlayerSelectCardForToss(RemotePlayer remotePlayer) {
+        this.setAttackBtnEnabled(false);
+        this.setStatusLabel(remotePlayer.getName() + "がトスするカードを選んでいます");
+        this.setCardShowCase(null);
+        this.continueBtn.setVisible(false);
+        this.stayBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.selectThisCardBtn.setVisible(false);
+        this.toss.setVisible(false);
+        this.letAllyToss.setVisible(false);
+        this.attackWithoutToss.setVisible(false);
+    }
+
     public void prepareAttacking(AbstractClientCard card, boolean cancellable) {
         this.setStatusLabel("あなたの番です。アタックしてください");
         this.setCardShowCase(card);
@@ -215,6 +238,8 @@ public class GamePanel extends Panel {
         this.setStatusLabel(player.getName() + "がアタックしています");
         this.continueBtn.setVisible(false);
         this.stayBtn.setVisible(false);
+        this.cancelBtn.setVisible(false);
+        this.toss.setVisible(false);
         this.setCardShowCase(null);
     }
 
