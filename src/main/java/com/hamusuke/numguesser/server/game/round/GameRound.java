@@ -62,7 +62,7 @@ public class GameRound {
     }
 
     public void startRound() {
-        this.parentDeterminer.determine(this.players, this.cardRegistry);
+        this.parentDeterminer.determineParentPermutationIfNeeded(this.players, this.cardRegistry);
         final var parent = this.parentDeterminer.getCurrentParent();
         this.winner = parent;
         this.curAttacker = parent;
@@ -72,10 +72,6 @@ public class GameRound {
         this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArranger.getSeatingArrangement()));
         this.giveOutCards();
         this.startAttacking();
-    }
-
-    protected SeatingArranger newSeatingArranger() {
-        return new SeatingArranger();
     }
 
     protected void giveOutCards() {

@@ -11,7 +11,7 @@ public class ParentDeterminer {
     private final Map<ServerPlayer, Card> pulledCardMap = Maps.newHashMap();
     private ServerPlayer parent;
 
-    public void determine(final List<ServerPlayer> players, final CardRegistry cardRegistry) {
+    public void determineParentPermutationIfNeeded(final List<ServerPlayer> players, final CardRegistry cardRegistry) {
         if (this.parent != null) {
             return;
         }
