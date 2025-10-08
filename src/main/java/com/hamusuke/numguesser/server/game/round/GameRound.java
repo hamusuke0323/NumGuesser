@@ -3,34 +3,30 @@ package com.hamusuke.numguesser.server.game.round;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.card.Card;
-import com.hamusuke.numguesser.game.card.Card.CardColor;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
 
 import javax.annotation.Nullable;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class GameRound {
-    private final AtomicInteger idIncrementer = new AtomicInteger();
-    private final Supplier<Integer> idGenerator = this.idIncrementer::getAndIncrement;
     protected final NormalGameMode game;
     protected final List<ServerPlayer> players;
     protected final List<Integer> seatingArrangement = Lists.newArrayList();
-    protected final Random random = new SecureRandom();
+    protected final Random random;
+    protected final CardRegistry cardRegistry;
     protected ServerPlayer parent;
-    protected final List<Card> deck;
     protected final Map<ServerPlayer, Card> pulledCardMapForDecidingParent = Maps.newHashMap();
-    protected final Map<Integer, Card> ownCardIdMap = Maps.newConcurrentMap();
-    protected final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
     protected ServerPlayer curAttacker;
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
@@ -44,16 +40,15 @@ public class GameRound {
         this.parent = parent;
         this.winner = parent;
 
-        this.deck = Lists.newArrayList();
-        for (var color : CardColor.values()) {
-            for (int i = 0; i < 12; i++) {
-                this.deck.add(new ServerCard(color, i));
-            }
+        Random random;
+        try {
+            random = SecureRandom.getInstanceStrong();
+        } catch (NoSuchAlgorithmException e) {
+            random = new Random(Util.getMeasuringTimeNano());
         }
 
-        Collections.shuffle(this.deck, this.random);
-        this.idIncrementer.set(this.random.nextInt(8));
-        this.deck.forEach(card -> card.setId(this.idGenerator.get()));
+        this.random = random;
+        this.cardRegistry = new CardRegistry(random);
     }
 
     public void startRound() {
@@ -82,26 +77,23 @@ public class GameRound {
 
         this.pulledCardMapForDecidingParent.clear();
         for (var player : this.players) {
-            this.pulledCardMapForDecidingParent.put(player, Util.chooseRandom(this.deck, player.getRandom()));
+            this.pulledCardMapForDecidingParent.put(player, this.cardRegistry.peek(player.getRandom()));
         }
 
         this.nextParent();
     }
 
     protected void giveOutCards() {
-        Collections.shuffle(this.deck, this.parent.getRandom());
+        this.cardRegistry.shuffle(this.parent.getRandom());
         this.players.forEach(ServerPlayer::makeNewDeck);
 
         for (var player : this.players) {
             for (int i = 0; i < this.getGivenCardNumPerPlayer(); i++) {
-                if (this.deck.isEmpty()) {
+                if (this.cardRegistry.isEmpty()) {
                     break;
                 }
 
-                var card = this.deck.remove(0);
-                player.getDeck().addCard(card);
-                this.ownCardIdMap.put(card.getId(), card);
-                this.cardIdPlayerMap.put(card.getId(), player);
+                player.getDeck().addCard(this.cardRegistry.pullBy(player));
             }
 
             player.sendPacket(new PlayerDeckSyncNotify(player.getId(), player.getDeck().getCards().stream().map(Card::toSerializer).toList()));
@@ -110,12 +102,12 @@ public class GameRound {
     }
 
     protected void startAttacking() {
-        var card = this.pullCardFromDeck();
-        if (card == null) {
+        if (this.cardRegistry.isEmpty()) {
             this.selectCardForAttack();
             return;
         }
 
+        final var card = this.cardRegistry.pull();
         this.decideCardForAttacking(card, CancelOperation.DO_NOTHING);
     }
 
@@ -135,8 +127,8 @@ public class GameRound {
             return;
         }
 
-        var card = this.ownCardIdMap.get(id);
-        var cardHolder = this.cardIdPlayerMap.get(id);
+        var card = this.cardRegistry.getOwnedCardById(id);
+        var cardHolder = this.cardRegistry.getCardOwnerById(id);
         if (cardHolder != this.curAttacker || card == null || card.isOpened()) {
             this.selectCardForAttack(); // Try again
             return;
@@ -145,18 +137,8 @@ public class GameRound {
         this.decideCardForAttacking(card, CancelOperation.BACK_TO_SELECTING_CARD_FOR_ATTACKING);
     }
 
-    @Nullable
-    protected Card pullCardFromDeck() {
-        if (this.deck.isEmpty()) {
-            return null;
-        }
-
-        return this.deck.remove(0);
-    }
-
     protected void ownCard(ServerPlayer player, Card card) {
-        if (this.ownCardIdMap.put(card.getId(), card) == null) {
-            this.cardIdPlayerMap.put(card.getId(), player);
+        if (this.cardRegistry.own(player, card)) {
             int index = player.getDeck().addCard(card);
             player.sendPacket(new PlayerNewCardAddNotify(player.getId(), index, card.toSerializer()));
             this.sendPacketToOthersInGame(player, new PlayerNewCardAddNotify(player.getId(), index, card.toSerializerForOthers()));
@@ -187,7 +169,7 @@ public class GameRound {
             return;
         }
 
-        var cardHolder = this.cardIdPlayerMap.get(cardId);
+        var cardHolder = this.cardRegistry.getCardOwnerById(cardId);
         if (this.curAttacker != cardHolder) { // attacker must select the others' cards.
             this.sendPacketToAllInGame(new PlayerCardSelectionSyncNotify(this.curAttacker.getId(), cardId));
         }
@@ -199,14 +181,14 @@ public class GameRound {
             return;
         }
 
-        var card = this.ownCardIdMap.get(id);
+        var card = this.cardRegistry.getOwnedCardById(id);
         if (card == null || card.isOpened() || !this.canAttack(card)) {
             return;
         }
 
         attacker.sendPacket(AttackRsp.INSTANCE);
 
-        this.sendAttackDetailToAll(attacker, num, this.cardIdPlayerMap.get(card.getId()));
+        this.sendAttackDetailToAll(attacker, num, this.cardRegistry.getCardOwnerById(card.getId()));
         if (card.getNum() == num) {
             this.onAttackSucceeded(card);
         } else {
@@ -215,7 +197,7 @@ public class GameRound {
     }
 
     protected boolean canAttack(Card card) {
-        return this.cardIdPlayerMap.get(card.getId()) != this.curAttacker;
+        return !this.cardRegistry.isCardOwnedBy(this.curAttacker, card);
     }
 
     protected void sendAttackDetailToAll(ServerPlayer attacker, int num, ServerPlayer beAttackedPlayer) {
@@ -240,7 +222,7 @@ public class GameRound {
     }
 
     protected void giveTipToAttacker(Card openedCard) {
-        var cardHolder = this.cardIdPlayerMap.get(openedCard.getId());
+        var cardHolder = this.cardRegistry.getCardOwnerById(openedCard.getId());
         if (cardHolder != null) {
             cardHolder.subTipPoint(openedCard.getPoint());
         }
@@ -268,7 +250,7 @@ public class GameRound {
         this.sendPacketToAllInGame(new CardOpenNotify(this.curCardForAttacking.toSerializer()));
         this.sendPacketToAllInGame(new ChatNotify("アタック失敗です"));
 
-        var closedCardHolder = this.cardIdPlayerMap.get(closedCard.getId());
+        var closedCardHolder = this.cardRegistry.getCardOwnerById(closedCard.getId());
         if (this.shouldEndRound(this.curCardForAttacking) || this.arePlayersDefeatedBy(closedCardHolder)) {
             // when all players excluding closed card owner are defeated, end the round.
             this.winner = closedCardHolder;
@@ -285,7 +267,7 @@ public class GameRound {
     }
 
     protected boolean shouldEndRound(Card openedCard) {
-        var player = this.cardIdPlayerMap.get(openedCard.getId());
+        var player = this.cardRegistry.getCardOwnerById(openedCard.getId());
         if (player == null) {
             this.sendPacketToAllInGame(new ChatNotify(new NullPointerException("player is null").toString()));
             this.sendPacketToAllInGame(new ChatNotify("エラーが発生したのでラウンドを終了します"));

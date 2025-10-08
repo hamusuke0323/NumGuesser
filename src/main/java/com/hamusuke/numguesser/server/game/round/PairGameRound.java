@@ -55,8 +55,8 @@ public class PairGameRound extends GameRound {
     }
 
     public void onToss(ServerPlayer tosser, int cardId) {
-        var cardHolder = this.cardIdPlayerMap.get(cardId);
-        var card = this.ownCardIdMap.get(cardId); // card == null should never happen
+        var cardHolder = this.cardRegistry.getCardOwnerById(cardId);
+        var card = this.cardRegistry.getOwnedCardById(cardId); // card == null should never happen
         if (this.gameState != GameState.TOSSING || cardHolder != tosser || card == null) {
             return;
         }
@@ -87,7 +87,7 @@ public class PairGameRound extends GameRound {
 
     @Override
     protected boolean canAttack(Card card) {
-        var cardOwner = this.cardIdPlayerMap.get(card.getId());
+        var cardOwner = this.cardRegistry.getCardOwnerById(card.getId());
         return super.canAttack(card) && cardOwner.getPairColor() != this.curAttacker.getPairColor();
     }
 
