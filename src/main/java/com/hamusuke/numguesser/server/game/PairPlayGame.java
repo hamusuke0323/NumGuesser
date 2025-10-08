@@ -1,14 +1,12 @@
 package com.hamusuke.numguesser.server.game;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.pair.PlayerPair.PairColor;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairColorChangeNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairMakingStartNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColorChangeReq;
-import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
+import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.PairGameRound;
 import com.hamusuke.numguesser.server.game.seating.PairPlaySeatingArranger;
@@ -18,11 +16,9 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class PairPlayGame extends NormalGame {
-    private final ServerPlayerPair bluePair = new ServerPlayerPair(PairColor.BLUE);
-    private final ServerPlayerPair redPair = new ServerPlayerPair(PairColor.RED);
+    private final ServerPlayerPairRegistry pairRegistry = new ServerPlayerPairRegistry();
     private boolean hasMadeTeam;
 
     public PairPlayGame(ServerRoom room, List<ServerPlayer> players) {
@@ -31,14 +27,14 @@ public class PairPlayGame extends NormalGame {
 
     @Override
     protected SeatingArranger newSeatingArranger() {
-        return new PairPlaySeatingArranger(this.bluePair, this.redPair);
+        return new PairPlaySeatingArranger(this.pairRegistry);
     }
 
     @Override
     public void startGame() {
         if (!this.hasMadeTeam) {
             this.makePairRandomly();
-            this.sendPacketToAllInGame(PairMakingStartNotify.from(this.toPairMap()));
+            this.sendPacketToAllInGame(PairMakingStartNotify.from(this.pairRegistry.toPlayer2ColorMap()));
             return;
         }
 
@@ -79,21 +75,18 @@ public class PairPlayGame extends NormalGame {
             return;
         }
 
-        this.hasMadeTeam = true;
-        var bluePlayers = this.players.stream().filter(player -> player.getPairColor() == PairColor.BLUE).toList();
-        var redPlayers = this.players.stream().filter(player -> player.getPairColor() == PairColor.RED).toList();
+        for (final var color : PairColor.values()) {
+            final var players = this.players.stream().filter(player -> player.getPairColor() == color).toList();
+            if (players.size() != 2) {
+                return;
+            }
 
-        if (bluePlayers.size() != 2 || redPlayers.size() != 2) {
-            this.hasMadeTeam = false;
-            return;
+            final var pair = this.pairRegistry.get(color);
+            pair.left(players.get(0));
+            pair.right(players.get(1));
         }
 
-        // Make pairs
-        this.bluePair.left(bluePlayers.get(0));
-        this.bluePair.right(bluePlayers.get(1));
-        this.redPair.left(redPlayers.get(0));
-        this.redPair.right(redPlayers.get(1));
-
+        this.hasMadeTeam = true;
         this.startGame();
     }
 
@@ -107,19 +100,8 @@ public class PairPlayGame extends NormalGame {
         return (PairGameRound) super.getRound();
     }
 
-    public ServerPlayerPair getBluePair() {
-        return this.bluePair;
-    }
-
-    public ServerPlayerPair getRedPair() {
-        return this.redPair;
-    }
-
-    private Map<ServerPlayer, PairColor> toPairMap() {
-        Map<ServerPlayer, PairColor> pairMap = Maps.newHashMap();
-        pairMap.putAll(this.bluePair.toMap());
-        pairMap.putAll(this.redPair.toMap());
-        return ImmutableMap.copyOf(pairMap);
+    public ServerPlayerPairRegistry getPairRegistry() {
+        return this.pairRegistry;
     }
 
     public void makePairRandomly() {
@@ -129,7 +111,7 @@ public class PairPlayGame extends NormalGame {
         Collections.shuffle(copied, random);
 
         for (int i = 0; i < this.players.size(); i++) {
-            var pair = i % 2 == 0 ? this.bluePair : this.redPair;
+            final var pair = this.pairRegistry.get(i % 2 == 0 ? PairColor.BLUE : PairColor.RED);
             if (i < 2) {
                 pair.left(copied.get(i));
             } else {

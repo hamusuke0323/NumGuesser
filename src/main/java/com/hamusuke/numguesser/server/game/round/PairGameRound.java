@@ -1,36 +1,34 @@
 package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.game.pair.PlayerPair;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
 import com.hamusuke.numguesser.server.game.PairPlayGame;
-import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
+import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
 public class PairGameRound extends GameRound {
-    private final ServerPlayerPair bluePair;
-    private final ServerPlayerPair redPair;
+    private final ServerPlayerPairRegistry pairRegistry;
 
     public PairGameRound(PairPlayGame game, List<ServerPlayer> players) {
         super(game, players);
-        this.bluePair = game.getBluePair();
-        this.redPair = game.getRedPair();
+        this.pairRegistry = game.getPairRegistry();
     }
 
     protected PairGameRound(final PairGameRound old) {
         super(old);
-        this.bluePair = old.bluePair;
-        this.redPair = old.redPair;
+        this.pairRegistry = old.pairRegistry;
     }
 
     @Override
     protected void startAttacking() {
         // If the buddy for the attacker is defeated, toss is not allowed.
-        if (this.getBuddyFor(this.curAttacker).isDefeated()) {
+        if (this.pairRegistry.getBuddyFor(this.curAttacker).isDefeated()) {
             this.selectCardForAttack();
             return;
         }
@@ -49,7 +47,7 @@ public class PairGameRound extends GameRound {
             return;
         }
 
-        var buddy = this.getBuddyFor(this.curAttacker);
+        var buddy = this.pairRegistry.getBuddyFor(this.curAttacker);
         if (buddy.isDefeated()) { // hey bro, i am already defeated, lol
             this.selectCardForAttack();
             return;
@@ -80,17 +78,6 @@ public class PairGameRound extends GameRound {
         this.selectCardForAttack(CancelOperation.BACK_TO_SELECTING_TOSS_OR_ATTACKING); // cancel operation for misclick.
     }
 
-    protected final ServerPlayerPair getPairFor(ServerPlayer player) {
-        return switch (player.getPairColor()) {
-            case BLUE -> this.bluePair;
-            case RED -> this.redPair;
-        };
-    }
-
-    protected final ServerPlayer getBuddyFor(ServerPlayer oneOfPair) {
-        return this.getPairFor(oneOfPair).getBuddyFor(oneOfPair);
-    }
-
     @Override
     protected boolean canAttack(Card card) {
         var cardOwner = this.cardRegistry.getCardOwnerById(card.getId());
@@ -114,7 +101,7 @@ public class PairGameRound extends GameRound {
     @Override
     protected boolean arePlayersDefeatedBy(@Nullable ServerPlayer player) {
         return this.players.stream()
-                .filter(sp -> !sp.equals(player) && !sp.equals(this.getBuddyFor(player)))
+                .filter(sp -> !sp.equals(player) && !sp.equals(this.pairRegistry.getBuddyFor(player)))
                 .allMatch(ServerPlayer::isDefeated);
     }
 
@@ -124,7 +111,7 @@ public class PairGameRound extends GameRound {
             return;
         }
 
-        var pair = this.getPairFor(this.winner);
+        var pair = this.pairRegistry.get(this.winner);
         var buddy = pair.getBuddyFor(this.winner);
         int point = this.winner.getDeck().getCards().stream()
                 .mapToInt(Card::getPoint)
@@ -149,15 +136,19 @@ public class PairGameRound extends GameRound {
 
     @Override
     protected void showWonMessage() {
-        int bluePairPoints = this.bluePair.getPlayers().stream().mapToInt(Player::getTipPoint).sum();
-        int redPairPoints = this.redPair.getPlayers().stream().mapToInt(Player::getTipPoint).sum();
+        int bluePairPoints = this.pairRegistry.getPlayers(PlayerPair.PairColor.BLUE).stream()
+                .mapToInt(Player::getTipPoint)
+                .sum();
+        int redPairPoints = this.pairRegistry.getPlayers(PlayerPair.PairColor.RED).stream()
+                .mapToInt(Player::getTipPoint)
+                .sum();
 
         if (bluePairPoints == redPairPoints) {
             this.sendPacketToAllInGame(new ChatNotify("どちらのペアも得点が同じなのでドローです"));
             return;
         }
 
-        var wonPair = bluePairPoints > redPairPoints ? this.bluePair : this.redPair;
+        final var wonPair = this.pairRegistry.get(bluePairPoints > redPairPoints ? PlayerPair.PairColor.BLUE : PlayerPair.PairColor.RED);
         this.sendPacketToAllInGame(new ChatNotify("合計" + Math.max(bluePairPoints, redPairPoints) + "点で " + wonPair.left().getDisplayName() + " と " + wonPair.right().getDisplayName() + " が勝利しました"));
     }
 
