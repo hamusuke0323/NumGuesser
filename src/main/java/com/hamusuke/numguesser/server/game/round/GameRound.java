@@ -1,12 +1,12 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.mode.NormalGameMode;
+import com.hamusuke.numguesser.server.game.NormalGameMode;
+import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
 
@@ -20,10 +20,10 @@ import java.util.Random;
 public class GameRound {
     protected final NormalGameMode game;
     protected final List<ServerPlayer> players;
-    protected final List<Integer> seatingArrangement = Lists.newArrayList();
     protected final Random random;
     protected final CardRegistry cardRegistry;
     protected final ParentDeterminer parentDeterminer;
+    protected final SeatingArranger seatingArranger;
     protected ServerPlayer curAttacker;
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
@@ -31,10 +31,26 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(NormalGameMode game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
+    public GameRound(NormalGameMode game, List<ServerPlayer> players) {
         this.game = game;
         this.players = players;
+        this.random = newRandom();
+        this.cardRegistry = new CardRegistry(this.random);
+        this.parentDeterminer = new ParentDeterminer();
+        this.seatingArranger = game.getSeatingArranger();
+    }
 
+    protected GameRound(final GameRound old) {
+        this.game = old.game;
+        this.players = old.players;
+        this.random = newRandom();
+        this.cardRegistry = new CardRegistry(this.random);
+        this.parentDeterminer = old.parentDeterminer;
+        this.parentDeterminer.next();
+        this.seatingArranger = old.seatingArranger;
+    }
+
+    protected static Random newRandom() {
         Random random;
         try {
             random = SecureRandom.getInstanceStrong();
@@ -42,9 +58,7 @@ public class GameRound {
             random = new Random(Util.getMeasuringTimeNano());
         }
 
-        this.random = random;
-        this.cardRegistry = new CardRegistry(random);
-        this.parentDeterminer = new ParentDeterminer(parent);
+        return random;
     }
 
     public void startRound() {
@@ -55,15 +69,13 @@ public class GameRound {
         this.sendPacketToAllInGame(new ChatNotify("親は " + parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
 
-        this.setSeatingArrangement();
-        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArrangement));
+        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArranger.getSeatingArrangement()));
         this.giveOutCards();
         this.startAttacking();
     }
 
-    protected void setSeatingArrangement() {
-        this.seatingArrangement.clear();
-        this.seatingArrangement.addAll(this.players.stream().map(Player::getId).toList());
+    protected SeatingArranger newSeatingArranger() {
+        return new SeatingArranger();
     }
 
     protected void giveOutCards() {
@@ -345,11 +357,11 @@ public class GameRound {
     }
 
     protected void nextAttacker() {
-        int cur = this.seatingArrangement.indexOf(this.curAttacker.getId());
+        int cur = this.seatingArranger.getSeatIndex(this.curAttacker);
 
-        for (int i = 0; i < this.seatingArrangement.size(); i++) {
-            int nextIndex = (cur + 1 + i) % this.seatingArrangement.size();
-            var player = this.getPlayingPlayerById(this.seatingArrangement.get(nextIndex));
+        for (int i = 0; i < this.seatingArranger.size(); i++) {
+            int nextIndex = (cur + 1 + i) % this.seatingArranger.size();
+            var player = this.getPlayingPlayerById(this.seatingArranger.get(nextIndex));
             if (player == null || player.isDefeated()) {
                 continue;
             }
@@ -434,9 +446,7 @@ public class GameRound {
     }
 
     public GameRound newRound() {
-        var round = new GameRound(this.game, this.players, this.parentDeterminer.next());
-        round.parentDeterminer.copyFrom(this.parentDeterminer);
-        return round;
+        return new GameRound(this);
     }
 
     public enum GameState {

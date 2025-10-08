@@ -8,12 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ParentDeterminer {
-    protected final Map<ServerPlayer, Card> pulledCardMap = Maps.newHashMap();
-    protected ServerPlayer parent;
-
-    public ParentDeterminer(final ServerPlayer initial) {
-        this.parent = initial;
-    }
+    private final Map<ServerPlayer, Card> pulledCardMap = Maps.newHashMap();
+    private ServerPlayer parent;
 
     public void determine(final List<ServerPlayer> players, final CardRegistry cardRegistry) {
         if (this.parent != null) {
@@ -43,12 +39,6 @@ public class ParentDeterminer {
 
     public boolean hasNoCandidates() {
         return this.pulledCardMap.isEmpty();
-    }
-
-    public void copyFrom(final ParentDeterminer old) {
-        this.pulledCardMap.clear();
-        this.pulledCardMap.putAll(old.pulledCardMap);
-        this.parent = old.parent;
     }
 
     public ServerPlayer getCurrentParent() {

@@ -1,4 +1,4 @@
-package com.hamusuke.numguesser.server.game.mode;
+package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -11,6 +11,8 @@ import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColo
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.PairGameRound;
+import com.hamusuke.numguesser.server.game.seating.PairPlaySeatingArranger;
+import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
@@ -25,6 +27,11 @@ public class PairPlayGameMode extends NormalGameMode {
 
     public PairPlayGameMode(ServerRoom room, List<ServerPlayer> players) {
         super(room, players);
+    }
+
+    @Override
+    protected SeatingArranger newSeatingArranger() {
+        return new PairPlaySeatingArranger(this.bluePair, this.redPair);
     }
 
     @Override
@@ -92,7 +99,7 @@ public class PairPlayGameMode extends NormalGameMode {
 
     @Override
     protected GameRound getFirstRound() {
-        return new PairGameRound(this, this.players, null);
+        return new PairGameRound(this, this.players);
     }
 
     @Override

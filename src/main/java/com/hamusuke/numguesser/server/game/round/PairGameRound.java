@@ -4,7 +4,7 @@ import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.mode.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.PairPlayGameMode;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -15,10 +15,16 @@ public class PairGameRound extends GameRound {
     private final ServerPlayerPair bluePair;
     private final ServerPlayerPair redPair;
 
-    public PairGameRound(PairPlayGameMode game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
-        super(game, players, parent);
+    public PairGameRound(PairPlayGameMode game, List<ServerPlayer> players) {
+        super(game, players);
         this.bluePair = game.getBluePair();
         this.redPair = game.getRedPair();
+    }
+
+    protected PairGameRound(final PairGameRound old) {
+        super(old);
+        this.bluePair = old.bluePair;
+        this.redPair = old.redPair;
     }
 
     @Override
@@ -96,24 +102,6 @@ public class PairGameRound extends GameRound {
     }
 
     @Override
-    protected void setSeatingArrangement() {
-        if (!this.seatingArrangement.isEmpty()) {
-            return;
-        }
-
-        super.setSeatingArrangement(); // invoke super method to replace them after
-        int startIndex = this.random.nextInt(4); // first seat is selected randomly.
-
-        // seating permutation is like this:
-        // one of blue pair, one of red pair, the other of blue pair, and the other of red pair.
-        for (int i = 0; i < this.players.size(); i++) {
-            int seatIndex = (i + startIndex) % this.players.size();
-            var pair = i % 2 == 0 ? this.bluePair : this.redPair;
-            this.seatingArrangement.set(seatIndex, (i < 2 ? pair.left() : pair.right()).getId());
-        }
-    }
-
-    @Override
     public void onCancelCommand(ServerPlayer canceller) {
         if (this.curAttacker == canceller && this.gameState == GameState.SELECTING_CARD_FOR_ATTACKING && this.cancelOperation == CancelOperation.BACK_TO_SELECTING_TOSS_OR_ATTACKING) {
             this.selectTossOrAttack();
@@ -180,9 +168,6 @@ public class PairGameRound extends GameRound {
 
     @Override
     public GameRound newRound() {
-        var game = new PairGameRound((PairPlayGameMode) this.game, this.players, this.parentDeterminer.next());
-        game.parentDeterminer.copyFrom(this.parentDeterminer);
-        game.seatingArrangement.addAll(this.seatingArrangement);
-        return game;
+        return new PairGameRound(this);
     }
 }

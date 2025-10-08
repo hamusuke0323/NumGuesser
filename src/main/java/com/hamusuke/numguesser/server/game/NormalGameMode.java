@@ -1,10 +1,11 @@
-package com.hamusuke.numguesser.server.game.mode;
+package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.StartGameRoundNotify;
 import com.hamusuke.numguesser.server.game.round.GameRound;
+import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
@@ -17,6 +18,7 @@ public class NormalGameMode {
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
     protected GameRound round;
+    protected final SeatingArranger seatingArranger;
     protected boolean isFirstRound = true;
     protected int waitForForceExitGameTicks;
 
@@ -24,6 +26,12 @@ public class NormalGameMode {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
+        this.seatingArranger = this.newSeatingArranger();
+        this.seatingArranger.arrange(this.players);
+    }
+
+    protected SeatingArranger newSeatingArranger() {
+        return new SeatingArranger();
     }
 
     public void tick() {
@@ -112,11 +120,15 @@ public class NormalGameMode {
         return this.round;
     }
 
+    public SeatingArranger getSeatingArranger() {
+        return this.seatingArranger;
+    }
+
     public List<ServerPlayer> getPlayingPlayers() {
         return this.playerList;
     }
 
     protected GameRound getFirstRound() {
-        return new GameRound(this, this.playerList, null);
+        return new GameRound(this, this.playerList);
     }
 }

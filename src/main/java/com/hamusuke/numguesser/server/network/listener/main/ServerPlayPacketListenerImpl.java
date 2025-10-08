@@ -6,7 +6,7 @@ import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyR
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.mode.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.PairPlayGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl implements ServerPlayPacketListener {

@@ -14,8 +14,8 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.mode.NormalGameMode;
-import com.hamusuke.numguesser.server.game.mode.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.NormalGameMode;
+import com.hamusuke.numguesser.server.game.PairPlayGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;

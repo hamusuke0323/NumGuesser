@@ -14,9 +14,9 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CardRegistry {
-    protected final List<Card> deck = Lists.newArrayList();
-    protected final Map<Integer, Card> ownCardIdMap = Maps.newConcurrentMap();
-    protected final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
+    private final List<Card> deck = Lists.newArrayList();
+    private final Map<Integer, Card> ownCardIdMap = Maps.newConcurrentMap();
+    private final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
 
     public CardRegistry(final Random random) {
         this.newDeck();
