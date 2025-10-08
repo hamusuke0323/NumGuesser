@@ -5,6 +5,7 @@ import com.hamusuke.numguesser.client.gui.component.JXCardPanel;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.game.card.CardSerializer;
 import org.jdesktop.swingx.JXPanel;
 
 import javax.annotation.Nullable;
@@ -19,6 +20,16 @@ public abstract class AbstractClientCard extends Card {
 
     public AbstractClientCard(CardColor cardColor) {
         super(cardColor);
+    }
+
+    public static AbstractClientCard from(final CardSerializer serializer) {
+        if (serializer.num() == -2) {
+            return new ClientFrameCard();
+        }
+
+        var card = serializer.num() >= 0 ? new LocalCard(serializer.cardColor(), serializer.num()) : new RemoteCard(serializer.cardColor());
+        card.setId(serializer.id());
+        return card;
     }
 
     public void tick() {

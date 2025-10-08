@@ -1,15 +1,15 @@
-package com.hamusuke.numguesser.game.round;
+package com.hamusuke.numguesser.server.game.round;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.card.Card.CardColor;
-import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.ServerCard;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
+import com.hamusuke.numguesser.server.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
 

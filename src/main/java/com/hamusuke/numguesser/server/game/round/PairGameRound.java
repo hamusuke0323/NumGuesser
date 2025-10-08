@@ -1,11 +1,11 @@
-package com.hamusuke.numguesser.game.round;
+package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.card.Card;
-import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.ServerPlayerPair;
+import com.hamusuke.numguesser.server.game.mode.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;

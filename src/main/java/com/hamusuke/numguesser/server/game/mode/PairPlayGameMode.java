@@ -1,16 +1,16 @@
-package com.hamusuke.numguesser.game.mode;
+package com.hamusuke.numguesser.server.game.mode;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.pair.PlayerPair.PairColor;
-import com.hamusuke.numguesser.game.round.GameRound;
-import com.hamusuke.numguesser.game.round.PairGameRound;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairColorChangeNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairMakingStartNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColorChangeReq;
-import com.hamusuke.numguesser.server.game.ServerPlayerPair;
+import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
+import com.hamusuke.numguesser.server.game.round.GameRound;
+import com.hamusuke.numguesser.server.game.round.PairGameRound;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 

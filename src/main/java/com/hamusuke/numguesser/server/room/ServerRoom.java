@@ -2,7 +2,6 @@ package com.hamusuke.numguesser.server.room;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.GameMode;
-import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
@@ -15,6 +14,8 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
+import com.hamusuke.numguesser.server.game.mode.NormalGameMode;
+import com.hamusuke.numguesser.server.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;
@@ -76,7 +77,10 @@ public class ServerRoom extends Room {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = this.gameMode.gameCreator.createGame(this, this.players);
+                    this.game = switch (this.gameMode) {
+                        case NORMAL_GAME -> new NormalGameMode(this, this.players);
+                        case PAIR_PLAY -> new PairPlayGameMode(this, this.players);
+                    };
                     this.players.forEach(player -> {
                         player.sendPacket(StartGameNotify.INSTANCE);
                         player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);

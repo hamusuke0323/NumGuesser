@@ -1,10 +1,10 @@
-package com.hamusuke.numguesser.game.mode;
+package com.hamusuke.numguesser.server.game.mode;
 
 import com.google.common.collect.Lists;
-import com.hamusuke.numguesser.game.round.GameRound;
 import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.StartGameRoundNotify;
+import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
