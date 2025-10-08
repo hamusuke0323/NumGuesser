@@ -180,8 +180,8 @@ public class PairGameRound extends GameRound {
 
     @Override
     public GameRound newRound() {
-        var game = new PairGameRound((PairPlayGameMode) this.game, this.players, this.nextParent());
-        game.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);
+        var game = new PairGameRound((PairPlayGameMode) this.game, this.players, this.parentDeterminer.next());
+        game.parentDeterminer.copyFrom(this.parentDeterminer);
         game.seatingArrangement.addAll(this.seatingArrangement);
         return game;
     }

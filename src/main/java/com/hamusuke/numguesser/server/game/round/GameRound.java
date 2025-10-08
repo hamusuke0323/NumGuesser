@@ -1,7 +1,6 @@
 package com.hamusuke.numguesser.server.game.round;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
@@ -16,7 +15,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 public class GameRound {
@@ -25,8 +23,7 @@ public class GameRound {
     protected final List<Integer> seatingArrangement = Lists.newArrayList();
     protected final Random random;
     protected final CardRegistry cardRegistry;
-    protected ServerPlayer parent;
-    protected final Map<ServerPlayer, Card> pulledCardMapForDecidingParent = Maps.newHashMap();
+    protected final ParentDeterminer parentDeterminer;
     protected ServerPlayer curAttacker;
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
@@ -37,8 +34,6 @@ public class GameRound {
     public GameRound(NormalGameMode game, List<ServerPlayer> players, @Nullable ServerPlayer parent) {
         this.game = game;
         this.players = players;
-        this.parent = parent;
-        this.winner = parent;
 
         Random random;
         try {
@@ -49,14 +44,15 @@ public class GameRound {
 
         this.random = random;
         this.cardRegistry = new CardRegistry(random);
+        this.parentDeterminer = new ParentDeterminer(parent);
     }
 
     public void startRound() {
-        this.decideParent();
-
-        this.winner = this.parent;
-        this.curAttacker = this.parent;
-        this.sendPacketToAllInGame(new ChatNotify("親は " + this.parent.getName() + " に決まりました"));
+        this.parentDeterminer.determine(this.players, this.cardRegistry);
+        final var parent = this.parentDeterminer.getCurrentParent();
+        this.winner = parent;
+        this.curAttacker = parent;
+        this.sendPacketToAllInGame(new ChatNotify("親は " + parent.getName() + " に決まりました"));
         this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
 
         this.setSeatingArrangement();
@@ -70,21 +66,8 @@ public class GameRound {
         this.seatingArrangement.addAll(this.players.stream().map(Player::getId).toList());
     }
 
-    protected void decideParent() {
-        if (this.parent != null) {
-            return;
-        }
-
-        this.pulledCardMapForDecidingParent.clear();
-        for (var player : this.players) {
-            this.pulledCardMapForDecidingParent.put(player, this.cardRegistry.peek(player.getRandom()));
-        }
-
-        this.nextParent();
-    }
-
     protected void giveOutCards() {
-        this.cardRegistry.shuffle(this.parent.getRandom());
+        this.cardRegistry.shuffle(this.parentDeterminer.getCurrentParent().getRandom());
         this.players.forEach(ServerPlayer::makeNewDeck);
 
         for (var player : this.players) {
@@ -306,7 +289,7 @@ public class GameRound {
             this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
         }
 
-        boolean isFinal = !this.shouldPlayNextRound();
+        boolean isFinal = this.isLastRound();
         this.sendPacketToAllInGame(new EndGameRoundNotify(isFinal));
 
         if (isFinal) {
@@ -351,7 +334,7 @@ public class GameRound {
             return;
         }
 
-        if (!this.shouldPlayNextRound()) {
+        if (this.isLastRound()) {
             return;
         }
 
@@ -390,7 +373,7 @@ public class GameRound {
         if (!list.isEmpty()) {
             this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
         }
-        this.pulledCardMapForDecidingParent.remove(player);
+        this.parentDeterminer.removeParentCandidate(player);
 
         if (this.players.size() <= 1) {
             this.winner = this.players.isEmpty() ? null : this.players.get(0);
@@ -428,8 +411,8 @@ public class GameRound {
                 .forEach(serverPlayer -> serverPlayer.sendPacket(packet));
     }
 
-    public boolean shouldPlayNextRound() {
-        return !this.pulledCardMapForDecidingParent.isEmpty();
+    public boolean isLastRound() {
+        return this.parentDeterminer.hasNoCandidates();
     }
 
     protected int getGivenCardNumPerPlayer() {
@@ -450,18 +433,9 @@ public class GameRound {
         };
     }
 
-    protected ServerPlayer nextParent() {
-        this.pulledCardMapForDecidingParent.entrySet().stream()
-                .min(Map.Entry.comparingByValue())
-                .ifPresent(e -> this.parent = e.getKey());
-        this.pulledCardMapForDecidingParent.remove(this.parent);
-
-        return this.parent;
-    }
-
     public GameRound newRound() {
-        var round = new GameRound(this.game, this.players, this.nextParent());
-        round.pulledCardMapForDecidingParent.putAll(this.pulledCardMapForDecidingParent);
+        var round = new GameRound(this.game, this.players, this.parentDeterminer.next());
+        round.parentDeterminer.copyFrom(this.parentDeterminer);
         return round;
     }
 
