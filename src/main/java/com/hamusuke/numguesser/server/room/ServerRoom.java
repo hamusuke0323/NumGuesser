@@ -14,8 +14,8 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.NormalGameMode;
-import com.hamusuke.numguesser.server.game.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.server.game.PairPlayGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;
@@ -27,7 +27,7 @@ public class ServerRoom extends Room {
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
     private final String password;
-    private NormalGameMode game;
+    private NormalGame game;
     private ServerPlayer owner;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
@@ -78,8 +78,8 @@ public class ServerRoom extends Room {
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
                     this.game = switch (this.gameMode) {
-                        case NORMAL_GAME -> new NormalGameMode(this, this.players);
-                        case PAIR_PLAY -> new PairPlayGameMode(this, this.players);
+                        case NORMAL_GAME -> new NormalGame(this, this.players);
+                        case PAIR_PLAY -> new PairPlayGame(this, this.players);
                     };
                     this.players.forEach(player -> {
                         player.sendPacket(StartGameNotify.INSTANCE);
@@ -195,7 +195,7 @@ public class ServerRoom extends Room {
         }
     }
 
-    public NormalGameMode getGame() {
+    public NormalGame getGame() {
         return this.game;
     }
 

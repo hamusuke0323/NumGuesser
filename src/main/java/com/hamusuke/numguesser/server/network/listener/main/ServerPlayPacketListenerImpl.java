@@ -6,7 +6,7 @@ import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyR
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.PairPlayGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl implements ServerPlayPacketListener {
@@ -78,7 +78,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
 
     @Override
     public void handlePairColorChange(PairColorChangeReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
             return;
         }
 
@@ -87,7 +87,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
 
     @Override
     public void handlePairMakingDone(PairMakingDoneReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
             return;
         }
 

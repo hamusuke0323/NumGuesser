@@ -12,7 +12,7 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 import java.util.Collections;
 import java.util.List;
 
-public class NormalGameMode {
+public class NormalGame {
     protected static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
     protected final ServerRoom room;
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
@@ -22,7 +22,7 @@ public class NormalGameMode {
     protected boolean isFirstRound = true;
     protected int waitForForceExitGameTicks;
 
-    public NormalGameMode(ServerRoom room, List<ServerPlayer> players) {
+    public NormalGame(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);

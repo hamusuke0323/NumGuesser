@@ -5,7 +5,7 @@ import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.NormalGameMode;
+import com.hamusuke.numguesser.server.game.NormalGame;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 
 public class GameRound {
-    protected final NormalGameMode game;
+    protected final NormalGame game;
     protected final List<ServerPlayer> players;
     protected final Random random;
     protected final CardRegistry cardRegistry;
@@ -31,7 +31,7 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(NormalGameMode game, List<ServerPlayer> players) {
+    public GameRound(NormalGame game, List<ServerPlayer> players) {
         this.game = game;
         this.players = players;
         this.random = newRandom();

@@ -4,7 +4,7 @@ import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.PairPlayGameMode;
+import com.hamusuke.numguesser.server.game.PairPlayGame;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPair;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -15,7 +15,7 @@ public class PairGameRound extends GameRound {
     private final ServerPlayerPair bluePair;
     private final ServerPlayerPair redPair;
 
-    public PairGameRound(PairPlayGameMode game, List<ServerPlayer> players) {
+    public PairGameRound(PairPlayGame game, List<ServerPlayer> players) {
         super(game, players);
         this.bluePair = game.getBluePair();
         this.redPair = game.getRedPair();

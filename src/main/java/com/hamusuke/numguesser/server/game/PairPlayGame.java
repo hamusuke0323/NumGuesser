@@ -20,12 +20,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class PairPlayGameMode extends NormalGameMode {
+public class PairPlayGame extends NormalGame {
     private final ServerPlayerPair bluePair = new ServerPlayerPair(PairColor.BLUE);
     private final ServerPlayerPair redPair = new ServerPlayerPair(PairColor.RED);
     private boolean hasMadeTeam;
 
-    public PairPlayGameMode(ServerRoom room, List<ServerPlayer> players) {
+    public PairPlayGame(ServerRoom room, List<ServerPlayer> players) {
         super(room, players);
     }
 
