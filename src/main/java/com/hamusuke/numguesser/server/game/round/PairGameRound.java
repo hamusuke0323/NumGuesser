@@ -4,8 +4,11 @@ import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.pair.PlayerPair;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossNotify;
 import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
+import com.hamusuke.numguesser.server.game.event.events.PlayerSelectCardForTossEvent;
+import com.hamusuke.numguesser.server.game.event.events.PlayerSelectTossOrAttackEvent;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -38,8 +41,7 @@ public class PairGameRound extends GameRound {
 
     protected void selectTossOrAttack() {
         this.gameState = GameState.SELECTING_TOSS_OR_ATTACKING;
-        this.curAttacker.sendPacket(TossOrAttackSelectionNotify.INSTANCE);
-        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerSelectTossOrAttackNotify(this.curAttacker.getId()));
+        this.eventBus.post(new PlayerSelectTossOrAttackEvent(this.curAttacker));
     }
 
     public void onTossSelected(ServerPlayer selector) {
@@ -54,8 +56,7 @@ public class PairGameRound extends GameRound {
         }
 
         this.gameState = GameState.TOSSING;
-        buddy.sendPacket(TossReq.INSTANCE);
-        this.sendPacketToOthersInGame(buddy, new RemotePlayerSelectCardForTossNotify(buddy.getId()));
+        this.eventBus.post(new PlayerSelectCardForTossEvent(buddy));
     }
 
     public void onToss(ServerPlayer tosser, int cardId) {
@@ -144,12 +145,12 @@ public class PairGameRound extends GameRound {
                 .sum();
 
         if (bluePairPoints == redPairPoints) {
-            this.sendPacketToAllInGame(new ChatNotify("どちらのペアも得点が同じなのでドローです"));
+            this.eventBus.post(new GameMessageEvent("どちらのペアも得点が同じなのでドローです"));
             return;
         }
 
         final var wonPair = this.pairRegistry.get(bluePairPoints > redPairPoints ? PlayerPair.PairColor.BLUE : PlayerPair.PairColor.RED);
-        this.sendPacketToAllInGame(new ChatNotify("合計" + Math.max(bluePairPoints, redPairPoints) + "点で " + wonPair.left().getDisplayName() + " と " + wonPair.right().getDisplayName() + " が勝利しました"));
+        this.eventBus.post(new GameMessageEvent("合計" + Math.max(bluePairPoints, redPairPoints) + "点で " + wonPair.left().getDisplayName() + " と " + wonPair.right().getDisplayName() + " が勝利しました"));
     }
 
     @Override

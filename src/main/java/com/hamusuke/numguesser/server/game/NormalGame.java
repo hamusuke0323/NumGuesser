@@ -1,9 +1,9 @@
 package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
-import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.StartGameRoundNotify;
+import com.hamusuke.numguesser.server.game.event.GameEventBus;
+import com.hamusuke.numguesser.server.game.event.events.GameRoundStartEvent;
+import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
@@ -17,8 +17,9 @@ public class NormalGame {
     protected final ServerRoom room;
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
-    protected GameRound round;
     protected final SeatingArranger seatingArranger;
+    protected final GameEventBus eventBus = new GameEventBus();
+    protected GameRound round;
     protected boolean isFirstRound = true;
     protected int waitForForceExitGameTicks;
 
@@ -27,7 +28,8 @@ public class NormalGame {
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
         this.seatingArranger = this.newSeatingArranger();
-        this.seatingArranger.arrange(this.players);
+        this.seatingArranger.arrange(this.playerList);
+        this.eventBus.register(new PacketSender(this.playerList));
     }
 
     protected SeatingArranger newSeatingArranger() {
@@ -51,7 +53,7 @@ public class NormalGame {
             this.players.forEach(p -> p.setTipPoint(point));
         }
 
-        this.round.sendPacketToAllInGame(StartGameRoundNotify.INSTANCE);
+        this.eventBus.post(new GameRoundStartEvent());
         this.round.startRound();
     }
 
@@ -73,10 +75,6 @@ public class NormalGame {
         if (this.players.remove(player)) {
             this.round.onPlayerLeft(player);
         }
-    }
-
-    protected void sendPacketToAllInGame(Packet<? extends ClientCommonPacketListener> packet) {
-        this.players.forEach(p -> p.sendPacket(packet));
     }
 
     public void onCardSelect(ServerPlayer selector, int id) {
@@ -126,6 +124,10 @@ public class NormalGame {
 
     public List<ServerPlayer> getPlayingPlayers() {
         return this.playerList;
+    }
+
+    public GameEventBus getEventBus() {
+        return this.eventBus;
     }
 
     protected GameRound getFirstRound() {

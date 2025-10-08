@@ -2,10 +2,10 @@ package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.pair.PlayerPair.PairColor;
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairColorChangeNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PairMakingStartNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColorChangeReq;
+import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
+import com.hamusuke.numguesser.server.game.event.events.PairColorChangeEvent;
+import com.hamusuke.numguesser.server.game.event.events.PairMakingStartEvent;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.PairGameRound;
@@ -34,7 +34,7 @@ public class PairPlayGame extends NormalGame {
     public void startGame() {
         if (!this.hasMadeTeam) {
             this.makePairRandomly();
-            this.sendPacketToAllInGame(PairMakingStartNotify.from(this.pairRegistry.toPlayer2ColorMap()));
+            this.eventBus.post(new PairMakingStartEvent(this.pairRegistry));
             return;
         }
 
@@ -67,7 +67,7 @@ public class PairPlayGame extends NormalGame {
         }
 
         player.setPairColor(req.color());
-        this.sendPacketToAllInGame(new PairColorChangeNotify(req.id(), req.color()));
+        this.eventBus.post(new PairColorChangeEvent(player, req.color()));
     }
 
     public synchronized void onPairMakingDone() {
@@ -123,7 +123,7 @@ public class PairPlayGame extends NormalGame {
     @Override
     public synchronized void leavePlayer(ServerPlayer player) {
         this.players.remove(player);
-        this.sendPacketToAllInGame(new ChatNotify("このゲームモードは少なくとも" + this.room.getGameMode().minPlayer + "人必要です"));
+        this.eventBus.post(new GameMessageEvent("このゲームモードは少なくとも" + this.room.getGameMode().minPlayer + "人必要です"));
         this.room.abortGame();
     }
 }

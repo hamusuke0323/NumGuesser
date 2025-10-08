@@ -2,10 +2,11 @@ package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackRsp;
+import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackSuccNotify;
 import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.server.game.event.GameEventBus;
+import com.hamusuke.numguesser.server.game.event.events.*;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -24,6 +25,7 @@ public class GameRound {
     protected final CardRegistry cardRegistry;
     protected final ParentDeterminer parentDeterminer;
     protected final SeatingArranger seatingArranger;
+    protected final GameEventBus eventBus;
     protected ServerPlayer curAttacker;
     protected Card curCardForAttacking;
     protected GameState gameState = GameState.STARTING;
@@ -33,6 +35,7 @@ public class GameRound {
 
     public GameRound(NormalGame game, List<ServerPlayer> players) {
         this.game = game;
+        this.eventBus = game.getEventBus();
         this.players = players;
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
@@ -42,6 +45,7 @@ public class GameRound {
 
     protected GameRound(final GameRound old) {
         this.game = old.game;
+        this.eventBus = old.eventBus;
         this.players = old.players;
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
@@ -66,10 +70,10 @@ public class GameRound {
         final var parent = this.parentDeterminer.getCurrentParent();
         this.winner = parent;
         this.curAttacker = parent;
-        this.sendPacketToAllInGame(new ChatNotify("親は " + parent.getName() + " に決まりました"));
-        this.sendPacketToAllInGame(new ChatNotify("親がカードを配ります"));
+        this.eventBus.post(new GameMessageEvent("親は " + parent.getName() + " に決まりました"));
+        this.eventBus.post(new GameMessageEvent("親がカードを配ります"));
 
-        this.sendPacketToAllInGame(new SeatingArrangementNotify(this.seatingArranger.getSeatingArrangement()));
+        this.eventBus.post(new SeatingArrangementEvent(this.seatingArranger.getSeatingArrangement()));
         this.giveOutCards();
         this.startAttacking();
     }
@@ -87,8 +91,7 @@ public class GameRound {
                 player.getDeck().addCard(this.cardRegistry.pullBy(player));
             }
 
-            player.sendPacket(new PlayerDeckSyncNotify(player.getId(), player.getDeck().getCards().stream().map(Card::toSerializer).toList()));
-            this.sendPacketToOthersInGame(player, new PlayerDeckSyncNotify(player.getId(), player.getDeck().getCards().stream().map(Card::toSerializerForOthers).toList()));
+            this.eventBus.post(new PlayerDeckSyncEvent(player));
         }
     }
 
@@ -109,8 +112,7 @@ public class GameRound {
     protected void selectCardForAttack(CancelOperation cancelOperation) {
         this.gameState = GameState.SELECTING_CARD_FOR_ATTACKING;
         this.cancelOperation = cancelOperation;
-        this.curAttacker.sendPacket(new CardForAttackSelectReq(cancelOperation.isCancellable()));
-        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerSelectCardForAttackNotify(this.curAttacker));
+        this.eventBus.post(new PlayerSelectCardForAttackEvent(this.curAttacker, this.cancelOperation.isCancellable()));
     }
 
     public void onCardForAttackSelect(ServerPlayer selector, int id) {
@@ -131,8 +133,7 @@ public class GameRound {
     protected void ownCard(ServerPlayer player, Card card) {
         if (this.cardRegistry.own(player, card)) {
             int index = player.getDeck().addCard(card);
-            player.sendPacket(new PlayerNewCardAddNotify(player.getId(), index, card.toSerializer()));
-            this.sendPacketToOthersInGame(player, new PlayerNewCardAddNotify(player.getId(), index, card.toSerializerForOthers()));
+            this.eventBus.post(new PlayerNewCardAddEvent(player, index, card));
         }
     }
 
@@ -140,8 +141,7 @@ public class GameRound {
         this.gameState = GameState.ATTACKING;
         this.cancelOperation = cancellable;
         this.curCardForAttacking = card;
-        this.curAttacker.sendPacket(new PlayerStartAttackNotify(card.toSerializer(), cancellable.isCancellable()));
-        this.sendPacketToOthersInGame(this.curAttacker, new RemotePlayerStartAttackNotify(this.curAttacker.getId(), card.toSerializerForOthers()));
+        this.eventBus.post(new PlayerStartAttackEvent(this.curAttacker, card, cancellable.isCancellable()));
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
@@ -161,8 +161,8 @@ public class GameRound {
         }
 
         var cardHolder = this.cardRegistry.getCardOwnerById(cardId);
-        if (this.curAttacker != cardHolder) { // attacker must select the others' cards.
-            this.sendPacketToAllInGame(new PlayerCardSelectionSyncNotify(this.curAttacker.getId(), cardId));
+        if (this.curAttacker != cardHolder) { // the attacker must select the others' cards.
+            this.eventBus.post(new PlayerCardSelectEvent(this.curAttacker, cardId));
         }
     }
 
@@ -192,13 +192,13 @@ public class GameRound {
     }
 
     protected void sendAttackDetailToAll(ServerPlayer attacker, int num, ServerPlayer beAttackedPlayer) {
-        this.sendPacketToAllInGame(new ChatNotify("アタック: " + attacker.getDisplayName() + "が" + num + "で" + beAttackedPlayer.getDisplayName() + "にアタックしました"));
+        this.eventBus.post(new GameMessageEvent("アタック: " + attacker.getDisplayName() + "が" + num + "で" + beAttackedPlayer.getDisplayName() + "にアタックしました"));
     }
 
     protected void onAttackSucceeded(Card card) {
         card.open();
-        this.sendPacketToAllInGame(new CardOpenNotify(card.toSerializer()));
-        this.sendPacketToAllInGame(new ChatNotify("アタック成功です！"));
+        this.eventBus.post(new CardOpenEvent(card));
+        this.eventBus.post(new GameMessageEvent("アタック成功です！"));
         this.giveTipToAttacker(card);
 
         if (this.shouldEndRound(card)) {
@@ -238,8 +238,8 @@ public class GameRound {
     protected void onAttackFailed(Card closedCard) {
         this.ownCard(this.curAttacker, this.curCardForAttacking);
         this.curCardForAttacking.open();
-        this.sendPacketToAllInGame(new CardOpenNotify(this.curCardForAttacking.toSerializer()));
-        this.sendPacketToAllInGame(new ChatNotify("アタック失敗です"));
+        this.eventBus.post(new CardOpenEvent(this.curCardForAttacking));
+        this.eventBus.post(new GameMessageEvent("アタック失敗です"));
 
         var closedCardHolder = this.cardRegistry.getCardOwnerById(closedCard.getId());
         if (this.shouldEndRound(this.curCardForAttacking) || this.arePlayersDefeatedBy(closedCardHolder)) {
@@ -260,8 +260,8 @@ public class GameRound {
     protected boolean shouldEndRound(Card openedCard) {
         var player = this.cardRegistry.getCardOwnerById(openedCard.getId());
         if (player == null) {
-            this.sendPacketToAllInGame(new ChatNotify(new NullPointerException("player is null").toString()));
-            this.sendPacketToAllInGame(new ChatNotify("エラーが発生したのでラウンドを終了します"));
+            this.eventBus.post(new GameMessageEvent(new NullPointerException("player is null").toString()));
+            this.eventBus.post(new GameMessageEvent("エラーが発生したのでラウンドを終了します"));
             return true;
         }
 
@@ -284,7 +284,7 @@ public class GameRound {
         }
 
         this.gameState = GameState.ENDED;
-        this.sendPacketToAllInGame(new ChatNotify("ラウンド終了"));
+        this.eventBus.post(new GameMessageEvent("ラウンド終了"));
 
         this.giveTipToRoundWinner();
 
@@ -294,11 +294,11 @@ public class GameRound {
                 continue;
             }
 
-            this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
+            this.eventBus.post(new CardsOpenEvent(list));
         }
 
         boolean isFinal = this.isLastRound();
-        this.sendPacketToAllInGame(new EndGameRoundNotify(isFinal));
+        this.eventBus.post(new GameRoundEndEvent(isFinal));
 
         if (isFinal) {
             this.endFinalRound();
@@ -312,7 +312,7 @@ public class GameRound {
 
     protected void showWonMessage() {
         this.players.stream().max(Comparator.comparingInt(Player::getTipPoint)).ifPresent(winner -> {
-            this.sendPacketToAllInGame(new ChatNotify(winner.getDisplayName() + " が" + winner.getTipPoint() + "点で勝利しました！"));
+            this.eventBus.post(new GameMessageEvent(winner.getDisplayName() + " が" + winner.getTipPoint() + "点で勝利しました！"));
         });
     }
 
@@ -376,10 +376,10 @@ public class GameRound {
     }
 
     public void onPlayerLeft(ServerPlayer player) {
-        this.sendPacketToAllInGame(new ChatNotify(player.getDisplayName() + "がゲームをやめました"));
+        this.eventBus.post(new GameMessageEvent(player.getDisplayName() + "がゲームをやめました"));
         var list = player.getDeck().openAllCards();
         if (!list.isEmpty()) {
-            this.sendPacketToAllInGame(new CardsOpenNotify(list.stream().map(Card::toSerializer).toList()));
+            this.eventBus.post(new CardsOpenEvent(list));
         }
         this.parentDeterminer.removeParentCandidate(player);
 
@@ -399,7 +399,7 @@ public class GameRound {
             } else if (this.gameState == GameState.ATTACKING || this.gameState == GameState.WAITING_PLAYER_CONTINUE_OR_STAY) {
                 var temp = this.curCardForAttacking;
                 this.continueOrStay(this.curAttacker, false);
-                this.sendPacketToAllInGame(new CardOpenNotify(temp.toSerializer()));
+                this.eventBus.post(new CardOpenEvent(temp));
             }
         }
 
@@ -407,16 +407,6 @@ public class GameRound {
             this.winner = this.curAttacker;
             this.endRound();
         }
-    }
-
-    public void sendPacketToAllInGame(Packet<?> packet) {
-        this.sendPacketToOthersInGame(null, packet);
-    }
-
-    public void sendPacketToOthersInGame(@Nullable ServerPlayer sender, Packet<?> packet) {
-        this.players.stream()
-                .filter(player -> !player.equals(sender))
-                .forEach(serverPlayer -> serverPlayer.sendPacket(packet));
     }
 
     public boolean isLastRound() {
