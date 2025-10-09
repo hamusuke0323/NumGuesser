@@ -10,6 +10,7 @@ import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXComboBox;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXPanel;
+import org.jdesktop.swingx.renderer.DefaultListRenderer;
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,6 +40,7 @@ public class RoomPanel extends Panel implements OwnerChangeListener {
 
         this.modeBox = new JXComboBox(GameMode.values());
         this.modeBox.setSelectedItem(this.client.curRoom.getGameMode());
+        this.modeBox.setRenderer(new DefaultListRenderer(value -> value instanceof GameMode mode ? mode.name : "null"));
         this.modeBox.addItemListener(e -> {
             if (this.client.curRoom.amIOwner() && e.getStateChange() == ItemEvent.SELECTED && this.client.getConnection() != null) {
                 this.client.getConnection().sendPacket(new GameModeSelectReq((GameMode) e.getItem()));
