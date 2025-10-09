@@ -41,21 +41,6 @@ public class PairPlayGame extends NormalGame {
         super.startGame();
     }
 
-    @Override
-    public void onTossSelected(ServerPlayer selector) {
-        this.getRound().onTossSelected(selector);
-    }
-
-    @Override
-    public void onAttackSelected(ServerPlayer selector) {
-        this.getRound().onAttackSelected(selector);
-    }
-
-    @Override
-    public void onToss(ServerPlayer tosser, int cardId) {
-        this.getRound().onToss(tosser, cardId);
-    }
-
     public void onPairColorChange(PairColorChangeReq req) {
         if (this.hasMadeTeam) {
             return;

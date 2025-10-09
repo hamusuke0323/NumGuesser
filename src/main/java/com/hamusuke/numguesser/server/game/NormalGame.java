@@ -5,6 +5,7 @@ import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.GameRoundStartEvent;
 import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
 import com.hamusuke.numguesser.server.game.round.GameRound;
+import com.hamusuke.numguesser.server.game.round.phase.GamePhaseDirector;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
@@ -77,37 +78,12 @@ public class NormalGame {
         }
     }
 
-    public void onCardSelect(ServerPlayer selector, int id) {
-        this.round.onCardSelect(selector, id);
-    }
-
-    public void onCardForAttackSelect(ServerPlayer selector, int id) {
-        this.round.onCardForAttackSelect(selector, id);
+    public <A> void onPlayerAction(final ServerPlayer actor, final A action) {
+        this.round.onPlayerAction(actor, action);
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
         this.round.onCancelCommand(canceller);
-    }
-
-    public void onTossSelected(ServerPlayer selector) {
-    }
-
-    public void onAttackSelected(ServerPlayer selector) {
-    }
-
-    public void onToss(ServerPlayer tosser, int cardId) {
-    }
-
-    public void onAttack(ServerPlayer player, int id, int num) {
-        this.round.onAttack(player, id, num);
-    }
-
-    public void continueAttacking(ServerPlayer player) {
-        this.round.continueOrStay(player, true);
-    }
-
-    public void stay(ServerPlayer player) {
-        this.round.continueOrStay(player, false);
     }
 
     public void ready() {
@@ -131,6 +107,6 @@ public class NormalGame {
     }
 
     protected GameRound getFirstRound() {
-        return new GameRound(this, this.playerList);
+        return new GameRound(this, this.playerList, GamePhaseDirector.forNormalGame());
     }
 }

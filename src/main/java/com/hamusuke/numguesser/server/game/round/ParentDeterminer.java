@@ -24,13 +24,11 @@ public class ParentDeterminer {
         this.next();
     }
 
-    public ServerPlayer next() {
+    public void next() {
         this.pulledCardMap.entrySet().stream()
                 .min(Map.Entry.comparingByValue())
                 .ifPresent(e -> this.parent = e.getKey());
         this.pulledCardMap.remove(this.parent);
-
-        return this.parent;
     }
 
     public void removeParentCandidate(final ServerPlayer player) {
