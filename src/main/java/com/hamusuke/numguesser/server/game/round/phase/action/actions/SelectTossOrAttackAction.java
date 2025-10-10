@@ -1,4 +1,11 @@
 package com.hamusuke.numguesser.server.game.round.phase.action.actions;
 
-public record SelectTossOrAttackAction(boolean isToss) {
+public final class SelectTossOrAttackAction extends BooleanAction {
+    public SelectTossOrAttackAction(boolean isToss) {
+        super(isToss);
+    }
+
+    public boolean isToss() {
+        return this.flag;
+    }
 }

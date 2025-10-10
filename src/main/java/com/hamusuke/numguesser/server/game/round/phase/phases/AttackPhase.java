@@ -34,23 +34,23 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
     @Override
     public void onPlayerAction(final GameRound round, final ServerPlayer actor, final AttackActions action) {
         switch (action) {
-            case AttackActions.Select(final int cardId) -> {
+            case AttackActions.Select select -> {
                 if (round.getCurAttacker() != actor) {
                     return;
                 }
 
-                final var cardOwner = round.cardRegistry.getCardOwnerById(cardId);
+                final var cardOwner = round.cardRegistry.getCardOwnerById(select.cardId());
                 if (actor != cardOwner) { // the attacker must select the others' cards.
-                    round.eventBus.post(new PlayerCardSelectEvent(actor, cardId));
+                    round.eventBus.post(new PlayerCardSelectEvent(actor, select.cardId()));
                 }
             }
-            case AttackActions.DoAttack(final int cardId, final int numExpected) -> {
+            case AttackActions.DoAttack doAttack -> {
                 if (round.getCurAttacker() != actor) {
                     actor.sendPacket(AttackRsp.INSTANCE);
                     return;
                 }
 
-                final var card = round.cardRegistry.getOwnedCardById(cardId);
+                final var card = round.cardRegistry.getOwnedCardById(doAttack.cardId());
                 if (card == null || card.isOpened() || !this.canAttack(round, actor, card)) {
                     actor.sendPacket(AttackRsp.INSTANCE); // Try again
                     return;
@@ -58,11 +58,11 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
 
                 actor.sendPacket(AttackRsp.INSTANCE);
                 round.eventBus.post(new GameMessageEvent("アタック: " +
-                        actor.getDisplayName() + "が" + numExpected + "で" +
-                        round.cardRegistry.getCardOwnerById(cardId).getDisplayName() +
+                        actor.getDisplayName() + "が" + doAttack.numExpected() + "で" +
+                        round.cardRegistry.getCardOwnerById(doAttack.cardId()).getDisplayName() +
                         "にアタックしました"));
 
-                if (card.getNum() == numExpected) {
+                if (card.getNum() == doAttack.numExpected()) {
                     this.onAttackSucceeded(round, card);
                 } else {
                     this.onAttackFailed(round, card);

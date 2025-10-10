@@ -2,12 +2,14 @@ package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
+import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.server.game.NormalGame;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
 import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.CancellableGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseManager;
+import com.hamusuke.numguesser.server.game.round.phase.action.ActionResolver;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -91,13 +93,19 @@ public class GameRound {
         }
     }
 
-    public <A> void onPlayerAction(final ServerPlayer actor, final A action) {
-        if (this.phaseManager.getCurrentPhase() instanceof ActableGamePhase actableGamePhase) {
-            try {
-                actableGamePhase.onPlayerAction(this, actor, action);
-            } catch (ClassCastException e) {
-                LOGGER.debug("Player {} might send an invalid action: {}", actor.getName(), action);
-            }
+    public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
+        if (!(this.phaseManager.getCurrentPhase() instanceof ActableGamePhase actableGamePhase)) {
+            return;
+        }
+
+        if (!ActionResolver.canActWith(packet, actableGamePhase)) {
+            return;
+        }
+
+        try {
+            actableGamePhase.onPlayerAction(this, actor, ActionResolver.resolve(packet));
+        } catch (Throwable e) {
+            LOGGER.warn("Player " + actor.getDisplayName() + " might send an invalid action", e);
         }
     }
 

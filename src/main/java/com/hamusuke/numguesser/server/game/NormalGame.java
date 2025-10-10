@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
+import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.GameRoundStartEvent;
 import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
@@ -78,8 +79,8 @@ public class NormalGame {
         }
     }
 
-    public <A> void onPlayerAction(final ServerPlayer actor, final A action) {
-        this.round.onPlayerAction(actor, action);
+    public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
+        this.round.onPlayerAction(actor, packet);
     }
 
     public void onCancelCommand(ServerPlayer canceller) {

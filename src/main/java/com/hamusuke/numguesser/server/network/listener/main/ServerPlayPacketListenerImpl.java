@@ -8,14 +8,9 @@ import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.game.PairPlayGame;
-import com.hamusuke.numguesser.server.game.round.phase.action.ActionResolver;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl implements ServerPlayPacketListener {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     public ServerPlayPacketListenerImpl(NumGuesserServer server, Connection connection, ServerPlayer player) {
         super(server, connection, player);
         connection.setupInboundProtocol(PlayProtocols.SERVERBOUND, this);
@@ -48,13 +43,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
             return;
         }
 
-        final var action = ActionResolver.resolve(packet);
-        if (action == null) {
-            LOGGER.warn("No action found from: {}", packet);
-            return;
-        }
-
-        this.room.getGame().onPlayerAction(this.player, action);
+        this.room.getGame().onPlayerAction(this.player, packet);
     }
 
     @Override
