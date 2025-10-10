@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.hamusuke.numguesser'
-version = '1.10.5'
+version = '1.20.0'
 
 java.sourceCompatibility = JavaVersion.VERSION_25
 java.targetCompatibility = JavaVersion.VERSION_25
