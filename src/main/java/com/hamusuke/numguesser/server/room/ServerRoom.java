@@ -21,8 +21,11 @@ import com.hamusuke.numguesser.server.network.ServerPlayer;
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerRoom extends Room {
+    private static final AtomicInteger ROOM_ID_INCREMENTER = new AtomicInteger();
+    private final int id = ROOM_ID_INCREMENTER.getAndIncrement();
     private final NumGuesserServer server;
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
@@ -39,6 +42,10 @@ public class ServerRoom extends Room {
 
     public RoomInfo toInfo() {
         return new RoomInfo(this.id, this.roomName, this.getPlayers().size(), this.hasPassword());
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     @Override

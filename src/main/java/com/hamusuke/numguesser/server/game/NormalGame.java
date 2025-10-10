@@ -91,10 +91,6 @@ public class NormalGame {
         this.round.ready();
     }
 
-    protected GameRound getRound() {
-        return this.round;
-    }
-
     public SeatingArranger getSeatingArranger() {
         return this.seatingArranger;
     }

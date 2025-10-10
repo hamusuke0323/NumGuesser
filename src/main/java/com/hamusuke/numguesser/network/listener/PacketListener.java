@@ -12,10 +12,6 @@ public interface PacketListener {
 
     void onDisconnect(String msg);
 
-    default void onPacketError(Packet<?> packet, Exception e) {
-        throw new RuntimeException("Packet Error: " + packet.getClass().getSimpleName(), e);
-    }
-
     boolean isAcceptingMessages();
 
     default boolean shouldHandleMessage(Packet<?> packet) {

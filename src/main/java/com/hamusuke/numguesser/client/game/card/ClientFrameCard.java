@@ -19,10 +19,6 @@ public class ClientFrameCard extends AbstractClientCard {
         this.width = width;
     }
 
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
     @Override
     public int getNum() {
         return -2;

@@ -17,7 +17,6 @@ import java.util.List;
 
 public class PairMakingPanel extends Panel {
     private final List<AbstractClientPlayer> member;
-    private PairList list;
 
     public PairMakingPanel(List<AbstractClientPlayer> member) {
         super(new GridBagLayout());
@@ -30,8 +29,8 @@ public class PairMakingPanel extends Panel {
 
         var l = (GridBagLayout) this.getLayout();
 
-        this.list = new PairList(this.client);
-        this.list.addPairEntries(this.member);
+        final var list = new PairList(this.client);
+        list.addPairEntries(this.member);
 
         boolean owner = this.client.curRoom.amIOwner();
 
@@ -49,7 +48,7 @@ public class PairMakingPanel extends Panel {
             addButton(this, done, l, 0, 3, 1, 1, 0.025D);
         }
 
-        addButton(this, this.list, l, 0, 2, 1, 1, 1.0D);
+        addButton(this, list, l, 0, 2, 1, 1, 1.0D);
     }
 
     private void startGame() {

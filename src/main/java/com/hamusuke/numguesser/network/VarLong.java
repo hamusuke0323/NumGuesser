@@ -38,13 +38,12 @@ public class VarLong {
         return l;
     }
 
-    public static ByteBuf write(ByteBuf buf, long l) {
+    public static void write(ByteBuf buf, long l) {
         while ((l & -CONTINUATION_BIT_MASK) != 0L) {
             buf.writeByte((int) (l & DATA_BITS_MASK) | CONTINUATION_BIT_MASK);
             l >>>= DATA_BITS_PER_BYTE;
         }
 
         buf.writeByte((int) l);
-        return buf;
     }
 }

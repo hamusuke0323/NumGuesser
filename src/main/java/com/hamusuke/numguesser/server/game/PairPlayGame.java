@@ -80,11 +80,6 @@ public class PairPlayGame extends NormalGame {
         return new PairGameRound(this, this.players);
     }
 
-    @Override
-    protected PairGameRound getRound() {
-        return (PairGameRound) super.getRound();
-    }
-
     public ServerPlayerPairRegistry getPairRegistry() {
         return this.pairRegistry;
     }

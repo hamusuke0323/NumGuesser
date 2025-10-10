@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.server;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hamusuke.numguesser.network.HandlerNames;
@@ -9,13 +10,12 @@ import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.protocol.PacketDirection;
 import com.hamusuke.numguesser.network.protocol.packet.disconnect.clientbound.DisconnectNotify;
 import com.hamusuke.numguesser.server.network.listener.handshake.ServerHandshakePacketListenerImpl;
-import com.hamusuke.numguesser.util.Lazy;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.apache.logging.log4j.LogManager;
@@ -26,14 +26,21 @@ import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 public class ServerNetworkIo {
-    public static final Lazy<NioEventLoopGroup> DEFAULT_CHANNEL = new Lazy<>(() -> {
-        return new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Server IO #%d").setDaemon(true).build());
-    });
-    public static final Lazy<EpollEventLoopGroup> EPOLL_CHANNEL = new Lazy<>(() -> {
-        return new EpollEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Epoll Server IO #%d").setDaemon(true).build());
-    });
+    public static final Supplier<MultiThreadIoEventLoopGroup> DEFAULT_CHANNEL = Suppliers.memoize(() ->
+            new MultiThreadIoEventLoopGroup(0,
+                    new ThreadFactoryBuilder()
+                            .setNameFormat("Netty Server IO #%d")
+                            .setDaemon(true)
+                            .build(), NioIoHandler.newFactory()));
+    public static final Supplier<MultiThreadIoEventLoopGroup> EPOLL_CHANNEL = Suppliers.memoize(() ->
+            new MultiThreadIoEventLoopGroup(0,
+                    new ThreadFactoryBuilder()
+                            .setNameFormat("Netty Epoll Server IO #%d")
+                            .setDaemon(true)
+                            .build(), EpollIoHandler.newFactory()));
     private static final Logger LOGGER = LogManager.getLogger();
     public final AtomicBoolean active = new AtomicBoolean();
     final NumGuesserServer server;
@@ -48,7 +55,7 @@ public class ServerNetworkIo {
     public void bind(@Nullable InetAddress address, int port) {
         synchronized (this.channels) {
             Class<? extends ServerChannel> clazz;
-            Lazy<? extends EventLoopGroup> lazy;
+            Supplier<? extends EventLoopGroup> lazy;
             if (Epoll.isAvailable()) {
                 clazz = EpollServerSocketChannel.class;
                 lazy = EPOLL_CHANNEL;
@@ -114,9 +121,5 @@ public class ServerNetworkIo {
                 return false;
             });
         }
-    }
-
-    public NumGuesserServer getServer() {
-        return this.server;
     }
 }

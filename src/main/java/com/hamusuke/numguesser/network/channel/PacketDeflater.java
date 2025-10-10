@@ -4,15 +4,12 @@ import com.hamusuke.numguesser.network.VarInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.zip.Deflater;
 
 import static com.hamusuke.numguesser.network.channel.PacketInflater.MAXIMUM_UNCOMPRESSED_LENGTH;
 
 public class PacketDeflater extends MessageToByteEncoder<ByteBuf> {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final byte[] encodeBuf = new byte[8192];
     private final Deflater deflater;
     private int threshold;
@@ -46,10 +43,6 @@ public class PacketDeflater extends MessageToByteEncoder<ByteBuf> {
 
             this.deflater.reset();
         }
-    }
-
-    public int getThreshold() {
-        return this.threshold;
     }
 
     public void setThreshold(int threshold) {

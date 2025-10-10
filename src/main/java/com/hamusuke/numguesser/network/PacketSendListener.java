@@ -3,7 +3,6 @@ package com.hamusuke.numguesser.network;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 
 import javax.annotation.Nullable;
-import java.util.function.Supplier;
 
 public interface PacketSendListener {
     static PacketSendListener thenRun(final Runnable runnable) {
@@ -18,16 +17,6 @@ public interface PacketSendListener {
             public Packet<?> onFailure() {
                 runnable.run();
                 return null;
-            }
-        };
-    }
-
-    static PacketSendListener exceptionallySend(final Supplier<Packet<?>> packetSupplier) {
-        return new PacketSendListener() {
-            @Nullable
-            @Override
-            public Packet<?> onFailure() {
-                return packetSupplier.get();
             }
         };
     }

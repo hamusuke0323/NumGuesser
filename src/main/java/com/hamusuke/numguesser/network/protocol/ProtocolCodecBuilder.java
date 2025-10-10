@@ -15,13 +15,12 @@ public class ProtocolCodecBuilder<B extends ByteBuf, L extends PacketListener> {
         this.direction = direction;
     }
 
-    public <T extends Packet<? super L>> ProtocolCodecBuilder<B, L> add(PacketType<T> type, StreamCodec<? super B, T> codec) {
+    public <T extends Packet<? super L>> void add(PacketType<T> type, StreamCodec<? super B, T> codec) {
         if (type.direction() != this.direction) {
             var s = String.valueOf(type);
             throw new IllegalArgumentException("Invalid packet flow for packet " + s + ", expected " + this.direction.name());
         } else {
             this.dispatchBuilder.add(type, codec);
-            return this;
         }
     }
 

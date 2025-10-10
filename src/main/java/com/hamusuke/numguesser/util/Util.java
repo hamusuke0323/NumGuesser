@@ -10,7 +10,9 @@ import java.net.SocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.*;
+import java.util.function.Function;
+import java.util.function.IntPredicate;
+import java.util.function.LongSupplier;
 
 public class Util {
     public static final LongSupplier nanoTimeSupplier = System::nanoTime;
@@ -53,20 +55,8 @@ public class Util {
         return transformToNewMap(from, keyTransformer, Function.identity());
     }
 
-    public static <K, V, V1> Map<K, V1> transformToNewMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
-        return Maps.transformValues(from, valueTransformer::apply);
-    }
-
-    public static <K, K1, V, V1> Map<K1, V1> transformToNewImmutableMap(Map<K, V> from, Function<K, K1> keyTransformer, Function<V, V1> valueTransformer) {
-        return ImmutableMap.copyOf(transformToNewMap(from, keyTransformer, valueTransformer));
-    }
-
     public static <K, K1, V> Map<K1, V> transformToNewImmutableMapOnlyKeys(Map<K, V> from, Function<K, K1> keyTransformer) {
         return ImmutableMap.copyOf(transformToNewMapOnlyKeys(from, keyTransformer));
-    }
-
-    public static <K, V, V1> Map<K, V1> transformToNewImmutableMapOnlyValues(Map<K, V> from, Function<V, V1> valueTransformer) {
-        return ImmutableMap.copyOf(transformToNewMapOnlyValues(from, valueTransformer));
     }
 
     public static String toHTML(String s) {
@@ -81,15 +71,6 @@ public class Util {
         var buf = new StringBuilder();
         s.chars().filter(intPredicate).forEach(value -> buf.append((char) value));
         return buf.toString();
-    }
-
-    public static <T> T make(Supplier<T> supplier) {
-        return supplier.get();
-    }
-
-    public static <T> T makeAndAccess(T t, Consumer<T> consumer) {
-        consumer.accept(t);
-        return t;
     }
 
     public static long getMeasuringTimeMs() {
