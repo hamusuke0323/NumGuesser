@@ -63,12 +63,12 @@ public class SinglePlayerGame {
 
     @Nullable
     public AbstractClientCard nextCard() {
-        return this.deck.isEmpty() ? null : this.deck.remove(0);
+        return this.deck.isEmpty() ? null : this.deck.removeFirst();
     }
 
     @Nullable
     public AbstractClientCard getNextCard() {
-        return this.deck.isEmpty() ? null : this.deck.get(0);
+        return this.deck.isEmpty() ? null : this.deck.getFirst();
     }
 
     public enum Difficulty {

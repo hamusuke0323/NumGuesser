@@ -308,7 +308,7 @@ public final class NumGuesserServer extends ReentrantThreadExecutor<ServerTask> 
 
     public void runQueuedCommands() {
         while (!this.commandQueue.isEmpty()) {
-            var command = this.commandQueue.remove(0);
+            var command = this.commandQueue.removeFirst();
             this.runCommand(command);
         }
     }

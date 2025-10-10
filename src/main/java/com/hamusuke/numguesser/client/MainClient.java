@@ -14,7 +14,7 @@ import java.awt.geom.AffineTransform;
 public class MainClient {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         var is = MainClient.class.getResourceAsStream("/font.otf");
         if (is != null) {
             try {

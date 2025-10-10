@@ -57,7 +57,7 @@ public class PacketLogTable extends JTable {
             return;
         }
 
-        vec.remove(0);
+        vec.removeFirst();
     }
 
     public void clear() {

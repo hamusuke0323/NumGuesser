@@ -51,7 +51,7 @@ public class EnterPasswordPanel extends Panel {
 
     private void enter() {
         var pwd = this.getPassword();
-        if (pwd.isEmpty() || pwd.isBlank()) {
+        if (pwd.isBlank()) {
             return;
         }
 

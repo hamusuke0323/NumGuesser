@@ -45,7 +45,7 @@ public class CardRegistry {
     }
 
     public Card pull() {
-        return this.deck.remove(0);
+        return this.deck.removeFirst();
     }
 
     public boolean own(final ServerPlayer player, final Card card) {

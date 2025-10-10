@@ -141,7 +141,7 @@ public class ServerRoom extends Room {
         }
 
         if (serverPlayer == this.owner) {
-            this.setOwner(this.players.get(0));
+            this.setOwner(this.players.getFirst());
         }
 
         this.sendPacketToAllInRoom(new PlayerLeaveNotify(serverPlayer));
