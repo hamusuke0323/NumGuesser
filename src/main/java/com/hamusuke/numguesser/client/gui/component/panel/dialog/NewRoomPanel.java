@@ -69,12 +69,12 @@ public class NewRoomPanel extends Panel {
 
     private void create() {
         var name = this.getRoomName();
-        if (name.isEmpty() || name.isBlank()) {
+        if (name.isBlank()) {
             return;
         }
 
         var pwd = this.getPassword();
-        if (this.hasPassword() && (pwd.isEmpty() || pwd.isBlank())) {
+        if (this.hasPassword() && (pwd.isBlank())) {
             return;
         }
 

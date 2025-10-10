@@ -31,10 +31,6 @@ public abstract class PlayerPair<P extends Player> {
         return ImmutableMap.copyOf(map);
     }
 
-    public PairColor getColor() {
-        return this.color;
-    }
-
     public P getBuddyFor(P player) {
         return this.left.equals(player) ? this.right : this.left;
     }

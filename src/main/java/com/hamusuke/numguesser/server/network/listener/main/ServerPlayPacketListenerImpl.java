@@ -1,12 +1,13 @@
 package com.hamusuke.numguesser.server.network.listener.main;
 
-import com.hamusuke.numguesser.game.mode.PairPlayGameMode;
 import com.hamusuke.numguesser.network.channel.Connection;
 import com.hamusuke.numguesser.network.listener.server.main.ServerPlayPacketListener;
+import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyReq;
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
+import com.hamusuke.numguesser.server.game.PairPlayGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl implements ServerPlayPacketListener {
@@ -17,7 +18,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
 
     @Override
     public synchronized void handleClientCommand(ClientCommandReq packet) {
-        var game = this.room.getGame();
+        final var game = this.room.getGame();
         if (game == null) {
             return;
         }
@@ -25,10 +26,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
         switch (packet.command()) {
             case EXIT_GAME -> this.room.exitGame(this.player);
             case CANCEL -> game.onCancelCommand(this.player);
-            case LET_ALLY_TOSS -> game.onTossSelected(this.player);
-            case ATTACK_WITHOUT_TOSS -> game.onAttackSelected(this.player);
-            case CONTINUE_ATTACKING -> game.continueAttacking(this.player);
-            case STAY -> game.stay(this.player);
+            default -> this.handleActions(packet);
         }
     }
 
@@ -40,45 +38,37 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
         }
     }
 
-    @Override
-    public void handleCardSelect(CardSelectReq packet) {
+    protected void handleActions(final Packet<?> packet) {
         if (this.room.getGame() == null) {
             return;
         }
 
-        this.room.getGame().onCardSelect(this.player, packet.id());
+        this.room.getGame().onPlayerAction(this.player, packet);
+    }
+
+    @Override
+    public void handleCardSelect(CardSelectReq packet) {
+        this.handleActions(packet);
     }
 
     @Override
     public void handleCardForAttackSelect(CardForAttackSelectRsp packet) {
-        if (this.room.getGame() == null) {
-            return;
-        }
-
-        this.room.getGame().onCardForAttackSelect(this.player, packet.id());
+        this.handleActions(packet);
     }
 
     @Override
     public synchronized void handleToss(TossRsp packet) {
-        if (this.room.getGame() == null) {
-            return;
-        }
-
-        this.room.getGame().onToss(this.player, packet.cardId());
+        this.handleActions(packet);
     }
 
     @Override
     public void handleAttack(AttackReq packet) {
-        if (this.room.getGame() == null) {
-            return;
-        }
-
-        this.room.getGame().onAttack(this.player, packet.id(), packet.num());
+        this.handleActions(packet);
     }
 
     @Override
     public void handlePairColorChange(PairColorChangeReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
             return;
         }
 
@@ -87,7 +77,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
 
     @Override
     public void handlePairMakingDone(PairMakingDoneReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGameMode pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
             return;
         }
 

@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.gui.component.table;
 
 import com.hamusuke.numguesser.network.PacketLogger.PacketDetails;
+import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.util.PacketUtil;
 import com.hamusuke.numguesser.util.Util;
 
@@ -11,7 +12,7 @@ import java.awt.*;
 public class PacketInfoRenderer extends DefaultTableCellRenderer {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        if (!(value instanceof PacketDetails details)) {
+        if (!(value instanceof PacketDetails(Packet<?> packet, int size))) {
             if (column == 0) {
                 var l = new JLabel("←");
                 l.setHorizontalAlignment(RIGHT);
@@ -21,9 +22,9 @@ public class PacketInfoRenderer extends DefaultTableCellRenderer {
             return new JLabel("→");
         }
 
-        var byteStr = "(%s)".formatted(PacketUtil.convertBytes(details.size()));
-        var l = new JLabel(details.packet().getClass().getSimpleName() + byteStr);
-        var packetDetails = PacketUtil.getPacketDetails(details.packet(), byteStr);
+        var byteStr = "(%s)".formatted(PacketUtil.convertBytes(size));
+        var l = new JLabel(packet.getClass().getSimpleName() + byteStr);
+        var packetDetails = PacketUtil.getPacketDetails(packet, byteStr);
         l.setToolTipText(Util.toHTML(packetDetails));
 
         return l;

@@ -8,7 +8,7 @@ import java.awt.*;
 import static com.hamusuke.numguesser.Constants.*;
 
 public class ClientFrameCard extends AbstractClientCard {
-    protected int width;
+    protected final int width;
 
     public ClientFrameCard() {
         this(CARD_WIDTH);
@@ -16,10 +16,6 @@ public class ClientFrameCard extends AbstractClientCard {
 
     public ClientFrameCard(int width) {
         super(CardColor.BLACK);
-        this.width = width;
-    }
-
-    public void setWidth(int width) {
         this.width = width;
     }
 

@@ -116,7 +116,7 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     }
 
     @Override
-    public void handleDisconnectPacket(DisconnectNotify packet) {
+    public void handleDisconnect(DisconnectNotify packet) {
         this.connection.disconnect(packet.msg());
     }
 
@@ -172,9 +172,5 @@ public abstract class ClientCommonPacketListenerImpl implements ClientCommonPack
     @Override
     public Connection getConnection() {
         return this.connection;
-    }
-
-    public NumGuesser getClient() {
-        return this.client;
     }
 }

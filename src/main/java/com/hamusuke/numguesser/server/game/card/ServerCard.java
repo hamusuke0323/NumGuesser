@@ -1,4 +1,4 @@
-package com.hamusuke.numguesser.server.game;
+package com.hamusuke.numguesser.server.game.card;
 
 import com.hamusuke.numguesser.game.card.Card;
 

@@ -5,11 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.BooleanSupplier;
-import java.util.function.Supplier;
 
 public abstract class ThreadExecutor<R extends Runnable> implements MessageListener<R>, Executor {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -35,41 +33,9 @@ public abstract class ThreadExecutor<R extends Runnable> implements MessageListe
         return !this.isSameThread();
     }
 
-    public int getTaskCount() {
-        return this.tasks.size();
-    }
-
     @Override
     public String getName() {
         return this.name;
-    }
-
-    public <V> CompletableFuture<V> submit(Supplier<V> task) {
-        return this.shouldExecuteAsync() ? CompletableFuture.supplyAsync(task, this) : CompletableFuture.completedFuture(task.get());
-    }
-
-    private CompletableFuture<Void> submitAsync(Runnable runnable) {
-        return CompletableFuture.supplyAsync(() -> {
-            runnable.run();
-            return null;
-        }, this);
-    }
-
-    public CompletableFuture<Void> submit(Runnable task) {
-        if (this.shouldExecuteAsync()) {
-            return this.submitAsync(task);
-        } else {
-            task.run();
-            return CompletableFuture.completedFuture(null);
-        }
-    }
-
-    public void submitAndJoin(Runnable runnable) {
-        if (!this.isSameThread()) {
-            this.submitAsync(runnable).join();
-        } else {
-            runnable.run();
-        }
     }
 
     @Override
@@ -89,10 +55,6 @@ public abstract class ThreadExecutor<R extends Runnable> implements MessageListe
 
     public void executeSync(Runnable runnable) {
         this.execute(runnable);
-    }
-
-    protected void cancelTasks() {
-        this.tasks.clear();
     }
 
     protected void runTasks() {

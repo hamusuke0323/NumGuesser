@@ -1,29 +1,41 @@
-package com.hamusuke.numguesser.game.mode;
+package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
-import com.hamusuke.numguesser.game.round.GameRound;
-import com.hamusuke.numguesser.network.listener.client.main.ClientCommonPacketListener;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.StartGameRoundNotify;
+import com.hamusuke.numguesser.server.game.event.GameEventBus;
+import com.hamusuke.numguesser.server.game.event.events.GameRoundStartEvent;
+import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
+import com.hamusuke.numguesser.server.game.round.GameRound;
+import com.hamusuke.numguesser.server.game.round.phase.GamePhaseDirector;
+import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import java.util.Collections;
 import java.util.List;
 
-public class NormalGameMode {
+public class NormalGame {
     protected static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
     protected final ServerRoom room;
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
+    protected final SeatingArranger seatingArranger;
+    protected final GameEventBus eventBus = new GameEventBus();
     protected GameRound round;
     protected boolean isFirstRound = true;
     protected int waitForForceExitGameTicks;
 
-    public NormalGameMode(ServerRoom room, List<ServerPlayer> players) {
+    public NormalGame(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
+        this.seatingArranger = this.newSeatingArranger();
+        this.seatingArranger.arrange(this.playerList);
+        this.eventBus.register(new PacketSender(this.playerList));
+    }
+
+    protected SeatingArranger newSeatingArranger() {
+        return new SeatingArranger();
     }
 
     public void tick() {
@@ -43,7 +55,7 @@ public class NormalGameMode {
             this.players.forEach(p -> p.setTipPoint(point));
         }
 
-        this.round.sendPacketToAllInGame(StartGameRoundNotify.INSTANCE);
+        this.eventBus.post(new GameRoundStartEvent());
         this.round.startRound();
     }
 
@@ -67,56 +79,31 @@ public class NormalGameMode {
         }
     }
 
-    protected void sendPacketToAllInGame(Packet<? extends ClientCommonPacketListener> packet) {
-        this.players.forEach(p -> p.sendPacket(packet));
-    }
-
-    public void onCardSelect(ServerPlayer selector, int id) {
-        this.round.onCardSelect(selector, id);
-    }
-
-    public void onCardForAttackSelect(ServerPlayer selector, int id) {
-        this.round.onCardForAttackSelect(selector, id);
+    public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
+        this.round.onPlayerAction(actor, packet);
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
         this.round.onCancelCommand(canceller);
     }
 
-    public void onTossSelected(ServerPlayer selector) {
-    }
-
-    public void onAttackSelected(ServerPlayer selector) {
-    }
-
-    public void onToss(ServerPlayer tosser, int cardId) {
-    }
-
-    public void onAttack(ServerPlayer player, int id, int num) {
-        this.round.onAttack(player, id, num);
-    }
-
-    public void continueAttacking(ServerPlayer player) {
-        this.round.continueOrStay(player, true);
-    }
-
-    public void stay(ServerPlayer player) {
-        this.round.continueOrStay(player, false);
-    }
-
     public void ready() {
         this.round.ready();
     }
 
-    protected GameRound getRound() {
-        return this.round;
+    public SeatingArranger getSeatingArranger() {
+        return this.seatingArranger;
     }
 
     public List<ServerPlayer> getPlayingPlayers() {
         return this.playerList;
     }
 
+    public GameEventBus getEventBus() {
+        return this.eventBus;
+    }
+
     protected GameRound getFirstRound() {
-        return new GameRound(this, this.playerList, null);
+        return new GameRound(this, this.playerList, GamePhaseDirector.forNormalGame());
     }
 }

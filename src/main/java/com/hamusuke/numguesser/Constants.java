@@ -1,8 +1,8 @@
 package com.hamusuke.numguesser;
 
 public class Constants {
-    public static final String VERSION = "1.10.5";
-    public static final int PROTOCOL_VERSION = 33;
+    public static final String VERSION = "1.20.0";
+    public static final int PROTOCOL_VERSION = 40;
     public static final int CARD_WIDTH = 75;
     public static final int CARD_HEIGHT = 108;
     public static final float FONT_SIZE = 30.0F;

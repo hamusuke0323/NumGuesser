@@ -19,7 +19,6 @@ import com.hamusuke.numguesser.network.protocol.EmptyPipelineHandler;
 import com.hamusuke.numguesser.network.protocol.EmptyPipelineHandler.Inbound;
 import com.hamusuke.numguesser.network.protocol.EmptyPipelineHandler.Outbound;
 import com.hamusuke.numguesser.network.protocol.PacketDirection;
-import com.hamusuke.numguesser.network.protocol.Protocol;
 import com.hamusuke.numguesser.network.protocol.ProtocolInfo;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.SkipPacketException;
@@ -33,11 +32,9 @@ import com.hamusuke.numguesser.util.Util;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.local.LocalChannel;
-import io.netty.channel.local.LocalServerChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.flow.FlowControlHandler;
@@ -60,39 +57,38 @@ import java.util.function.Supplier;
 
 public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final Supplier<NioEventLoopGroup> NETWORK_WORKER_GROUP = Suppliers.memoize(() -> new NioEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Client IO #%d").setDaemon(true).build()));
-    public static final Supplier<EpollEventLoopGroup> NETWORK_EPOLL_WORKER_GROUP = Suppliers.memoize(() -> new EpollEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build()));
-    public static final Supplier<DefaultEventLoopGroup> LOCAL_WORKER_GROUP = Suppliers.memoize(() -> new DefaultEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Local Client IO #%d").setDaemon(true).build()));
+    public static final Supplier<MultiThreadIoEventLoopGroup> NETWORK_WORKER_GROUP = Suppliers.memoize(() ->
+            new MultiThreadIoEventLoopGroup(0,
+                    new ThreadFactoryBuilder()
+                            .setNameFormat("Netty Client IO #%d")
+                            .setDaemon(true)
+                            .build(), NioIoHandler.newFactory()));
+    public static final Supplier<MultiThreadIoEventLoopGroup> NETWORK_EPOLL_WORKER_GROUP = Suppliers.memoize(() ->
+            new MultiThreadIoEventLoopGroup(0,
+                    new ThreadFactoryBuilder()
+                            .setNameFormat("Netty Epoll Client IO #%d")
+                            .setDaemon(true)
+                            .build(), EpollIoHandler.newFactory()));
     private static final ProtocolInfo<ServerHandshakePacketListener> INITIAL_PROTOCOL = HandshakeProtocols.SERVERBOUND;
     private final PacketDirection receiving;
     private final Queue<Consumer<Connection>> pendingActions = Queues.newConcurrentLinkedQueue();
     private final PacketLogger packetLogger;
     private Channel channel;
     private SocketAddress address;
-    private volatile boolean sendLoginDisconnect = true;
     @Nullable
     private volatile PacketListener disconnectListener;
     @Nullable
     private volatile PacketListener packetListener;
     @Nullable
     private String disconnectedReason;
-    private boolean encrypted;
     private boolean disconnectionHandled;
-    private int tickCount;
     private boolean handlingFault;
     @Nullable
     private volatile String delayedDisconnect;
-    private ProtocolInfo<?> outboundProtocol;
-    private ProtocolInfo<?> inboundProtocol;
 
     public Connection(PacketDirection receiving, PacketLogger logger) {
         this.receiving = receiving;
         this.packetLogger = logger;
-        if (this.receiving == PacketDirection.SERVERBOUND) {
-            this.inboundProtocol = INITIAL_PROTOCOL;
-        } else {
-            this.outboundProtocol = INITIAL_PROTOCOL;
-        }
     }
 
     private static <T extends PacketListener> void handlePacket(Packet<T> packet, PacketListener listener) {
@@ -158,19 +154,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
 
     private static ChannelInboundHandler createFrameDecoder(boolean noop) {
         return !noop ? new PacketSplitter() : new NoOpFrameDecoder();
-    }
-
-    public static Connection connectToLocalServer(SocketAddress address, PacketLogger logger) {
-        final var connection = new Connection(PacketDirection.CLIENTBOUND, logger);
-        new Bootstrap().group(LOCAL_WORKER_GROUP.get()).handler(new ChannelInitializer<>() {
-            @Override
-            protected void initChannel(Channel channel) {
-                var channelpipeline = channel.pipeline();
-                connection.configureInMemoryPipeline(channelpipeline, PacketDirection.CLIENTBOUND);
-                connection.configurePacketHandler(channelpipeline);
-            }
-        }).channel(LocalChannel.class).connect(address).syncUninterruptibly();
-        return connection;
     }
 
     @Override
@@ -266,7 +249,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         if (info.direction() != this.getReceiving()) {
             throw new IllegalStateException("Invalid inbound protocol: " + info.id());
         } else {
-            this.inboundProtocol = info;
             this.packetListener = listener;
             this.disconnectListener = null;
             var task = EmptyPipelineHandler.setupInboundProtocol(info, this.packetLogger);
@@ -279,11 +261,8 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         if (info.direction() != this.getSending()) {
             throw new IllegalStateException("Invalid outbound protocol: " + info.id());
         } else {
-            var task = EmptyPipelineHandler.setupOutboundProtocol(info, this.packetLogger)
-                    .andThen(f -> this.outboundProtocol = info);
-
-            boolean flag = info.id() == Protocol.LOGIN;
-            syncAfterConfigurationChange(this.channel.writeAndFlush(task.andThen(ctx -> this.sendLoginDisconnect = flag)));
+            var task = EmptyPipelineHandler.setupOutboundProtocol(info, this.packetLogger);
+            syncAfterConfigurationChange(this.channel.writeAndFlush(task));
         }
     }
 
@@ -367,14 +346,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         channelfuture.addListener(ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE);
     }
 
-    public void flushChannel() {
-        if (this.isConnected()) {
-            this.flush();
-        } else {
-            this.pendingActions.add(Connection::flush);
-        }
-    }
-
     private void flush() {
         if (this.channel.eventLoop().inEventLoop()) {
             this.channel.flush();
@@ -409,10 +380,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
         }
     }
 
-    public SocketAddress getRemoteAddress() {
-        return this.address;
-    }
-
     public String getLoggableAddress(boolean show) {
         if (this.address == null) {
             return "local";
@@ -430,10 +397,6 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
             this.channel.close().awaitUninterruptibly();
             this.disconnectedReason = msg;
         }
-    }
-
-    public boolean isMemoryConnection() {
-        return this.channel instanceof LocalChannel || this.channel instanceof LocalServerChannel;
     }
 
     public PacketDirection getReceiving() {
@@ -465,13 +428,8 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     }
 
     public void setEncryptionKey(Cipher cipher, Cipher cipher1) {
-        this.encrypted = true;
         this.channel.pipeline().addBefore(HandlerNames.SPLITTER, HandlerNames.DECRYPT, new PacketDecryptor(cipher));
         this.channel.pipeline().addBefore(HandlerNames.PREPENDER, HandlerNames.ENCRYPT, new PacketEncryptor(cipher1));
-    }
-
-    public boolean isEncrypted() {
-        return this.encrypted;
     }
 
     public boolean isConnected() {
@@ -542,21 +500,5 @@ public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
                 }
             }
         }
-    }
-
-    public Channel channel() {
-        return this.channel;
-    }
-
-    public Protocol getProtocol() {
-        return this.outboundProtocol != null ? this.outboundProtocol.id() : this.inboundProtocol.id();
-    }
-
-    public ProtocolInfo<?> getInboundProtocolInfo() {
-        return this.inboundProtocol;
-    }
-
-    public ProtocolInfo<?> getOutputboundProtocolInfo() {
-        return this.outboundProtocol;
     }
 }

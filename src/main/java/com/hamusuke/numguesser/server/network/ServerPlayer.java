@@ -11,7 +11,7 @@ import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.Player
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.PlayerNewDeckNotify;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.ServerPlayerDeck;
+import com.hamusuke.numguesser.server.game.card.ServerPlayerDeck;
 import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import javax.annotation.Nullable;

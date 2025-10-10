@@ -34,13 +34,6 @@ public class EmptyPipelineHandler {
 
     public interface InboundConfigTask {
         void run(ChannelHandlerContext ctx);
-
-        default InboundConfigTask andThen(InboundConfigTask task) {
-            return ctx -> {
-                this.run(ctx);
-                task.run(ctx);
-            };
-        }
     }
 
     public interface OutboundConfigTask {

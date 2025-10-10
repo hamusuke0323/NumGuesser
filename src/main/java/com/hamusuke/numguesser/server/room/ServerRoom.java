@@ -2,7 +2,6 @@ package com.hamusuke.numguesser.server.room;
 
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.GameMode;
-import com.hamusuke.numguesser.game.mode.NormalGameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.*;
@@ -15,18 +14,23 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
+import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.server.game.PairPlayGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ServerRoom extends Room {
+    private static final AtomicInteger ROOM_ID_INCREMENTER = new AtomicInteger();
+    private final int id = ROOM_ID_INCREMENTER.getAndIncrement();
     private final NumGuesserServer server;
     private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<ServerPlayer> playerList;
     private final String password;
-    private NormalGameMode game;
+    private NormalGame game;
     private ServerPlayer owner;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
@@ -38,6 +42,10 @@ public class ServerRoom extends Room {
 
     public RoomInfo toInfo() {
         return new RoomInfo(this.id, this.roomName, this.getPlayers().size(), this.hasPassword());
+    }
+
+    public int getId() {
+        return this.id;
     }
 
     @Override
@@ -76,7 +84,10 @@ public class ServerRoom extends Room {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = this.gameMode.gameCreator.createGame(this, this.players);
+                    this.game = switch (this.gameMode) {
+                        case NORMAL_GAME -> new NormalGame(this, this.players);
+                        case PAIR_PLAY -> new PairPlayGame(this, this.players);
+                    };
                     this.players.forEach(player -> {
                         player.sendPacket(StartGameNotify.INSTANCE);
                         player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
@@ -137,7 +148,7 @@ public class ServerRoom extends Room {
         }
 
         if (serverPlayer == this.owner) {
-            this.setOwner(this.players.get(0));
+            this.setOwner(this.players.getFirst());
         }
 
         this.sendPacketToAllInRoom(new PlayerLeaveNotify(serverPlayer));
@@ -191,7 +202,7 @@ public class ServerRoom extends Room {
         }
     }
 
-    public NormalGameMode getGame() {
+    public NormalGame getGame() {
         return this.game;
     }
 

@@ -104,12 +104,6 @@ public class SinglePlayerGameTable extends JTable {
         }
     }
 
-    private void completeAllRows() {
-        for (int i = 0; i < this.tableModel.getRowCount(); i++) {
-            this.completeRow(i);
-        }
-    }
-
     private boolean isFullInRow(int row) {
         return this.tableModel.getDataVector().get(row).stream().filter(o -> !(o instanceof ClientFrameCard)).count() >= this.difficulty.maxRowCardNum;
     }

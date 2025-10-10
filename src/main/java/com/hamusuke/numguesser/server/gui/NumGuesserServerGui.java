@@ -1,7 +1,6 @@
 package com.hamusuke.numguesser.server.gui;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.logging.LogQueues;
 import com.hamusuke.numguesser.server.NumGuesserServer;

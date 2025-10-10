@@ -17,10 +17,6 @@ public interface CommandSource {
         this.sendMessage(msg, true);
     }
 
-    default void sendFeedback(String msg) {
-        this.sendCommandFeedback(msg, true);
-    }
-
     default void sendError(String msg) {
         this.sendCommandFeedback(msg, false);
     }

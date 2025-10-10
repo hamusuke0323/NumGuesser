@@ -18,7 +18,7 @@ public class TestFrame extends JXFrame {
         this.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    static void main() {
         FlatDarkLaf.setup();
         new TestFrame();
     }

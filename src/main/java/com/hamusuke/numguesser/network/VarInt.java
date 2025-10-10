@@ -38,13 +38,12 @@ public class VarInt {
         return i;
     }
 
-    public static ByteBuf write(ByteBuf buf, int i) {
+    public static void write(ByteBuf buf, int i) {
         while ((i & -CONTINUATION_BIT_MASK) != 0) {
             buf.writeByte(i & DATA_BITS_MASK | CONTINUATION_BIT_MASK);
             i >>>= DATA_BITS_PER_BYTE;
         }
 
         buf.writeByte(i);
-        return buf;
     }
 }
