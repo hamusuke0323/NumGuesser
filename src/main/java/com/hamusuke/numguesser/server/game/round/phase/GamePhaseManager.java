@@ -33,7 +33,6 @@ public class GamePhaseManager {
             throw new IllegalStateException("prevPhase is null");
         }
 
-        this.currentPhase.onExit(round);
         this.currentPhase = this.prevPhase;
         this.currentPhase.onEnter(round);
         this.prevPhase = null;
@@ -52,16 +51,10 @@ public class GamePhaseManager {
 
         this.prevPhase = this.currentPhase;
         this.currentPhase = (GamePhase<?>) nextPhase;
-
-        if (this.prevPhase != null) {
-            this.prevPhase.onExit(round);
-        }
-
         this.currentPhase.onEnter(round);
     }
 
     public void setEndForcibly(final GameRound round) {
-        this.currentPhase.onExit(round);
         this.currentPhase = this.end.get();
         this.currentPhase.onEnter(round);
     }

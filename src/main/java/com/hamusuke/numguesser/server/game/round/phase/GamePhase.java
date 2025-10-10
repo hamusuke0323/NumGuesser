@@ -9,9 +9,6 @@ public interface GamePhase<R> {
     default void onEnter(final GameRound round) {
     }
 
-    default void onExit(final GameRound round) {
-    }
-
     default void onPlayerLeft(final GameRound round, final ServerPlayer player) {
         round.eventBus.post(new GameMessageEvent(player.getDisplayName() + "がゲームをやめました"));
         final var list = player.getDeck().openAllCards();
