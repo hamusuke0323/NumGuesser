@@ -13,9 +13,9 @@ import com.hamusuke.numguesser.server.network.listener.handshake.ServerHandshake
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollIoHandler;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.apache.logging.log4j.LogManager;
@@ -29,18 +29,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 public class ServerNetworkIo {
-    public static final Supplier<MultiThreadIoEventLoopGroup> DEFAULT_CHANNEL = Suppliers.memoize(() ->
-            new MultiThreadIoEventLoopGroup(0,
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("Netty Server IO #%d")
-                            .setDaemon(true)
-                            .build(), NioIoHandler.newFactory()));
-    public static final Supplier<MultiThreadIoEventLoopGroup> EPOLL_CHANNEL = Suppliers.memoize(() ->
-            new MultiThreadIoEventLoopGroup(0,
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("Netty Epoll Server IO #%d")
-                            .setDaemon(true)
-                            .build(), EpollIoHandler.newFactory()));
+    public static final Supplier<NioEventLoopGroup> DEFAULT_CHANNEL = Suppliers.memoize(() -> {
+        return new NioEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Server IO #%d").setDaemon(true).build());
+    });
+    public static final Supplier<EpollEventLoopGroup> EPOLL_CHANNEL = Suppliers.memoize(() -> {
+        return new EpollEventLoopGroup(0, (new ThreadFactoryBuilder()).setNameFormat("Netty Epoll Server IO #%d").setDaemon(true).build());
+    });
     private static final Logger LOGGER = LogManager.getLogger();
     public final AtomicBoolean active = new AtomicBoolean();
     final NumGuesserServer server;

@@ -32,9 +32,9 @@ import com.hamusuke.numguesser.util.Util;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
-import io.netty.channel.epoll.EpollIoHandler;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioIoHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.flow.FlowControlHandler;
@@ -57,18 +57,8 @@ import java.util.function.Supplier;
 
 public class Connection extends SimpleChannelInboundHandler<Packet<?>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final Supplier<MultiThreadIoEventLoopGroup> NETWORK_WORKER_GROUP = Suppliers.memoize(() ->
-            new MultiThreadIoEventLoopGroup(0,
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("Netty Client IO #%d")
-                            .setDaemon(true)
-                            .build(), NioIoHandler.newFactory()));
-    public static final Supplier<MultiThreadIoEventLoopGroup> NETWORK_EPOLL_WORKER_GROUP = Suppliers.memoize(() ->
-            new MultiThreadIoEventLoopGroup(0,
-                    new ThreadFactoryBuilder()
-                            .setNameFormat("Netty Epoll Client IO #%d")
-                            .setDaemon(true)
-                            .build(), EpollIoHandler.newFactory()));
+    public static final Supplier<NioEventLoopGroup> NETWORK_WORKER_GROUP = Suppliers.memoize(() -> new NioEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Client IO #%d").setDaemon(true).build()));
+    public static final Supplier<EpollEventLoopGroup> NETWORK_EPOLL_WORKER_GROUP = Suppliers.memoize(() -> new EpollEventLoopGroup(0, new ThreadFactoryBuilder().setNameFormat("Netty Epoll Client IO #%d").setDaemon(true).build()));
     private static final ProtocolInfo<ServerHandshakePacketListener> INITIAL_PROTOCOL = HandshakeProtocols.SERVERBOUND;
     private final PacketDirection receiving;
     private final Queue<Consumer<Connection>> pendingActions = Queues.newConcurrentLinkedQueue();

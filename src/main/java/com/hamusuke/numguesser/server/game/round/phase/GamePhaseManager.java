@@ -85,7 +85,7 @@ public class GamePhaseManager {
         }
 
         public <R> Builder advanceAfter(final Class<? extends GamePhase<R>> after, final Supplier<GamePhase<?>> supplier) {
-            return this.advanceWithResultAfter(after, _ -> supplier.get());
+            return this.advanceWithResultAfter(after, __ -> supplier.get());
         }
 
         public <R> Builder advanceWithResultAfter(final Class<? extends GamePhase<R>> after, final Function<R, GamePhase<?>> function) {

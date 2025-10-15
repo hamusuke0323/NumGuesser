@@ -11,7 +11,7 @@ import java.net.UnknownHostException;
 public class MainServer {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws UnknownHostException {
         var s = InetAddress.getLocalHost().getHostAddress();
         int i = 16160;
         boolean noGui = false;
