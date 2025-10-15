@@ -59,7 +59,7 @@ public class SelectCardForAttackPhase implements ActableGamePhase<SelectCardForA
     }
 
     @Override
-    public boolean isCancellable() {
-        return this.cancellable;
+    public boolean isCancellable(final GameRound round, final ServerPlayer canceller) {
+        return this.cancellable && round.getCurAttacker() == canceller;
     }
 }

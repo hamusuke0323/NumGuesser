@@ -155,8 +155,8 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
     }
 
     @Override
-    public boolean isCancellable() {
-        return this.cancellable;
+    public boolean isCancellable(final GameRound round, final ServerPlayer canceller) {
+        return this.cancellable && round.getCurAttacker() == canceller;
     }
 
     public sealed interface Result permits Result.Failure, Result.Success {
