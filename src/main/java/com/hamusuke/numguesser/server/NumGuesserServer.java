@@ -44,18 +44,18 @@ public final class NumGuesserServer extends ReentrantThreadExecutor<ServerTask> 
     private final List<String> commandQueue = Collections.synchronizedList(Lists.newArrayList());
     private final String serverIp;
     private final int serverPort;
+    private final PlayerManager playerManager = new PlayerManager();
+    private final AtomicBoolean loading = new AtomicBoolean();
+    private final Map<Integer, ServerRoom> rooms = Maps.newConcurrentMap();
+    private final List<Runnable> tickables = Lists.newArrayList();
     private boolean stopped;
     private int ticks;
-    private final PlayerManager playerManager = new PlayerManager();
     @Nullable
     private KeyPair keyPair;
     private boolean waitingForNextTick;
     private long nextTickTimestamp;
     private long timeReference;
     private long lastTimeReference;
-    private final AtomicBoolean loading = new AtomicBoolean();
-    private final Map<Integer, ServerRoom> rooms = Maps.newConcurrentMap();
-    private final List<Runnable> tickables = Lists.newArrayList();
     @Nullable
     private NumGuesserServerGui gui;
 
@@ -263,7 +263,12 @@ public final class NumGuesserServer extends ReentrantThreadExecutor<ServerTask> 
         LOGGER.info(msg);
 
         if (all) {
-            this.playerManager.sendPacketToAll(new ChatNotify(String.format("[%s] %s", this.getDisplayName(), msg)));
+            this.playerManager
+                    .getPlayers()
+                    .stream()
+                    .filter(p -> p.curRoom != null)
+                    .forEach(p ->
+                            p.sendPacket(new ChatNotify(String.format("[%s] %s", this.getDisplayName(), msg))));
         }
     }
 
@@ -272,7 +277,12 @@ public final class NumGuesserServer extends ReentrantThreadExecutor<ServerTask> 
         LOGGER.info(msg);
 
         if (all) {
-            this.playerManager.sendPacketToAll(new ChatNotify(String.format("[%s]: %s", this.getDisplayName(), msg)));
+            this.playerManager
+                    .getPlayers()
+                    .stream()
+                    .filter(p -> p.curRoom != null)
+                    .forEach(p ->
+                            p.sendPacket(new ChatNotify(String.format("[%s]: %s", this.getDisplayName(), msg))));
         }
     }
 
