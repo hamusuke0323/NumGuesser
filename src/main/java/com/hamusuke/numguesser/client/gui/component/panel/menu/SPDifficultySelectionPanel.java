@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.panel.menu;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.game.SinglePlayerGame.Difficulty;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.SinglePlayerGamePanel;
@@ -20,7 +21,7 @@ public class SPDifficultySelectionPanel extends Panel {
 
         var l = (GridBagLayout) this.getLayout();
 
-        this.client.setWindowTitle("シングルプレイ - " + this.client.getGameTitleWithVersion());
+        this.client.setWindowTitle("シングルプレイ - " + Constants.TITLE_AND_VERSION);
         var sp = new JXButton("初級編");
         sp.addActionListener(e -> this.startSPEasy());
         var mp = new JXButton("上級編");

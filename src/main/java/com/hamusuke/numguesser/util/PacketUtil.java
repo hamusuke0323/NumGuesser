@@ -20,6 +20,10 @@ public class PacketUtil {
             RTTChangeNotify.class.getSimpleName()
     );
 
+    public static boolean isPacketTrash(Packet<?> packet) {
+        return LOOP_PACKETS.contains(packet.getClass().getSimpleName());
+    }
+
     public static String getPacketDetails(Packet<?> packet, String byteStr) {
         var buf = new StringBuilder(packet.getClass().getSimpleName() + byteStr).append('\n');
 

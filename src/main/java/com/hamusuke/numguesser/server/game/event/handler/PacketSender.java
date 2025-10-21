@@ -1,10 +1,10 @@
 package com.hamusuke.numguesser.server.game.event.handler;
 
+import com.hamusuke.numguesser.event.EventHandler;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.server.game.event.EventHandler;
 import com.hamusuke.numguesser.server.game.event.events.*;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 

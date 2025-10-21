@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
@@ -26,7 +27,7 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
     public final JToggleButton themeToggle;
 
     public MainWindow(NumGuesser client) {
-        super(client.getGameTitleWithVersion());
+        super(Constants.TITLE_AND_VERSION);
         this.client = client;
         this.addWindowListener(this);
         this.addComponentListener(this);
@@ -64,7 +65,7 @@ public class MainWindow extends JXFrame implements ActionListener, WindowListene
     private void onThemeChanged(boolean dark) {
         this.client.sendMsg(() -> {
             this.client.config.darkTheme.setValue(dark);
-            this.client.config.saveConfig();
+            this.client.config.save();
         });
     }
 

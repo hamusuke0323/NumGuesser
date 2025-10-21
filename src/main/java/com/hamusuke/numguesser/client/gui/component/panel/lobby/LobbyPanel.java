@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.panel.lobby;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.CenteredMessagePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.NewRoomPanel;
@@ -36,7 +37,7 @@ public class LobbyPanel extends Panel implements ListSelectionListener {
     public void init() {
         super.init();
 
-        this.client.setWindowTitle("ロビー - " + this.client.getGameTitleWithVersion());
+        this.client.setWindowTitle("ロビー - " + Constants.TITLE_AND_VERSION);
         var sl = new GridBagLayout();
         var searchPanel = new JXPanel(sl);
         this.searchBox = new JXTextField();

@@ -1,4 +1,4 @@
-package com.hamusuke.numguesser.server.game.event;
+package com.hamusuke.numguesser.event;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

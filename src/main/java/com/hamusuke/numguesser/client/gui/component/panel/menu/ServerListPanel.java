@@ -1,9 +1,11 @@
 package com.hamusuke.numguesser.client.gui.component.panel.menu;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ConfirmPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ConnectingPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.dialog.ServerInfoPanel;
+import com.hamusuke.numguesser.client.network.ServerInfoRegistry;
 import com.hamusuke.numguesser.network.ServerInfo;
 import com.hamusuke.numguesser.network.ServerInfo.Status;
 import org.jdesktop.swingx.JXButton;
@@ -20,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.util.Optional;
 
 public class ServerListPanel extends Panel implements ListSelectionListener {
+    private final ServerInfoRegistry serverInfoRegistry = this.client.getServerInfoRegistry();
     private JXList list;
     private JXButton connect;
     private JXButton remove;
@@ -31,9 +34,9 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
     public void init() {
         super.init();
 
-        this.client.setWindowTitle("マルチプレイ - " + this.client.getGameTitleWithVersion());
+        this.client.setWindowTitle("マルチプレイ - " + Constants.TITLE_AND_VERSION);
         var model = new DefaultListModel<ServerInfo>();
-        model.addAll(this.client.getServers());
+        model.addAll(this.serverInfoRegistry.getServers());
         this.list = new JXList(model);
         this.list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         this.list.addListSelectionListener(this);
@@ -109,8 +112,8 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
     private void remove() {
         this.getSelectionOrDialog().ifPresent(info -> this.client.setPanel(new ConfirmPanel(this, "削除してもよろしいですか", b -> {
             if (b) {
-                this.client.removeServer(info);
-                this.client.saveServers();
+                this.serverInfoRegistry.remove(info);
+                this.serverInfoRegistry.save();
                 ((DefaultListModel<?>) this.list.getModel()).removeElement(info);
             }
         })));
@@ -119,8 +122,8 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
     private void add() {
         this.client.setPanel(new ServerInfoPanel(this, d -> {
             var info = new ServerInfo(d.getAddress(), d.getPort());
-            if (this.client.addServer(info)) {
-                this.client.saveServers();
+            if (this.serverInfoRegistry.add(info)) {
+                this.serverInfoRegistry.save();
                 ((DefaultListModel<ServerInfo>) this.list.getModel()).addElement(info);
             }
         }));
@@ -129,15 +132,15 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
     private void edit() {
         this.getSelectionOrDialog().ifPresent(info -> this.client.setPanel(new ServerInfoPanel(this, d -> {
             var newInfo = new ServerInfo(d.getAddress(), d.getPort());
-            if (!info.equals(newInfo) && this.client.getServers().contains(newInfo)) {
-                this.client.removeServer(info);
+            if (!info.equals(newInfo) && this.serverInfoRegistry.contains(newInfo)) {
+                this.serverInfoRegistry.remove(info);
                 ((DefaultListModel<ServerInfo>) this.list.getModel()).removeElement(info);
             } else {
                 info.address = newInfo.address;
                 info.port = newInfo.port;
             }
 
-            this.client.saveServers();
+            this.serverInfoRegistry.save();
             this.list.repaint();
         }, info)));
     }
@@ -157,7 +160,7 @@ public class ServerListPanel extends Panel implements ListSelectionListener {
                 return;
             }
 
-            this.client.checkServerInfo(info);
+            this.client.getServerChecker().startChecking(info);
             this.refresh.setEnabled(false);
             this.refreshBtnTicks = 40;
         });

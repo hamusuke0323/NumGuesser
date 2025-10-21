@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.panel.menu;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import org.jdesktop.swingx.JXButton;
 import org.jdesktop.swingx.JXLabel;
@@ -18,12 +19,12 @@ public class MainMenuPanel extends Panel {
 
         var l = (GridBagLayout) this.getLayout();
 
-        this.client.setWindowTitle("Main Menu - " + this.client.getGameTitleWithVersion());
+        this.client.setWindowTitle("Main Menu - " + Constants.TITLE_AND_VERSION);
         var sp = new JXButton("シングルプレイ");
         sp.addActionListener(e -> this.goToSPPanel());
         var mp = new JXButton("マルチプレイ");
         mp.addActionListener(e -> this.showServerList());
-        var gameTitle = new JXLabel(this.client.getGameTitle(), SwingConstants.CENTER);
+        var gameTitle = new JXLabel(Constants.TITLE, SwingConstants.CENTER);
 
         addButton(this, gameTitle, l, 0, 0, 1, 1, 1.0D);
         addButton(this, sp, l, 0, 1, 1, 1, 1.0D);
