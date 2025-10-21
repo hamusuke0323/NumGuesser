@@ -9,15 +9,7 @@ import com.hamusuke.numguesser.network.protocol.packet.lobby.LobbyPacketTypes;
 import com.hamusuke.numguesser.room.RoomInfo;
 
 public record JoinRoomSuccNotify(RoomInfo info) implements Packet<ClientLobbyPacketListener> {
-    public static final StreamCodec<IntelligentByteBuf, JoinRoomSuccNotify> STREAM_CODEC = Packet.codec(JoinRoomSuccNotify::write, JoinRoomSuccNotify::new);
-
-    private JoinRoomSuccNotify(IntelligentByteBuf buf) {
-        this(RoomInfo.STREAM_CODEC.decode(buf));
-    }
-
-    private void write(IntelligentByteBuf buf) {
-        RoomInfo.STREAM_CODEC.encode(buf, this.info);
-    }
+    public static final StreamCodec<IntelligentByteBuf, JoinRoomSuccNotify> STREAM_CODEC = RoomInfo.STREAM_CODEC.xmap(JoinRoomSuccNotify::new, JoinRoomSuccNotify::info);
 
     @Override
     public PacketType<JoinRoomSuccNotify> type() {

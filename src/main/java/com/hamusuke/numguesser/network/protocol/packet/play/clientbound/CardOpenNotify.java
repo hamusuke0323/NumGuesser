@@ -9,15 +9,7 @@ import com.hamusuke.numguesser.network.protocol.packet.PacketType;
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayPacketTypes;
 
 public record CardOpenNotify(CardSerializer card) implements Packet<ClientPlayPacketListener> {
-    public static final StreamCodec<IntelligentByteBuf, CardOpenNotify> STREAM_CODEC = Packet.codec(CardOpenNotify::write, CardOpenNotify::new);
-
-    private CardOpenNotify(IntelligentByteBuf buf) {
-        this(CardSerializer.STREAM_CODEC.decode(buf));
-    }
-
-    private void write(IntelligentByteBuf buf) {
-        CardSerializer.STREAM_CODEC.encode(buf, this.card);
-    }
+    public static final StreamCodec<IntelligentByteBuf, CardOpenNotify> STREAM_CODEC = CardSerializer.STREAM_CODEC.xmap(CardOpenNotify::new, CardOpenNotify::card);
 
     @Override
     public PacketType<CardOpenNotify> type() {

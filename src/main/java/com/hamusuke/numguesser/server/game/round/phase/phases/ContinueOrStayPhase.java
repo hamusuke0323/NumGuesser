@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
-import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackSuccNotify;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
@@ -9,10 +9,10 @@ import com.hamusuke.numguesser.server.game.round.phase.action.actions.ContinueOr
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ContinueOrStayPhase implements ActableGamePhase<ContinueOrStayAction, ContinueOrStayPhase.Result> {
-    private final Card cardForAttacking;
+    private final ServerCard cardForAttacking;
     private Result result;
 
-    public ContinueOrStayPhase(final Card cardForAttacking) {
+    public ContinueOrStayPhase(final ServerCard cardForAttacking) {
         this.cardForAttacking = cardForAttacking;
     }
 
@@ -58,7 +58,7 @@ public class ContinueOrStayPhase implements ActableGamePhase<ContinueOrStayActio
     }
 
     public sealed interface Result permits ContinueOrStayPhase.Result.Continue, ContinueOrStayPhase.Result.Stay {
-        record Continue(Card cardForAttacking) implements Result {
+        record Continue(ServerCard cardForAttacking) implements Result {
         }
 
         record Stay() implements Result {

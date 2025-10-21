@@ -2,6 +2,7 @@ package com.hamusuke.numguesser.server.game.round.phase.phases;
 
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackRsp;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.event.events.PlayerCardSelectEvent;
@@ -14,14 +15,14 @@ import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.Result>, CancellableGamePhase<AttackPhase.Result> {
     private final boolean cancellable;
-    private final Card cardForAttacking;
+    private final ServerCard cardForAttacking;
     private Result result;
 
-    public AttackPhase(final Card cardForAttacking) {
+    public AttackPhase(final ServerCard cardForAttacking) {
         this(false, cardForAttacking);
     }
 
-    public AttackPhase(final boolean cancellable, final Card cardForAttacking) {
+    public AttackPhase(final boolean cancellable, final ServerCard cardForAttacking) {
         this.cancellable = cancellable;
         this.cardForAttacking = cardForAttacking;
     }
@@ -160,7 +161,7 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
     }
 
     public sealed interface Result permits Result.Failure, Result.Success {
-        record Success(Card cardForAttack) implements Result {
+        record Success(ServerCard cardForAttack) implements Result {
         }
 
         record Failure() implements Result {

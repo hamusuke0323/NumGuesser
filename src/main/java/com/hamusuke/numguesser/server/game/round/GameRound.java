@@ -1,9 +1,9 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
 import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
@@ -86,7 +86,7 @@ public class GameRound {
         this.phaseManager.next(this);
     }
 
-    public void ownCard(ServerPlayer player, Card card) {
+    public void ownCard(ServerPlayer player, ServerCard card) {
         if (this.cardRegistry.own(player, card)) {
             int index = player.getDeck().addCard(card);
             this.eventBus.post(new PlayerNewCardAddEvent(player, index, card));

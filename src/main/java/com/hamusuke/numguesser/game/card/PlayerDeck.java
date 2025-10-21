@@ -6,14 +6,16 @@ import com.hamusuke.numguesser.network.Player;
 
 import java.util.List;
 
-public abstract class PlayerDeck {
-    protected final List<Card> cards;
+public abstract class PlayerDeck<C extends Card, P extends Player> {
+    protected final P owner;
+    protected final List<C> cards;
 
-    public PlayerDeck() {
+    public PlayerDeck(final P owner) {
+        this.owner = owner;
         this.cards = Lists.newArrayList();
     }
 
-    public int addCard(Card card) {
+    public int addCard(C card) {
         this.cards.add(card);
         this.sort();
         return this.cards.indexOf(card);
@@ -23,7 +25,7 @@ public abstract class PlayerDeck {
         this.cards.sort(Card::compareTo);
     }
 
-    public List<Card> openAllCards() {
+    public List<C> openAllCards() {
         var hasOpened = this.cards.stream()
                 .filter(card -> !card.isOpened())
                 .toList();
@@ -32,13 +34,15 @@ public abstract class PlayerDeck {
         return hasOpened;
     }
 
-    public boolean contains(Card card) {
+    public boolean contains(C card) {
         return this.cards.contains(card);
     }
 
-    public List<? extends Card> getCards() {
+    public List<C> getCards() {
         return ImmutableList.copyOf(this.cards);
     }
 
-    public abstract Player getOwner();
+    public P getOwner() {
+        return this.owner;
+    }
 }

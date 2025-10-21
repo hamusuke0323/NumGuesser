@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseDirector;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
@@ -23,7 +23,7 @@ public class PairGameRound extends GameRound {
     }
 
     @Override
-    public void ownCard(ServerPlayer player, Card card) {
+    public void ownCard(ServerPlayer player, ServerCard card) {
     }
 
     @Override

@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
-import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhase;
 
@@ -28,7 +28,7 @@ public class PullCardPhase implements GamePhase<PullCardPhase.Result> {
         record EmptyDeck() implements Result {
         }
 
-        record PulledCard(Card pulledCard) implements Result {
+        record PulledCard(ServerCard pulledCard) implements Result {
         }
     }
 }

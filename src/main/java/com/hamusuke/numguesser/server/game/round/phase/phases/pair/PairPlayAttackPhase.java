@@ -1,16 +1,13 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases.pair;
 
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.phases.AttackPhase;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class PairPlayAttackPhase extends AttackPhase {
-    public PairPlayAttackPhase(final Card cardForAttack) {
-        super(cardForAttack);
-    }
-
-    public PairPlayAttackPhase(final boolean cancellable, final Card cardForAttack) {
+    public PairPlayAttackPhase(final boolean cancellable, final ServerCard cardForAttack) {
         super(cancellable, cardForAttack);
     }
 

@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
-import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.PlayerSelectCardForAttackEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
@@ -8,9 +8,9 @@ import com.hamusuke.numguesser.server.game.round.phase.CancellableGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.SelectCardForAttackAction;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class SelectCardForAttackPhase implements ActableGamePhase<SelectCardForAttackAction, Card>, CancellableGamePhase<Card> {
+public class SelectCardForAttackPhase implements ActableGamePhase<SelectCardForAttackAction, ServerCard>, CancellableGamePhase<ServerCard> {
     private final boolean cancellable;
-    private Card selectedCard;
+    private ServerCard selectedCard;
 
     public SelectCardForAttackPhase() {
         this(false);
@@ -54,7 +54,7 @@ public class SelectCardForAttackPhase implements ActableGamePhase<SelectCardForA
     }
 
     @Override
-    public Card getResult() {
+    public ServerCard getResult() {
         return this.selectedCard;
     }
 

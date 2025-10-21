@@ -36,6 +36,18 @@ public interface StreamCodec<B, V> extends StreamDecoder<B, V>, StreamEncoder<B,
         };
     }
 
+    default <O> StreamCodec<B, O> xmap(final Function<? super V, ? extends O> to, final Function<? super O, ? extends V> from) {
+        return new StreamCodec<>() {
+            public O decode(B object) {
+                return to.apply(StreamCodec.this.decode(object));
+            }
+
+            public void encode(B object, O object2) {
+                StreamCodec.this.encode(object, from.apply(object2));
+            }
+        };
+    }
+
     default <O extends ByteBuf> StreamCodec<O, V> mapStream(final Function<O, ? extends B> func) {
         return new StreamCodec<>() {
             @Override
