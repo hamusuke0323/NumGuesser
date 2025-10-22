@@ -3,7 +3,7 @@ package com.hamusuke.numguesser.server.game.round.phase.action;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.*;
 import com.hamusuke.numguesser.server.game.round.phase.phases.AttackPhase;
 import com.hamusuke.numguesser.server.game.round.phase.phases.ContinueOrStayPhase;
@@ -34,15 +34,15 @@ public class ActionResolver {
         });
     }
 
-    private static <P extends Packet<?>, A> void register(final Class<P> clazz, final Set<Class<? extends ActableGamePhase<? extends A, ?>>> allowList, final Function<P, A> actionConverter) {
+    private static <P extends Packet<?>, A> void register(final Class<P> clazz, final Set<Class<? extends Actable<? extends A>>> allowList, final Function<P, A> actionConverter) {
         register(clazz, phase -> allowList.contains(phase.getClass()), actionConverter);
     }
 
-    private static <P extends Packet<?>, A> void register(final Class<P> clazz, final Predicate<ActableGamePhase<A, ?>> canAct, final Function<P, A> actionConverter) {
+    private static <P extends Packet<?>, A> void register(final Class<P> clazz, final Predicate<Actable<A>> canAct, final Function<P, A> actionConverter) {
         PACKET2ACTION.put(clazz, new ActionContext<>(canAct, actionConverter));
     }
 
-    public static boolean canActWith(final Packet<?> packet, final ActableGamePhase<?, ?> phase) {
+    public static boolean canActWith(final Packet<?> packet, final Actable<?> phase) {
         final ActionContext actionContext = PACKET2ACTION.get(packet.getClass());
         if (actionContext == null) {
             return false;
@@ -61,7 +61,7 @@ public class ActionResolver {
         return (A) ctx.actionConverter.apply(packet);
     }
 
-    private record ActionContext<P extends Packet<?>, A>(Predicate<ActableGamePhase<A, ?>> canAct,
+    private record ActionContext<P extends Packet<?>, A>(Predicate<Actable<A>> canAct,
                                                          Function<P, A> actionConverter) {
     }
 }

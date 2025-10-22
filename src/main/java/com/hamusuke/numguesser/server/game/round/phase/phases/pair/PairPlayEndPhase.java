@@ -2,6 +2,7 @@ package com.hamusuke.numguesser.server.game.round.phase.phases.pair;
 
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.pair.PlayerPair;
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
@@ -54,5 +55,10 @@ public class PairPlayEndPhase extends EndPhase {
 
         final var wonPair = pairRegistry.get(bluePairPoints > redPairPoints ? PlayerPair.PairColor.BLUE : PlayerPair.PairColor.RED);
         round.eventBus.post(new GameMessageEvent("合計" + Math.max(bluePairPoints, redPairPoints) + "点で " + wonPair.left().getDisplayName() + " と " + wonPair.right().getDisplayName() + " が勝利しました"));
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.PAIR_END;
     }
 }

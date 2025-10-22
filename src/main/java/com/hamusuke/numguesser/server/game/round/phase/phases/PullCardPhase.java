@@ -1,10 +1,12 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.GamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.HasResult;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 
-public class PullCardPhase implements GamePhase<PullCardPhase.Result> {
+public class PullCardPhase implements ServerGamePhase, HasResult<PullCardPhase.Result> {
     private Result result;
 
     @Override
@@ -18,6 +20,11 @@ public class PullCardPhase implements GamePhase<PullCardPhase.Result> {
         }
 
         round.nextPhase();
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.PULL;
     }
 
     @Override

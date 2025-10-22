@@ -9,14 +9,14 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class GamePhaseManager {
-    private final Supplier<GamePhase<?>> start;
-    private final Supplier<GamePhase<?>> end;
-    private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap;
+    private final Supplier<ServerGamePhase> start;
+    private final Supplier<ServerGamePhase> end;
+    private final Map<Class<? extends ServerGamePhase>, PhaseSwitcher<?>> phaseTransitionMap;
     @Nullable
-    private GamePhase<?> prevPhase;
-    private GamePhase<?> currentPhase;
+    private ServerGamePhase prevPhase;
+    private ServerGamePhase currentPhase;
 
-    private GamePhaseManager(final Supplier<GamePhase<?>> start, final Supplier<GamePhase<?>> end, final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap) {
+    private GamePhaseManager(final Supplier<ServerGamePhase> start, final Supplier<ServerGamePhase> end, final Map<Class<? extends ServerGamePhase>, PhaseSwitcher<?>> phaseTransitionMap) {
         this.start = start;
         this.end = end;
         this.phaseTransitionMap = phaseTransitionMap;
@@ -43,14 +43,14 @@ public class GamePhaseManager {
             throw new IllegalStateException("nextPhaseMap has no mapping for " + this.currentPhase.getClass());
         }
 
-        final Function nextPhaseFunc = this.phaseTransitionMap.get(this.currentPhase.getClass());
-        final var nextPhase = nextPhaseFunc.apply(this.currentPhase.getResult());
+        final PhaseSwitcher switcher = this.phaseTransitionMap.get(this.currentPhase.getClass());
+        final var nextPhase = switcher.newPhase(this.currentPhase);
         if (nextPhase == null) {
-            throw new NullPointerException("nextPhaseFunc returned null");
+            throw new NullPointerException("nextPhase is null");
         }
 
         this.prevPhase = this.currentPhase;
-        this.currentPhase = (GamePhase<?>) nextPhase;
+        this.currentPhase = nextPhase;
         this.currentPhase.onEnter(round);
     }
 
@@ -63,14 +63,22 @@ public class GamePhaseManager {
         return this.phaseTransitionMap.containsKey(this.currentPhase.getClass());
     }
 
-    public GamePhase<?> getCurrentPhase() {
+    public ServerGamePhase getCurrentPhase() {
         return this.currentPhase;
     }
 
+    public interface PhaseSwitcher<P extends ServerGamePhase> {
+        static <R, T extends ServerGamePhase & HasResult<R>> PhaseSwitcher<T> switchWithResult(final Function<R, ServerGamePhase> function) {
+            return phase -> function.apply(phase.getResult());
+        }
+
+        ServerGamePhase newPhase(final P phase);
+    }
+
     public static class Builder {
-        private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap = Maps.newHashMap();
-        private Supplier<GamePhase<?>> start;
-        private Supplier<GamePhase<?>> end;
+        private final Map<Class<? extends ServerGamePhase>, PhaseSwitcher<?>> phaseTransitionMap = Maps.newHashMap();
+        private Supplier<ServerGamePhase> start;
+        private Supplier<ServerGamePhase> end;
 
         private Builder() {
         }
@@ -79,25 +87,30 @@ public class GamePhaseManager {
             return new Builder();
         }
 
-        public Builder startWith(final Supplier<GamePhase<?>> supplier) {
+        public Builder startWith(final Supplier<ServerGamePhase> supplier) {
             this.start = supplier;
             return this;
         }
 
-        public <R> Builder advanceAfter(final Class<? extends GamePhase<R>> after, final Supplier<GamePhase<?>> supplier) {
-            return this.advanceWithResultAfter(after, __ -> supplier.get());
+        private void validate(final Class<? extends ServerGamePhase> phase) {
+            if (this.phaseTransitionMap.containsKey(phase)) {
+                throw new IllegalStateException("nextPhaseMap has already mapping for " + phase);
+            }
         }
 
-        public <R> Builder advanceWithResultAfter(final Class<? extends GamePhase<R>> after, final Function<R, GamePhase<?>> function) {
-            if (this.phaseTransitionMap.containsKey(after)) {
-                throw new IllegalStateException("nextPhaseMap has already mapping for " + after);
-            }
-
-            this.phaseTransitionMap.put(after, function);
+        public Builder advanceAfter(final Class<? extends ServerGamePhase> after, final Supplier<ServerGamePhase> supplier) {
+            this.validate(after);
+            this.phaseTransitionMap.put(after, phase -> supplier.get());
             return this;
         }
 
-        public Builder endWith(final Supplier<GamePhase<?>> end) {
+        public <R, P extends ServerGamePhase & HasResult<R>> Builder advanceWithResultAfter(final Class<P> after, final Function<R, ServerGamePhase> function) {
+            this.validate(after);
+            this.phaseTransitionMap.put(after, PhaseSwitcher.switchWithResult(function));
+            return this;
+        }
+
+        public Builder endWith(final Supplier<ServerGamePhase> end) {
             this.end = end;
             return this;
         }

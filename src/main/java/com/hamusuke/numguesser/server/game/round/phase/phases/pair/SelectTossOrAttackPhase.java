@@ -1,13 +1,16 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases.pair;
 
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.server.game.event.events.PlayerSelectTossOrAttackEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.PairGameRound;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.HasResult;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.SelectTossOrAttackAction;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class SelectTossOrAttackPhase implements ActableGamePhase<SelectTossOrAttackAction, SelectTossOrAttackPhase.Result> {
+public class SelectTossOrAttackPhase implements ServerGamePhase, Actable<SelectTossOrAttackAction>, HasResult<SelectTossOrAttackPhase.Result> {
     private Result result;
 
     @Override
@@ -29,6 +32,11 @@ public class SelectTossOrAttackPhase implements ActableGamePhase<SelectTossOrAtt
         }
 
         round.nextPhase();
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.SELECT_TOSS_OR_ATTACK;
     }
 
     @Override

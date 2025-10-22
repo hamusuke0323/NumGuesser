@@ -6,8 +6,8 @@ import com.hamusuke.numguesser.server.game.NormalGame;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
-import com.hamusuke.numguesser.server.game.round.phase.CancellableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.Cancellable;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseManager;
 import com.hamusuke.numguesser.server.game.round.phase.action.ActionResolver;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
@@ -94,24 +94,24 @@ public class GameRound {
     }
 
     public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
-        if (!(this.phaseManager.getCurrentPhase() instanceof ActableGamePhase actableGamePhase)) {
+        if (!(this.phaseManager.getCurrentPhase() instanceof Actable actable)) {
             return;
         }
 
-        if (!ActionResolver.canActWith(packet, actableGamePhase)) {
+        if (!ActionResolver.canActWith(packet, actable)) {
             return;
         }
 
         try {
-            actableGamePhase.onPlayerAction(this, actor, ActionResolver.resolve(packet));
+            actable.onPlayerAction(this, actor, ActionResolver.resolve(packet));
         } catch (Throwable e) {
             LOGGER.warn("Player " + actor.getDisplayName() + " might send an invalid action", e);
         }
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
-        if (this.phaseManager.getCurrentPhase() instanceof CancellableGamePhase<?> cancellableGamePhase) {
-            cancellableGamePhase.onPlayerCancel(this, canceller);
+        if (this.phaseManager.getCurrentPhase() instanceof Cancellable cancellable) {
+            cancellable.onPlayerCancel(this, canceller);
         }
     }
 

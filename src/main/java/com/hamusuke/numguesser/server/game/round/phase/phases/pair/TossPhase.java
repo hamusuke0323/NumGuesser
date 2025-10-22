@@ -1,13 +1,15 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases.pair;
 
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.server.game.event.events.PlayerSelectCardForTossEvent;
 import com.hamusuke.numguesser.server.game.event.events.TossEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.TossAction;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class TossPhase implements ActableGamePhase<TossAction, Void> {
+public class TossPhase implements ServerGamePhase, Actable<TossAction> {
     private final ServerPlayer buddy;
 
     public TossPhase(final ServerPlayer buddy) {
@@ -29,5 +31,10 @@ public class TossPhase implements ActableGamePhase<TossAction, Void> {
 
         round.eventBus.post(new TossEvent(round.getCurAttacker(), card));
         round.nextPhase();
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.TOSS;
     }
 }

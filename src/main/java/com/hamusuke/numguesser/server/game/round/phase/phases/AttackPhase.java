@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackRsp;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
@@ -8,12 +9,14 @@ import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.event.events.PlayerCardSelectEvent;
 import com.hamusuke.numguesser.server.game.event.events.PlayerStartAttackEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
-import com.hamusuke.numguesser.server.game.round.phase.CancellableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.Cancellable;
+import com.hamusuke.numguesser.server.game.round.phase.HasResult;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.AttackActions;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.Result>, CancellableGamePhase<AttackPhase.Result> {
+public class AttackPhase implements ServerGamePhase, Actable<AttackActions>, Cancellable, HasResult<AttackPhase.Result> {
     private final boolean cancellable;
     private final ServerCard cardForAttacking;
     private Result result;
@@ -148,6 +151,11 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
         round.eventBus.post(new CardOpenEvent(this.cardForAttacking));
         this.result = new Result.Failure();
         round.nextPhase();
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.ATTACK;
     }
 
     @Override

@@ -1,17 +1,19 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.server.game.event.events.CardsOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameRoundEndEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import java.util.Comparator;
 
-public class EndPhase implements ActableGamePhase<Void, Void> {
+public class EndPhase implements ServerGamePhase, Actable<Void> {
     @Override
     public void onEnter(final GameRound round) {
         round.eventBus.post(new GameMessageEvent("ラウンド終了"));
@@ -64,6 +66,11 @@ public class EndPhase implements ActableGamePhase<Void, Void> {
         round.players.stream().max(Comparator.comparingInt(Player::getTipPoint)).ifPresent(winner -> {
             round.eventBus.post(new GameMessageEvent(winner.getDisplayName() + " が" + winner.getTipPoint() + "点で勝利しました！"));
         });
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.END;
     }
 
     @Override

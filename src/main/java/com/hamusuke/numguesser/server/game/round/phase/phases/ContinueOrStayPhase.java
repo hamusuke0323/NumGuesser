@@ -1,14 +1,17 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackSuccNotify;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.HasResult;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.ContinueOrStayAction;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class ContinueOrStayPhase implements ActableGamePhase<ContinueOrStayAction, ContinueOrStayPhase.Result> {
+public class ContinueOrStayPhase implements ServerGamePhase, Actable<ContinueOrStayAction>, HasResult<ContinueOrStayPhase.Result> {
     private final ServerCard cardForAttacking;
     private Result result;
 
@@ -50,6 +53,11 @@ public class ContinueOrStayPhase implements ActableGamePhase<ContinueOrStayActio
         round.eventBus.post(new CardOpenEvent(this.cardForAttacking));
         this.result = new Result.Stay();
         round.nextPhase();
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.CONTINUE_OR_STAY;
     }
 
     @Override

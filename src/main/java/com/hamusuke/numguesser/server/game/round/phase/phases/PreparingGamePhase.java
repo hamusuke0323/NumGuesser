@@ -1,13 +1,14 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.event.events.PlayerDeckSyncEvent;
 import com.hamusuke.numguesser.server.game.event.events.SeatingArrangementEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
-import com.hamusuke.numguesser.server.game.round.phase.GamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-public class PreparingGamePhase implements GamePhase<Void> {
+public class PreparingGamePhase implements ServerGamePhase {
     @Override
     public void onEnter(final GameRound round) {
         round.parentDeterminer.determineParentPermutationIfNeeded(round.players, round.cardRegistry);
@@ -36,5 +37,10 @@ public class PreparingGamePhase implements GamePhase<Void> {
 
             round.eventBus.post(new PlayerDeckSyncEvent(player));
         }
+    }
+
+    @Override
+    public PhaseType type() {
+        return PhaseType.PREPARE;
     }
 }
