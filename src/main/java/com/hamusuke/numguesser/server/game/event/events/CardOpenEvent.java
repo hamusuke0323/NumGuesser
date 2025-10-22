@@ -1,6 +1,6 @@
 package com.hamusuke.numguesser.server.game.event.events;
 
-import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 
-public record CardOpenEvent(Card card) implements GameEvent {
+public record CardOpenEvent(ServerCard card) implements GameEvent {
 }

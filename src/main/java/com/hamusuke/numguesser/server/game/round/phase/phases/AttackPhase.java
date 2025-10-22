@@ -72,7 +72,7 @@ public class AttackPhase implements ActableGamePhase<AttackActions, AttackPhase.
         }
     }
 
-    protected void onAttackSucceeded(final GameRound round, final Card card) {
+    protected void onAttackSucceeded(final GameRound round, final ServerCard card) {
         card.open();
         round.eventBus.post(new CardOpenEvent(card));
         round.eventBus.post(new GameMessageEvent("アタック成功です！"));

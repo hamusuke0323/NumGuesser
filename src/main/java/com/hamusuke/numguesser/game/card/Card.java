@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 public abstract class Card implements Comparable<Card> {
     public static final int UNKNOWN = -1;
@@ -81,56 +80,6 @@ public abstract class Card implements Comparable<Card> {
     @Override
     public String toString() {
         return this.cardColor + " Card: " + getNum();
-    }
-
-    public CardSerializer toSerializer() {
-        return this.toSerializer(VisibleTester.EVERYONE);
-    }
-
-    public CardSerializer toSerializer(final VisibleTester visibleTester) {
-        return new CardSerializer(this.getId(), this.getCardColor(), visibleTester.test(this) ? this.getNum() : UNKNOWN);
-    }
-
-    public sealed interface VisibleTester extends Predicate<Card> permits VisibleTester.EveryOne, VisibleTester.Never, VisibleTester.OnlyOwner {
-        EveryOne EVERYONE = new EveryOne();
-        Never NEVER = new Never();
-
-        final class EveryOne implements VisibleTester {
-            private EveryOne() {
-            }
-
-            @Override
-            public boolean test(Card card) {
-                return true;
-            }
-        }
-
-        final class Never implements VisibleTester {
-            private Never() {
-            }
-
-            @Override
-            public boolean test(Card card) {
-                return false;
-            }
-        }
-
-        final class OnlyOwner implements VisibleTester {
-            private final Player player;
-
-            private OnlyOwner(Player player) {
-                this.player = player;
-            }
-
-            public static OnlyOwner testFor(final Player player) {
-                return new OnlyOwner(player);
-            }
-
-            @Override
-            public boolean test(final Card card) {
-                return this.player.equals(card.owner);
-            }
-        }
     }
 
     public enum CardColor {

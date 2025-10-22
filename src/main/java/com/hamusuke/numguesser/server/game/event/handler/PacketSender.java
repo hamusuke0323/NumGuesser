@@ -1,10 +1,10 @@
 package com.hamusuke.numguesser.server.game.event.handler;
 
 import com.hamusuke.numguesser.event.EventHandler;
-import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.*;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
@@ -26,7 +26,7 @@ public final class PacketSender {
 
     @EventHandler
     public void onCardsOpen(final CardsOpenEvent event) {
-        this.sendPacketToAllInGame(new CardsOpenNotify(event.cards().stream().map(Card::toSerializer).toList()));
+        this.sendPacketToAllInGame(new CardsOpenNotify(event.cards().stream().map(ServerCard::toSerializer).toList()));
     }
 
     @EventHandler
@@ -66,7 +66,7 @@ public final class PacketSender {
                 new PlayerDeckSyncNotify(deckOwner.getId(),
                         deckOwner.getDeck().getCards().stream()
                                 .map(card ->
-                                        card.toSerializer(Card.VisibleTester.OnlyOwner.testFor(player))).toList()));
+                                        card.toSerializer(ServerCard.VisibleTester.OnlyOwner.testFor(player))).toList()));
     }
 
     @EventHandler
@@ -74,7 +74,7 @@ public final class PacketSender {
         final var cardOwner = event.getPlayer();
         this.sendPacketToAllInGame(player ->
                 new PlayerNewCardAddNotify(cardOwner.getId(), event.getIndex(),
-                        event.getCard().toSerializer(Card.VisibleTester.OnlyOwner.testFor(player))));
+                        event.getCard().toSerializer(ServerCard.VisibleTester.OnlyOwner.testFor(player))));
     }
 
     @EventHandler
@@ -99,7 +99,7 @@ public final class PacketSender {
     public void onPlayerStartAttack(final PlayerStartAttackEvent event) {
         final var attacker = event.getPlayer();
         attacker.sendPacket(new PlayerStartAttackNotify(event.getCard().toSerializer(), event.isCancellable()));
-        this.sendPacketToOthersInGame(attacker, new RemotePlayerStartAttackNotify(attacker.getId(), event.getCard().toSerializer(Card.VisibleTester.NEVER)));
+        this.sendPacketToOthersInGame(attacker, new RemotePlayerStartAttackNotify(attacker.getId(), event.getCard().toSerializer(ServerCard.VisibleTester.NEVER)));
     }
 
     @EventHandler
