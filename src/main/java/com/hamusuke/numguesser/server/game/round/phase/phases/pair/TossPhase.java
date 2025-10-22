@@ -1,8 +1,7 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases.pair;
 
-import com.hamusuke.numguesser.network.protocol.packet.common.clientbound.ChatNotify;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.TossNotify;
 import com.hamusuke.numguesser.server.game.event.events.PlayerSelectCardForTossEvent;
+import com.hamusuke.numguesser.server.game.event.events.TossEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
 import com.hamusuke.numguesser.server.game.round.phase.action.actions.TossAction;
@@ -28,8 +27,7 @@ public class TossPhase implements ActableGamePhase<TossAction, Void> {
             return;
         }
 
-        round.getCurAttacker().sendPacket(new TossNotify(card.toSerializer()));
-        round.getCurAttacker().sendPacket(new ChatNotify("味方があなたにトスしました"));
+        round.eventBus.post(new TossEvent(round.getCurAttacker(), card));
         round.nextPhase();
     }
 }

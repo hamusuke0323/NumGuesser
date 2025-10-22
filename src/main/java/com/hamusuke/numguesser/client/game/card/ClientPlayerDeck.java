@@ -19,6 +19,7 @@ public class ClientPlayerDeck extends PlayerDeck<AbstractClientCard, AbstractCli
 
     @Override
     public int addCard(AbstractClientCard card) {
+        card.setOwner(this.owner);
         this.addCard(this.cards.size(), card);
         return this.cards.size();
     }

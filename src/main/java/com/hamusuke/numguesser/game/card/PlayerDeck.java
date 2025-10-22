@@ -16,6 +16,7 @@ public abstract class PlayerDeck<C extends Card, P extends Player> {
     }
 
     public int addCard(C card) {
+        card.setOwner(this.owner);
         this.cards.add(card);
         this.sort();
         return this.cards.indexOf(card);

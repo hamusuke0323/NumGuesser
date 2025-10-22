@@ -13,6 +13,7 @@ public class PullCardPhase implements GamePhase<PullCardPhase.Result> {
             this.result = new Result.EmptyDeck();
         } else {
             final var card = round.cardRegistry.pull();
+            card.setOwner(round.getCurAttacker());
             this.result = new Result.PulledCard(card);
         }
 
