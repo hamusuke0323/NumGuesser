@@ -6,7 +6,7 @@ import com.hamusuke.numguesser.server.game.round.phase.phases.pair.*;
 public class GamePhaseDirector {
     public static GamePhaseManager forNormalGame() {
         return GamePhaseManager.Builder.builder()
-                .start(PreparingGamePhase::new)
+                .startWith(PreparingGamePhase::new)
                 .advanceAfter(PreparingGamePhase.class, PullCardPhase::new)
                 .advanceWithResultAfter(PullCardPhase.class, result -> switch (result) {
                     case PullCardPhase.Result.EmptyDeck __ -> new SelectCardForAttackPhase();
@@ -27,7 +27,7 @@ public class GamePhaseDirector {
 
     public static GamePhaseManager forPairPlayGame() {
         return GamePhaseManager.Builder.builder()
-                .start(PreparingGamePhase::new)
+                .startWith(PreparingGamePhase::new)
                 .advanceAfter(PreparingGamePhase.class, CheckBuddyAlivePhase::new)
                 .advanceWithResultAfter(CheckBuddyAlivePhase.class, isAlive -> isAlive ? new SelectTossOrAttackPhase() : new SelectCardForAttackPhase())
                 .advanceWithResultAfter(SelectTossOrAttackPhase.class, result -> switch (result) {

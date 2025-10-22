@@ -9,22 +9,22 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class GamePhaseManager {
-    private final Supplier<GamePhase<?>> root;
+    private final Supplier<GamePhase<?>> start;
     private final Supplier<GamePhase<?>> end;
-    private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> nextPhaseMap;
+    private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap;
     @Nullable
     private GamePhase<?> prevPhase;
     private GamePhase<?> currentPhase;
 
-    private GamePhaseManager(final Supplier<GamePhase<?>> root, final Supplier<GamePhase<?>> end, final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> nextPhaseMap) {
-        this.root = root;
+    private GamePhaseManager(final Supplier<GamePhase<?>> start, final Supplier<GamePhase<?>> end, final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap) {
+        this.start = start;
         this.end = end;
-        this.nextPhaseMap = nextPhaseMap;
+        this.phaseTransitionMap = phaseTransitionMap;
     }
 
     public void start(final GameRound round) {
         this.prevPhase = null;
-        this.currentPhase = this.root.get();
+        this.currentPhase = this.start.get();
         this.currentPhase.onEnter(round);
     }
 
@@ -43,7 +43,7 @@ public class GamePhaseManager {
             throw new IllegalStateException("nextPhaseMap has no mapping for " + this.currentPhase.getClass());
         }
 
-        final Function nextPhaseFunc = this.nextPhaseMap.get(this.currentPhase.getClass());
+        final Function nextPhaseFunc = this.phaseTransitionMap.get(this.currentPhase.getClass());
         final var nextPhase = nextPhaseFunc.apply(this.currentPhase.getResult());
         if (nextPhase == null) {
             throw new NullPointerException("nextPhaseFunc returned null");
@@ -60,7 +60,7 @@ public class GamePhaseManager {
     }
 
     public boolean hasNext() {
-        return this.nextPhaseMap.containsKey(this.currentPhase.getClass());
+        return this.phaseTransitionMap.containsKey(this.currentPhase.getClass());
     }
 
     public GamePhase<?> getCurrentPhase() {
@@ -68,8 +68,8 @@ public class GamePhaseManager {
     }
 
     public static class Builder {
-        private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> nextPhaseMap = Maps.newHashMap();
-        private Supplier<GamePhase<?>> root;
+        private final Map<Class<? extends GamePhase<?>>, Function<?, GamePhase<?>>> phaseTransitionMap = Maps.newHashMap();
+        private Supplier<GamePhase<?>> start;
         private Supplier<GamePhase<?>> end;
 
         private Builder() {
@@ -79,8 +79,8 @@ public class GamePhaseManager {
             return new Builder();
         }
 
-        public Builder start(final Supplier<GamePhase<?>> supplier) {
-            this.root = supplier;
+        public Builder startWith(final Supplier<GamePhase<?>> supplier) {
+            this.start = supplier;
             return this;
         }
 
@@ -89,11 +89,11 @@ public class GamePhaseManager {
         }
 
         public <R> Builder advanceWithResultAfter(final Class<? extends GamePhase<R>> after, final Function<R, GamePhase<?>> function) {
-            if (this.nextPhaseMap.containsKey(after)) {
+            if (this.phaseTransitionMap.containsKey(after)) {
                 throw new IllegalStateException("nextPhaseMap has already mapping for " + after);
             }
 
-            this.nextPhaseMap.put(after, function);
+            this.phaseTransitionMap.put(after, function);
             return this;
         }
 
@@ -103,11 +103,11 @@ public class GamePhaseManager {
         }
 
         public GamePhaseManager build() {
-            if (this.root == null || this.end == null) {
-                throw new IllegalStateException("root or end is null");
+            if (this.start == null || this.end == null) {
+                throw new IllegalStateException("start or end is null");
             }
 
-            return new GamePhaseManager(this.root, this.end, Map.copyOf(this.nextPhaseMap));
+            return new GamePhaseManager(this.start, this.end, Map.copyOf(this.phaseTransitionMap));
         }
     }
 }
