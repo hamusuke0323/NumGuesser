@@ -46,7 +46,7 @@ public final class PacketSender {
 
     @EventHandler
     public void onGamePhaseTransition(final GamePhaseTransitionEvent event) {
-        this.sendPacketToAllInGame(new GamePhaseTransitionNotify());
+        this.sendPacketToAllInGame(new GamePhaseTransitionNotify(event.phase().type()));
     }
 
     @EventHandler
