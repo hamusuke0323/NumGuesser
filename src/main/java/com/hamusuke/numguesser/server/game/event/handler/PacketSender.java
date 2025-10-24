@@ -45,6 +45,11 @@ public final class PacketSender {
     }
 
     @EventHandler
+    public void onGamePhaseTransition(final GamePhaseTransitionEvent event) {
+        this.sendPacketToAllInGame(new GamePhaseTransitionNotify());
+    }
+
+    @EventHandler
     public void onPairColorChange(final PairColorChangeEvent event) {
         this.sendPacketToAllInGame(new PairColorChangeNotify(event.player().getId(), event.color()));
     }

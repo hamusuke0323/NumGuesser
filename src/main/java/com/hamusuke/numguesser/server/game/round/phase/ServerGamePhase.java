@@ -3,11 +3,18 @@ package com.hamusuke.numguesser.server.game.round.phase;
 import com.hamusuke.numguesser.game.phase.GamePhase;
 import com.hamusuke.numguesser.server.game.event.events.CardsOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
+import com.hamusuke.numguesser.server.game.event.events.GamePhaseTransitionEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public interface ServerGamePhase extends GamePhase {
-    void onEnter(final GameRound round);
+    default void onEnter(final GameRound round) {
+        round.eventBus.post(new GamePhaseTransitionEvent(this));
+    }
+
+    default void restart(final GameRound round) {
+        this.onEnter(round);
+    }
 
     default void onPlayerLeft(final GameRound round, final ServerPlayer player) {
         round.eventBus.post(new GameMessageEvent(player.getDisplayName() + "がゲームをやめました"));

@@ -37,7 +37,7 @@ public class SelectCardForAttackPhase implements ServerGamePhase, Actable<Select
         final var card = round.cardRegistry.getOwnedCardById(action.cardId());
         final var cardOwner = round.cardRegistry.getCardOwnerById(action.cardId());
         if (cardOwner != actor || card == null || card.isOpened()) {
-            this.onEnter(round); // Try again
+            this.restart(round); // Try again
             return;
         }
 

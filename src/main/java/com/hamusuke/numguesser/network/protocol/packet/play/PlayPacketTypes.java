@@ -16,6 +16,7 @@ public class PlayPacketTypes {
     public static final PacketType<CardsOpenNotify> CARDS_OPEN = createClientbound("cards_open");
     public static final PacketType<EndGameRoundNotify> END_GAME_ROUND = createClientbound("end_game_round");
     public static final PacketType<ExitGameSuccNotify> EXIT_GAME_SUCC = createClientbound("exit_game_succ");
+    public static final PacketType<GamePhaseTransitionNotify> GAME_PHASE_TRANSITION = createClientbound("game_phase_transition");
     public static final PacketType<PairColorChangeNotify> PAIR_COLOR_CHANGE_NOTIFY = createClientbound("pair_color_change_notify");
     public static final PacketType<PairMakingStartNotify> PAIR_MAKING_START = createClientbound("pair_making_start");
     public static final PacketType<PlayerCardSelectionSyncNotify> PLAYER_CARD_SELECTION_SYNC = createClientbound("player_card_selection_sync");

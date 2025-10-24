@@ -49,6 +49,7 @@ public class PlayProtocols {
                         .addPacket(PlayPacketTypes.CARDS_OPEN, CardsOpenNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.END_GAME_ROUND, EndGameRoundNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.EXIT_GAME_SUCC, ExitGameSuccNotify.STREAM_CODEC)
+                        .addPacket(PlayPacketTypes.GAME_PHASE_TRANSITION, GamePhaseTransitionNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PAIR_COLOR_CHANGE_NOTIFY, PairColorChangeNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PAIR_MAKING_START, PairMakingStartNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_CARD_SELECTION_SYNC, PlayerCardSelectionSyncNotify.STREAM_CODEC)

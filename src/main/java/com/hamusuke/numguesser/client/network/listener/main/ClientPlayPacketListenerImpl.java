@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.client.NumGuesser;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
+import com.hamusuke.numguesser.client.game.phase.ClientGamePhaseRegistry;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.PairMakingPanel;
@@ -117,6 +118,16 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         this.connection.setupOutboundProtocol(RoomProtocols.SERVERBOUND);
         this.client.playerTable.removePointColumn();
         this.client.setPanel(new RoomPanel());
+    }
+
+    @Override
+    public void handleGamePhaseTransition(GamePhaseTransitionNotify packet) {
+        if (!(this.client.getPanel() instanceof GamePanel gamePanel)) {
+            return;
+        }
+
+        final var phase = ClientGamePhaseRegistry.newPhaseOf(packet.phaseType());
+        SwingUtilities.invokeLater(() -> phase.onEnter(gamePanel));
     }
 
     @Override
