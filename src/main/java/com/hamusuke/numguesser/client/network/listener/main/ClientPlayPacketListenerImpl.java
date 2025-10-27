@@ -22,7 +22,7 @@ import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
 import javax.swing.*;
 
 public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl implements ClientPlayPacketListener {
-    public final ClientGame game = new ClientGame();
+    public final ClientGame game = new ClientGame(this.curRoom);
 
     public ClientPlayPacketListenerImpl(NumGuesser client, ClientRoom room, Connection connection) {
         super(client, room, connection);
@@ -61,7 +61,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleSeatingArrangement(SeatingArrangementNotify packet) {
-        this.game.newSeatingArrangement(packet.serverPlayerIdList());
+        //this.game.newSeatingArrangement(packet.serverPlayerIdList());
     }
 
     @Override
@@ -160,7 +160,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     public void handleCardForAttackSelect(CardForAttackSelectReq packet) {
         this.game.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
-            gamePanel.onSelectCardForAttackReq(packet.cancellable());
+            //gamePanel.onSelectCardForAttackReq(packet.cancellable());
         }
 
         this.repaintGamePanel();
@@ -186,7 +186,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     public void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet) {
         this.game.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
-            gamePanel.onRemotePlayerSelectCardForAttack(remotePlayer);
+            //gamePanel.onRemotePlayerSelectCardForAttack(remotePlayer);
         }
     }
 

@@ -7,6 +7,6 @@ import com.hamusuke.numguesser.game.phase.phases.PullCardPhase;
 
 public class ClientPullCardPhase extends PullCardPhase implements ClientGamePhase {
     @Override
-    public void onEnter(ClientGame game, GamePanel panel) {
+    public void onEnter(final ClientGame game, final GamePanel panel) {
     }
 }

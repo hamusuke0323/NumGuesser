@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.game.phase.action.actions.AttackActions;
@@ -29,6 +30,11 @@ public class ServerAttackPhase extends AttackPhase implements ServerGamePhase, A
     public ServerAttackPhase(final boolean cancellable, final ServerCard cardForAttacking) {
         this.cancellable = cancellable;
         this.cardForAttacking = cardForAttacking;
+    }
+
+    @Override
+    public void prepareSyncedData(final GameRound round) {
+        round.game.setSyncedData(Game.CANCELLABLE, this.cancellable);
     }
 
     @Override

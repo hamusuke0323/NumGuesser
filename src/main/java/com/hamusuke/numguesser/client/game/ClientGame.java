@@ -1,12 +1,11 @@
 package com.hamusuke.numguesser.client.game;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
 import com.hamusuke.numguesser.client.game.round.phase.ClientGamePhase;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
+import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.game.data.DataListener;
 import com.hamusuke.numguesser.game.data.GameData;
@@ -17,17 +16,26 @@ import java.util.List;
 import java.util.Map;
 
 public class ClientGame extends Game {
+    private final ClientRoom room;
     private final Map<AbstractClientPlayer, ClientPlayerDeck> playerDeckMap = Maps.newConcurrentMap();
     private final Map<Integer, AbstractClientCard> cardMap = Maps.newConcurrentMap();
     private final Map<Integer, AbstractClientPlayer> cardPlayerMap = Maps.newConcurrentMap();
-    private final List<Integer> seatingArrangement = Lists.newArrayList();
     @Nullable
     private AbstractClientCard curSelectedCard;
     private ClientGamePhase curPhase;
 
+    public ClientGame(final ClientRoom room) {
+        this.room = room;
+    }
+
     @Override
     public void tick() {
         this.playerDeckMap.values().forEach(ClientPlayerDeck::tick);
+    }
+
+    @Nullable
+    public AbstractClientPlayer getPlayer(final int id) {
+        return this.room.getPlayer(id);
     }
 
     public void setPhase(final ClientGamePhase phase) {
@@ -45,13 +53,8 @@ public class ClientGame extends Game {
         return this.dataSyncer.get(data);
     }
 
-    public void newSeatingArrangement(final List<Integer> serverPlayerIdList) {
-        this.seatingArrangement.clear();
-        this.seatingArrangement.addAll(serverPlayerIdList);
-    }
-
     public List<Integer> getSeatingArrangement() {
-        return ImmutableList.copyOf(this.seatingArrangement);
+        return this.getGameData(SEATING_ARRANGEMENT);
     }
 
     public void clearAllCardMaps() {
