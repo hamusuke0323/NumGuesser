@@ -1,15 +1,15 @@
 package com.hamusuke.numguesser.server.game.round;
 
+import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.server.game.GameDataRegistry;
+import com.hamusuke.numguesser.server.game.ServerGenericGame;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
 import com.hamusuke.numguesser.server.game.round.phase.Cancellable;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseManager;
-import com.hamusuke.numguesser.server.game.round.phase.action.ActionResolver;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -24,7 +24,7 @@ import java.util.Random;
 
 public class GameRound {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final NormalGame game;
+    public final ServerGenericGame game;
     public final List<ServerPlayer> players;
     public final CardRegistry cardRegistry;
     public final ParentDeterminer parentDeterminer;
@@ -36,14 +36,14 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(NormalGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
+    public GameRound(ServerGenericGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
         this.game = game;
         this.eventBus = game.getEventBus();
         this.players = players;
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
         this.parentDeterminer = new ParentDeterminer();
-        this.seatingArranger = game.getSeatingArranger();
+        this.seatingArranger = game.getData(GameDataRegistry.SEATING_ARRANGER);
         this.phaseManager = phaseManager;
     }
 
@@ -93,17 +93,13 @@ public class GameRound {
         }
     }
 
-    public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
+    public void onPlayerAction(final ServerPlayer actor, final Object data) {
         if (!(this.phaseManager.getCurrentPhase() instanceof Actable actable)) {
             return;
         }
 
-        if (!ActionResolver.canActWith(packet, actable)) {
-            return;
-        }
-
         try {
-            actable.onPlayerAction(this, actor, ActionResolver.resolve(packet));
+            actable.onPlayerAction(this, actor, data);
         } catch (Throwable e) {
             LOGGER.warn("Player " + actor.getDisplayName() + " might send an invalid action", e);
         }
@@ -142,7 +138,7 @@ public class GameRound {
                 continue;
             }
 
-            this.curAttacker = player;
+            this.setCurAttacker(player);
             break;
         }
     }
@@ -191,6 +187,7 @@ public class GameRound {
 
     public void setCurAttacker(ServerPlayer curAttacker) {
         this.curAttacker = curAttacker;
+        this.game.setSyncedData(Game.CURRENT_ATTACKER, curAttacker.getId());
     }
 
     @Nullable

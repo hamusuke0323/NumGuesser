@@ -7,13 +7,22 @@ import com.hamusuke.numguesser.network.protocol.packet.common.serverbound.ReadyR
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayProtocols;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.ServerPairPlayGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl implements ServerPlayPacketListener {
     public ServerPlayPacketListenerImpl(NumGuesserServer server, Connection connection, ServerPlayer player) {
         super(server, connection, player);
         connection.setupInboundProtocol(PlayProtocols.SERVERBOUND, this);
+    }
+
+    @Override
+    public void handleClientAction(final ClientActionReq packet) {
+        if (this.room.getGame() == null) {
+            return;
+        }
+
+        this.room.getGame().onPlayerAction(this.player, packet.data());
     }
 
     @Override
@@ -43,7 +52,7 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
             return;
         }
 
-        this.room.getGame().onPlayerAction(this.player, packet);
+        //this.room.getGame().onPlayerAction(this.player, packet);
     }
 
     @Override
@@ -68,20 +77,20 @@ public class ServerPlayPacketListenerImpl extends ServerCommonPacketListenerImpl
 
     @Override
     public void handlePairColorChange(PairColorChangeReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof ServerPairPlayGame serverPairPlayGameMode)) {
             return;
         }
 
-        pairPlayGameMode.onPairColorChange(packet);
+        //serverPairPlayGameMode.onPairColorChange(packet);
     }
 
     @Override
     public void handlePairMakingDone(PairMakingDoneReq packet) {
-        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof PairPlayGame pairPlayGameMode)) {
+        if (this.player != this.room.getOwner() || !(this.room.getGame() instanceof ServerPairPlayGame serverPairPlayGameMode)) {
             return;
         }
 
-        pairPlayGameMode.onPairMakingDone();
+        //serverPairPlayGameMode.onPairMakingDone();
     }
 
     @Override

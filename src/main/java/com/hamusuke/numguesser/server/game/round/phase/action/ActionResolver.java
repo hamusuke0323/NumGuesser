@@ -1,15 +1,11 @@
 package com.hamusuke.numguesser.server.game.round.phase.action;
 
 import com.google.common.collect.Maps;
+import com.hamusuke.numguesser.game.phase.action.actions.*;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
-import com.hamusuke.numguesser.server.game.round.phase.action.actions.*;
-import com.hamusuke.numguesser.server.game.round.phase.phases.AttackPhase;
-import com.hamusuke.numguesser.server.game.round.phase.phases.ContinueOrStayPhase;
-import com.hamusuke.numguesser.server.game.round.phase.phases.SelectCardForAttackPhase;
-import com.hamusuke.numguesser.server.game.round.phase.phases.pair.SelectTossOrAttackPhase;
-import com.hamusuke.numguesser.server.game.round.phase.phases.pair.TossPhase;
+import com.hamusuke.numguesser.server.game.round.phase.phases.*;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -17,15 +13,16 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+@Deprecated(forRemoval = true)
 public class ActionResolver {
     private static final Map<Class<? extends Packet<?>>, ActionContext<?, ?>> PACKET2ACTION = Maps.newHashMap();
 
     static {
-        register(CardSelectReq.class, phase -> AttackPhase.class.isAssignableFrom(phase.getClass()), p -> new AttackActions.Select(p.id()));
-        register(AttackReq.class, phase -> AttackPhase.class.isAssignableFrom(phase.getClass()), p -> new AttackActions.DoAttack(p.id(), p.num()));
-        register(CardForAttackSelectRsp.class, Set.of(SelectCardForAttackPhase.class), p -> new SelectCardForAttackAction(p.id()));
-        register(TossRsp.class, Set.of(TossPhase.class), p -> new TossAction(p.cardId()));
-        register(ClientCommandReq.class, Set.of(ContinueOrStayPhase.class, SelectTossOrAttackPhase.class), p -> switch (p.command()) {
+        register(CardSelectReq.class, phase -> ServerAttackPhase.class.isAssignableFrom(phase.getClass()), p -> new AttackActions.Select(p.id()));
+        register(AttackReq.class, phase -> ServerAttackPhase.class.isAssignableFrom(phase.getClass()), p -> new AttackActions.DoAttack(p.id(), p.num()));
+        register(CardForAttackSelectRsp.class, Set.of(ServerSelectCardForAttackPhase.class), p -> new SelectCardForAttackAction(p.id()));
+        register(TossRsp.class, Set.of(ServerTossPhase.class), p -> new TossAction(p.cardId()));
+        register(ClientCommandReq.class, Set.of(ServerContinueOrStayPhase.class, ServerSelectTossOrAttackPhase.class), p -> switch (p.command()) {
             case CONTINUE_ATTACKING, STAY ->
                     new ContinueOrStayAction(p.command() == ClientCommandReq.Command.CONTINUE_ATTACKING);
             case LET_ALLY_TOSS, ATTACK_WITHOUT_TOSS ->

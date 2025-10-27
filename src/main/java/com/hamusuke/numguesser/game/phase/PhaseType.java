@@ -5,6 +5,7 @@ import com.hamusuke.numguesser.network.codec.StreamCodec;
 
 public enum PhaseType {
     PREPARE,
+    PAIR_MAKING,
     PULL,
     CHECK_BUDDY_ALIVE,
     SELECT_ATTACK_CARD,

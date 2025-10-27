@@ -9,15 +9,7 @@ import com.hamusuke.numguesser.network.protocol.packet.PacketType;
 import com.hamusuke.numguesser.network.protocol.packet.play.PlayPacketTypes;
 
 public record GamePhaseTransitionNotify(PhaseType phaseType) implements Packet<ClientPlayPacketListener> {
-    public static final StreamCodec<IntelligentByteBuf, GamePhaseTransitionNotify> STREAM_CODEC = Packet.codec(GamePhaseTransitionNotify::write, GamePhaseTransitionNotify::new);
-
-    private GamePhaseTransitionNotify(final IntelligentByteBuf buf) {
-        this(buf.readEnum(PhaseType.class));
-    }
-
-    private void write(final IntelligentByteBuf buf) {
-        buf.writeEnum(this.phaseType);
-    }
+    public static final StreamCodec<IntelligentByteBuf, GamePhaseTransitionNotify> STREAM_CODEC = PhaseType.STREAM_CODEC.xmap(GamePhaseTransitionNotify::new, GamePhaseTransitionNotify::phaseType);
 
     @Override
     public void handle(ClientPlayPacketListener listener) {

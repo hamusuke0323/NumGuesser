@@ -13,8 +13,8 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.NormalGame;
-import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.GameModeRegistry;
+import com.hamusuke.numguesser.server.game.ServerGenericGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,7 +24,7 @@ public class ServerRoom extends Room<ServerPlayer> {
     private final int id = ROOM_ID_INCREMENTER.getAndIncrement();
     private final NumGuesserServer server;
     private final String password;
-    private NormalGame game;
+    private ServerGenericGame game;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
         super(roomName);
@@ -73,10 +73,7 @@ public class ServerRoom extends Room<ServerPlayer> {
                     this.players.forEach(player -> player.setReady(false));
 
                     this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = switch (this.gameMode) {
-                        case NORMAL_GAME -> new NormalGame(this, this.players);
-                        case PAIR_PLAY -> new PairPlayGame(this, this.players);
-                    };
+                    this.game = GameModeRegistry.create(this.gameMode, this, this.players);
                     this.players.forEach(player -> {
                         player.sendPacket(StartGameNotify.INSTANCE);
                         player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
@@ -183,7 +180,7 @@ public class ServerRoom extends Room<ServerPlayer> {
         }
     }
 
-    public NormalGame getGame() {
+    public ServerGenericGame getGame() {
         return this.game;
     }
 }

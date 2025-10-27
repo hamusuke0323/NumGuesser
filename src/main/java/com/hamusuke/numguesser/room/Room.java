@@ -15,7 +15,7 @@ public abstract class Room<P extends Player> {
     protected final List<P> players = Collections.synchronizedList(Lists.newArrayList());
     private final List<P> playerList;
     protected P owner;
-    protected GameMode gameMode = GameMode.NORMAL_GAME;
+    protected GameMode gameMode = GameMode.GENERIC;
 
     protected Room(String roomName) {
         this.roomName = roomName;

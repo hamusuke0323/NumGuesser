@@ -1,6 +1,5 @@
 package com.hamusuke.numguesser.util;
 
-import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
@@ -14,7 +13,7 @@ import java.util.List;
 
 public class PacketUtil {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final List<String> LOOP_PACKETS = Lists.newArrayList(
+    public static final List<String> LOOP_PACKETS = List.of(
             PongRsp.class.getSimpleName(),
             PingReq.class.getSimpleName(),
             RTTChangeNotify.class.getSimpleName()

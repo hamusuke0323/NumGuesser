@@ -16,6 +16,7 @@ public class PlayPacketTypes {
     public static final PacketType<CardsOpenNotify> CARDS_OPEN = createClientbound("cards_open");
     public static final PacketType<EndGameRoundNotify> END_GAME_ROUND = createClientbound("end_game_round");
     public static final PacketType<ExitGameSuccNotify> EXIT_GAME_SUCC = createClientbound("exit_game_succ");
+    public static final PacketType<GameDataSyncNotify> GAME_DATA_SYNC = createClientbound("game_data_sync");
     public static final PacketType<GamePhaseTransitionNotify> GAME_PHASE_TRANSITION = createClientbound("game_phase_transition");
     public static final PacketType<PairColorChangeNotify> PAIR_COLOR_CHANGE_NOTIFY = createClientbound("pair_color_change_notify");
     public static final PacketType<PairMakingStartNotify> PAIR_MAKING_START = createClientbound("pair_making_start");
@@ -36,6 +37,7 @@ public class PlayPacketTypes {
     public static final PacketType<AttackReq> ATTACK_REQ = createServerbound("attack_req");
     public static final PacketType<CardForAttackSelectRsp> CARD_FOR_ATTACK_SELECT_RSP = createServerbound("card_for_attack_select_rsp");
     public static final PacketType<CardSelectReq> CARD_SELECT_REQ = createServerbound("card_select_req");
+    public static final PacketType<ClientActionReq> CLIENT_ACTION = createServerbound("client_action");
     public static final PacketType<ClientCommandReq> CLIENT_COMMAND = createServerbound("client_command");
     public static final PacketType<GameExitedNotify> GAME_EXITED = createServerbound("game_exited");
     public static final PacketType<PairColorChangeReq> PAIR_COLOR_CHANGE_REQ = createServerbound("pair_color_change_req");

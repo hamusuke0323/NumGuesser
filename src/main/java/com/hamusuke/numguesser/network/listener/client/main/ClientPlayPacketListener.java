@@ -23,6 +23,8 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handleExitGameSucc(ExitGameSuccNotify packet);
 
+    void handleGameDataSync(GameDataSyncNotify packet);
+
     void handleGamePhaseTransition(GamePhaseTransitionNotify packet);
 
     void handleTossOrAttackSelection(TossOrAttackSelectionNotify packet);

@@ -9,6 +9,8 @@ public interface ServerPlayPacketListener extends ServerCommonPacketListener {
         return Protocol.PLAY;
     }
 
+    void handleClientAction(ClientActionReq packet);
+
     void handleClientCommand(ClientCommandReq packet);
 
     void handleCardSelect(CardSelectReq packet);

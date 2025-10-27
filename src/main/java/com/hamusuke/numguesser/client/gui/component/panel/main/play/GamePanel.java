@@ -25,6 +25,7 @@ import java.util.List;
 
 public class GamePanel extends Panel {
     private final List<CardList> remoteCards = Lists.newArrayList();
+    private JXPanel centerPanel;
     private JXLabel statusLabel;
     private JXPanel cardShowCase;
     @Nullable
@@ -46,8 +47,8 @@ public class GamePanel extends Panel {
     public void init() {
         super.init();
 
-        var commandPanel = new JXPanel(new GridBagLayout());
-        var commandPanelLayout = (GridBagLayout) commandPanel.getLayout();
+        this.centerPanel = new JXPanel(new GridBagLayout());
+        var commandPanelLayout = (GridBagLayout) this.centerPanel.getLayout();
 
         this.statusLabel = new JXLabel();
         this.statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -92,7 +93,8 @@ public class GamePanel extends Panel {
         this.backBtn.setVisible(false);
         this.backBtn.addActionListener(this);
 
-        addButton(commandPanel, this.statusLabel, commandPanelLayout, 0, 0, 1, 1, 1.0D, 0.05D);
+        /*
+        addButton(this.centerPanel, this.statusLabel, commandPanelLayout, 0, 0, 1, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.cardShowCase, commandPanelLayout, 0, 1, 1, 1, 1.0D);
         addButton(commandPanel, this.letAllyToss, commandPanelLayout, 0, 2, 1, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.attackWithoutToss, commandPanelLayout, 0, 3, 1, 1, 1.0D, 0.05D);
@@ -103,9 +105,13 @@ public class GamePanel extends Panel {
         addButton(commandPanel, this.continueBtn, commandPanelLayout, 0, 8, 1, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.stayBtn, commandPanelLayout, 0, 9, 1, 1, 1.0D, 0.05D);
         addButton(commandPanel, this.readyBtn, commandPanelLayout, 0, 10, 1, 1, 1.0D, 0.05D);
-        addButton(commandPanel, this.backBtn, commandPanelLayout, 0, 11, 1, 1, 1.0D, 0.05D);
+        addButton(commandPanel, this.backBtn, commandPanelLayout, 0, 11, 1, 1, 1.0D, 0.05D);*/
 
-        this.add(commandPanel, BorderLayout.CENTER);
+        this.add(this.centerPanel, BorderLayout.CENTER);
+    }
+
+    public JXPanel getCenterPanel() {
+        return this.centerPanel;
     }
 
     private void onCancelBtnPressed() {
@@ -326,12 +332,12 @@ public class GamePanel extends Panel {
     }
 
     private boolean isAttackable(AbstractClientCard card) {
-        if (this.client.curRoom.getGameMode() == GameMode.NORMAL_GAME) {
+        if (this.client.curRoom.getGameMode() == GameMode.GENERIC) {
             return !this.client.clientPlayer.getDeck().contains(card);
         }
 
         if (this.client.listener instanceof ClientPlayPacketListenerImpl play) {
-            var cardHolder = play.getCardPlayerMap().get(card.getId());
+            var cardHolder = play.game.getCardOwner(card);
             return cardHolder != null && this.client.clientPlayer.getPairColor() != cardHolder.getPairColor();
         }
 

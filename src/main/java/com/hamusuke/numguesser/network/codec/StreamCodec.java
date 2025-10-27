@@ -5,6 +5,20 @@ import io.netty.buffer.ByteBuf;
 import java.util.function.Function;
 
 public interface StreamCodec<B, V> extends StreamDecoder<B, V>, StreamEncoder<B, V> {
+    static <B, V> StreamCodec<B, V> of(final StreamEncoder<B, V> encoder, final StreamDecoder<B, V> decoder) {
+        return new StreamCodec<>() {
+            @Override
+            public V decode(B b) {
+                return decoder.decode(b);
+            }
+
+            @Override
+            public void encode(B o, V v) {
+                encoder.encode(o, v);
+            }
+        };
+    }
+
     static <B, V> StreamCodec<B, V> ofMember(final StreamMemberEncoder<B, V> encoder, final StreamDecoder<B, V> decoder) {
         return new StreamCodec<>() {
             @Override

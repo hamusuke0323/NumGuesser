@@ -1,16 +1,13 @@
 package com.hamusuke.numguesser.client.network.listener.main;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.client.NumGuesser;
+import com.hamusuke.numguesser.client.game.ClientGame;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
-import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
-import com.hamusuke.numguesser.client.game.phase.ClientGamePhaseRegistry;
+import com.hamusuke.numguesser.client.game.round.phase.ClientGamePhaseRegistry;
 import com.hamusuke.numguesser.client.gui.component.list.CardList.Direction;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.play.PairMakingPanel;
 import com.hamusuke.numguesser.client.gui.component.panel.main.room.RoomPanel;
-import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.client.network.player.RemotePlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.Player;
@@ -22,18 +19,10 @@ import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
 import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.GameExitedNotify;
 import com.hamusuke.numguesser.network.protocol.packet.room.RoomProtocols;
 
-import javax.annotation.Nullable;
 import javax.swing.*;
-import java.util.List;
-import java.util.Map;
 
 public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl implements ClientPlayPacketListener {
-    private final Map<AbstractClientPlayer, ClientPlayerDeck> playerDeckMap = Maps.newConcurrentMap();
-    private final Map<Integer, AbstractClientCard> cardMap = Maps.newConcurrentMap();
-    private final Map<Integer, AbstractClientPlayer> cardPlayerMap = Maps.newConcurrentMap();
-    @Nullable
-    private AbstractClientCard curSelectedCard;
-    private final List<Integer> serverPlayerIdList = Lists.newArrayList();
+    public final ClientGame game = new ClientGame();
 
     public ClientPlayPacketListenerImpl(NumGuesser client, ClientRoom room, Connection connection) {
         super(client, room, connection);
@@ -43,8 +32,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     @Override
     public void tick() {
         super.tick();
-
-        this.playerDeckMap.values().forEach(ClientPlayerDeck::tick);
+        this.game.tick();
     }
 
     @Override
@@ -73,15 +61,12 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleSeatingArrangement(SeatingArrangementNotify packet) {
-        this.serverPlayerIdList.clear();
-        this.serverPlayerIdList.addAll(packet.serverPlayerIdList());
+        this.game.newSeatingArrangement(packet.serverPlayerIdList());
     }
 
     @Override
     public void handlePlayerNewDeck(PlayerNewDeckNotify packet) {
-        this.playerDeckMap.clear();
-        this.cardMap.clear();
-        this.cardPlayerMap.clear();
+        this.game.clearAllCardMaps();
     }
 
     @Override
@@ -91,21 +76,24 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
             return;
         }
 
-        var deck = this.playerDeckMap.computeIfAbsent(player, AbstractClientPlayer::newDeck);
+        var deck = this.game.newDeck(player);
         packet.cards().stream()
                 .map(AbstractClientCard::from)
                 .forEach(card -> {
-                    this.cardMap.put(card.getId(), card);
-                    this.cardPlayerMap.put(card.getId(), player);
+                    this.game.addCard(player, card);
                     deck.addCard(card);
                 });
 
-        int myIdIndex = this.serverPlayerIdList.indexOf(this.clientPlayer.getId());
-        int targetIdIndex = this.serverPlayerIdList.indexOf(player.getId());
+        final var seatingArrangement = this.game.getSeatingArrangement();
+        int myIdIndex = seatingArrangement.indexOf(this.clientPlayer.getId());
+        int targetIdIndex = seatingArrangement.indexOf(player.getId());
 
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             // when two-player game, only north and south side are used.
-            gamePanel.addCardList(this.serverPlayerIdList.size() == 2 && player != this.clientPlayer ? Direction.NORTH : Direction.counterClockwiseFromSouth(targetIdIndex - myIdIndex), deck.getOwner().getName(), deck.getCardModel());
+            gamePanel.addCardList(seatingArrangement.size() == 2 && player != this.clientPlayer ?
+                            Direction.NORTH :
+                            Direction.counterClockwiseFromSouth(targetIdIndex - myIdIndex),
+                    deck.getOwner().getName(), deck.getCardModel());
         }
     }
 
@@ -121,13 +109,19 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     }
 
     @Override
+    public void handleGameDataSync(GameDataSyncNotify packet) {
+        this.game.onGameDataSync(packet.data());
+    }
+
+    @Override
     public void handleGamePhaseTransition(GamePhaseTransitionNotify packet) {
         if (!(this.client.getPanel() instanceof GamePanel gamePanel)) {
             return;
         }
 
         final var phase = ClientGamePhaseRegistry.newPhaseOf(packet.phaseType());
-        SwingUtilities.invokeLater(() -> phase.onEnter(gamePanel));
+        this.game.setPhase(phase);
+        SwingUtilities.invokeLater(() -> phase.onEnter(this.game, gamePanel));
     }
 
     @Override
@@ -151,7 +145,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     @Override
     public void handleTossNotify(TossNotify packet) {
         var openedCard = AbstractClientCard.from(packet.card());
-        var card = this.cardMap.get(openedCard.getId());
+        var card = this.game.getCardById(openedCard.getId());
         if (card == null) {
             return;
         }
@@ -164,7 +158,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleCardForAttackSelect(CardForAttackSelectReq packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onSelectCardForAttackReq(packet.cancellable());
         }
@@ -174,7 +168,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleRemotePlayerSelectTossOrAttack(RemotePlayerSelectTossOrAttackNotify packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onRemotePlayerSelectTossOrAttack(remotePlayer);
         }
@@ -182,7 +176,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleRemotePlayerSelectCardForToss(RemotePlayerSelectCardForTossNotify packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onRemotePlayerSelectCardForToss(remotePlayer);
         }
@@ -190,7 +184,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onRemotePlayerSelectCardForAttack(remotePlayer);
         }
@@ -198,7 +192,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handlePlayerStartAttacking(PlayerStartAttackNotify packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.prepareAttacking(AbstractClientCard.from(packet.card()), packet.cancellable());
         }
@@ -208,7 +202,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
 
     @Override
     public void handleRemotePlayerStartAttacking(RemotePlayerStartAttackNotify packet) {
-        this.clearCardSelection();
+        this.game.clearCardSelection();
         if (this.curRoom.getPlayer(packet.id()) instanceof RemotePlayer remotePlayer && this.client.getPanel() instanceof GamePanel gamePanel) {
             remotePlayer.onAttack(AbstractClientCard.from(packet.cardForAttack()));
             gamePanel.onRemotePlayerAttacking(remotePlayer);
@@ -217,17 +211,10 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         this.repaintGamePanel();
     }
 
-    protected void clearCardSelection() {
-        if (this.curSelectedCard != null) {
-            this.curSelectedCard.select(null);
-            this.curSelectedCard = null;
-        }
-    }
-
     @Override
     public void handleCardOpen(CardOpenNotify packet) {
         var openedCard = AbstractClientCard.from(packet.card());
-        var card = this.cardMap.get(openedCard.getId());
+        var card = this.game.getCardById(openedCard.getId());
         if (card == null) {
             return;
         }
@@ -243,7 +230,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         packet.cards().stream()
                 .map(AbstractClientCard::from)
                 .forEach(openedCard -> {
-                    var card = this.cardMap.get(openedCard.getId());
+                    var card = this.game.getCardById(openedCard.getId());
                     if (card == null) {
                         return;
                     }
@@ -258,17 +245,13 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
     @Override
     public void handlePlayerCardSelectionSync(PlayerCardSelectionSyncNotify packet) {
         var player = this.curRoom.getPlayer(packet.playerId());
-        var card = this.cardMap.get(packet.cardId());
+        var card = this.game.getCardById(packet.cardId());
 
         if (player == null || card == null) {
             return;
         }
 
-        if (this.curSelectedCard != null) {
-            this.curSelectedCard.select(null);
-        }
-
-        this.curSelectedCard = card;
+        this.game.selectCard(card);
         card.select(player);
 
         this.repaintGamePanel();
@@ -290,14 +273,13 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
             return;
         }
 
-        var deck = this.playerDeckMap.get(player);
+        var deck = this.game.getDeckFor(player);
         if (deck == null) {
             return;
         }
 
         var card = AbstractClientCard.from(packet.card());
-        this.cardMap.put(card.getId(), card);
-        this.cardPlayerMap.put(card.getId(), player);
+        this.game.addCard(player, card);
         deck.addCard(packet.index(), card);
         card.showNewLabel();
 
@@ -338,10 +320,6 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
         if (this.client.getPanel() instanceof GamePanel gamePanel) {
             gamePanel.onReadyRsp();
         }
-    }
-
-    public Map<Integer, AbstractClientPlayer> getCardPlayerMap() {
-        return this.cardPlayerMap;
     }
 
     protected void repaintGamePanel() {
