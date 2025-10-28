@@ -1,10 +1,7 @@
 package com.hamusuke.numguesser.client.game.round.phase;
 
 import com.google.common.collect.Maps;
-import com.hamusuke.numguesser.client.game.round.phase.phases.ClientAttackPhase;
-import com.hamusuke.numguesser.client.game.round.phase.phases.ClientPreparingGamePhase;
-import com.hamusuke.numguesser.client.game.round.phase.phases.ClientPullCardPhase;
-import com.hamusuke.numguesser.client.game.round.phase.phases.ClientSelectCardForAttackPhase;
+import com.hamusuke.numguesser.client.game.round.phase.phases.*;
 import com.hamusuke.numguesser.game.phase.PhaseType;
 
 import java.util.EnumMap;
@@ -18,6 +15,7 @@ public class ClientGamePhaseRegistry {
         register(PhaseType.PULL, ClientPullCardPhase::new);
         register(PhaseType.SELECT_ATTACK_CARD, ClientSelectCardForAttackPhase::new);
         register(PhaseType.ATTACK, ClientAttackPhase::new);
+        register(PhaseType.CONTINUE_OR_STAY, ClientContinueOrStayPhase::new);
         validate();
     }
 

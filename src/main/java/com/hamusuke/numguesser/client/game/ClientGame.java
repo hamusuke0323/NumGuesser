@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.ClientPlayerDeck;
 import com.hamusuke.numguesser.client.game.round.phase.ClientGamePhase;
+import com.hamusuke.numguesser.client.gui.component.panel.main.play.GamePanel;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.game.Game;
@@ -12,6 +13,7 @@ import com.hamusuke.numguesser.game.data.GameData;
 import com.hamusuke.numguesser.game.data.GameDataSyncer;
 
 import javax.annotation.Nullable;
+import javax.swing.*;
 import java.util.List;
 import java.util.Map;
 
@@ -38,8 +40,16 @@ public class ClientGame extends Game {
         return this.room.getPlayer(id);
     }
 
-    public void setPhase(final ClientGamePhase phase) {
+    public void transitionPhase(final ClientGamePhase phase, final GamePanel panel) {
+        final var old = this.curPhase;
         this.curPhase = phase;
+        SwingUtilities.invokeLater(() -> {
+            if (old != null) {
+                old.onExit(this, panel);
+            }
+
+            phase.onEnter(this, panel);
+        });
     }
 
     public <V> void onGameDataSync(final GameDataSyncer.SerializedData<V> data) {

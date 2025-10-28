@@ -6,4 +6,8 @@ import com.hamusuke.numguesser.game.phase.GamePhase;
 
 public interface ClientGamePhase extends GamePhase {
     void onEnter(final ClientGame game, final GamePanel panel);
+
+    default void onExit(final ClientGame game, final GamePanel panel) {
+        panel.getCenterPanel().removeAll();
+    }
 }

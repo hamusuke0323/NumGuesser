@@ -31,7 +31,7 @@ public class ClientSelectCardForAttackPhase extends SelectCardForAttackPhase imp
 
         // the remote player is about to attack.
         if (attacker != NumGuesser.getInstance().clientPlayer) {
-            addButton(center, new JXLabel(attacker.getName() + "がアタックするためのカードを選んでいます"), layout, 0, 0, 1, 1, 1.0D, 0.05D);
+            addButton(center, new JXLabel(attacker.getName() + "がアタックするためのカードを選んでいます", SwingConstants.CENTER), layout, 0, 0, 1, 1, 1.0D, 0.05D);
             return;
         }
 

@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.client.gui.component.panel.main.play;
 
 import com.google.common.collect.Lists;
+import com.hamusuke.numguesser.client.event.CardSelectEvent;
 import com.hamusuke.numguesser.client.game.card.AbstractClientCard;
 import com.hamusuke.numguesser.client.game.card.LocalCard;
 import com.hamusuke.numguesser.client.gui.component.list.CardList;
@@ -363,7 +364,7 @@ public class GamePanel extends Panel {
         }
 
         this.selectedCard = card;
-        this.client.getConnection().sendPacket(new CardSelectReq(card.getId()));
+        this.client.eventBus.post(new CardSelectEvent(card));
     }
 
     @Nullable

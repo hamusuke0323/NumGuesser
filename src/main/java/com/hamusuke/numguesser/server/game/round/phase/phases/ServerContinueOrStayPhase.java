@@ -2,7 +2,6 @@ package com.hamusuke.numguesser.server.game.round.phase.phases;
 
 import com.hamusuke.numguesser.game.phase.action.actions.ContinueOrStayAction;
 import com.hamusuke.numguesser.game.phase.phases.ContinueOrStayPhase;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackSuccNotify;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
@@ -17,11 +16,6 @@ public class ServerContinueOrStayPhase extends ContinueOrStayPhase implements Se
 
     public ServerContinueOrStayPhase(final ServerCard cardForAttacking) {
         this.cardForAttacking = cardForAttacking;
-    }
-
-    @Override
-    public void onEnter(final GameRound round) {
-        round.getCurAttacker().sendPacket(AttackSuccNotify.INSTANCE);
     }
 
     @Override

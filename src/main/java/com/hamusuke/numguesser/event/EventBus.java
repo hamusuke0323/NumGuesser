@@ -11,6 +11,7 @@ import java.util.Map;
 public class EventBus<E extends Event> {
     private final Class<E> baseEventClass;
     private final Map<Class<? extends E>, List<EventListener<? extends E>>> listeners = Maps.newConcurrentMap();
+    private final Map<Object, List<EventListener<? extends E>>> objectToListeners = Maps.newConcurrentMap();
 
     public EventBus(final Class<E> baseEventClass) {
         this.baseEventClass = baseEventClass;
@@ -31,14 +32,38 @@ public class EventBus<E extends Event> {
                 throw new IllegalArgumentException("Invalid parameter type: " + params[0].getType().getName() + " is not a subclass of " + this.baseEventClass.getName() + "; " + method.getName() + " in " + handler.getClass().getName());
             }
 
-            this.register((Class<E>) params[0].getType(), event -> {
+            final EventListener<? extends E> listener = event -> {
                 try {
                     method.invoke(handler, event);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     throw new RuntimeException(e);
                 }
-            });
+            };
+
+            this.objectToListeners.computeIfAbsent(handler, key -> Lists.newArrayList())
+                    .add(listener);
+            this.register((Class<E>) params[0].getType(), listener);
         }
+    }
+
+    public void unregister(final Object handler) {
+        final var list = this.objectToListeners.get(handler);
+        if (list == null) {
+            return;
+        }
+
+        final var it = list.iterator();
+        while (it.hasNext()) {
+            final var listener = it.next();
+            for (final var collection : this.listeners.values()) {
+                if (collection.remove(listener)) {
+                    it.remove();
+                    break;
+                }
+            }
+        }
+
+        list.clear();
     }
 
     public void register(final Class<? extends E> eventClass, final EventListener<? extends E> listener) {

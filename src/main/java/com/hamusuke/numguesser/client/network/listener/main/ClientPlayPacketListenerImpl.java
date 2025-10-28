@@ -119,9 +119,7 @@ public class ClientPlayPacketListenerImpl extends ClientCommonPacketListenerImpl
             return;
         }
 
-        final var phase = ClientGamePhaseRegistry.newPhaseOf(packet.phaseType());
-        this.game.setPhase(phase);
-        SwingUtilities.invokeLater(() -> phase.onEnter(this.game, gamePanel));
+        this.game.transitionPhase(ClientGamePhaseRegistry.newPhaseOf(packet.phaseType()), gamePanel);
     }
 
     @Override

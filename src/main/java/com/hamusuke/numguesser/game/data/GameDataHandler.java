@@ -22,7 +22,7 @@ public sealed interface GameDataHandler<V> permits GameDataHandler.Individually,
 
             @Override
             public void encode(IntelligentByteBuf o, V v) {
-                throw new EncoderException("This codec is used for individual data");
+                throw new EncoderException("This handler cannot encode the data");
             }
         }, encoder);
     }
