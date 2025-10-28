@@ -24,7 +24,7 @@ public class ServerSelectCardForAttackPhase extends SelectCardForAttackPhase imp
     }
 
     @Override
-    public void prepareSyncedData(final GameRound round) {
+    public void syncGameData(final GameRound round) {
         round.game.setSyncedData(Game.CANCELLABLE, this.cancellable);
     }
 

@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.game.data;
 
 import com.google.common.collect.Maps;
+import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
 import io.netty.handler.codec.DecoderException;
 
@@ -83,10 +84,15 @@ public class GameDataSyncer {
             return new SerializedData<>(entryId, handler, value);
         }
 
-        public void writeTo(final IntelligentByteBuf buf) {
+        public void writeTo(final Player player, final IntelligentByteBuf buf) {
             buf.writeVarInt(GameDataHandlerRegistry.getId(this.handler));
             buf.writeVarInt(this.entryId);
-            this.handler.codec().encode(buf, this.value);
+
+            switch (this.handler) {
+                case GameDataHandler.Generic(final var codec) -> codec.encode(buf, this.value);
+                case GameDataHandler.Individually(final var __, final var encoder) ->
+                        encoder.apply(player).encode(buf, this.value);
+            }
         }
     }
 

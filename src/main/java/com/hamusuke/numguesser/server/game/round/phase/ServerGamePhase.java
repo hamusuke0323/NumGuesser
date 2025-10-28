@@ -8,11 +8,11 @@ import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public interface ServerGamePhase extends GamePhase {
-    default void prepareSyncedData(final GameRound round) {
+    default void syncGameData(final GameRound round) {
     }
 
     default void onEnter(final GameRound round) {
-        this.prepareSyncedData(round);
+        this.syncGameData(round);
         round.eventBus.post(new GamePhaseTransitionEvent(this));
     }
 

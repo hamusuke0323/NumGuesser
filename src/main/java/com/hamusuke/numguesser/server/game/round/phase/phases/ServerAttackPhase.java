@@ -10,7 +10,6 @@ import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
 import com.hamusuke.numguesser.server.game.event.events.PlayerCardSelectEvent;
-import com.hamusuke.numguesser.server.game.event.events.PlayerStartAttackEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
 import com.hamusuke.numguesser.server.game.round.phase.Cancellable;
@@ -33,13 +32,9 @@ public class ServerAttackPhase extends AttackPhase implements ServerGamePhase, A
     }
 
     @Override
-    public void prepareSyncedData(final GameRound round) {
+    public void syncGameData(final GameRound round) {
         round.game.setSyncedData(Game.CANCELLABLE, this.cancellable);
-    }
-
-    @Override
-    public void onEnter(final GameRound round) {
-        round.eventBus.post(new PlayerStartAttackEvent(round.getCurAttacker(), this.cardForAttacking, this.cancellable));
+        round.game.setSyncedData(Game.ATTACK_CARD, new SyncedAttackData(round.getCurAttacker().getId(), this.cardForAttacking.toSerializer()));
     }
 
     @Override

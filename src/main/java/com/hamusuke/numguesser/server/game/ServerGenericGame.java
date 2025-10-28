@@ -53,7 +53,7 @@ public class ServerGenericGame extends Game {
         this.dataSyncer.set(data, value);
         final var e = this.dataSyncer.getEntry(data);
         if (e.isDirty()) {
-            this.players.forEach(player -> player.sendPacket(new GameDataSyncNotify(this.dataSyncer.toSerialized(data))));
+            this.players.forEach(player -> player.sendPacket(new GameDataSyncNotify(player, this.dataSyncer.toSerialized(data))));
             e.clearDirty();
         }
     }
