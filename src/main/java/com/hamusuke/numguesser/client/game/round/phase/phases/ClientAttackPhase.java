@@ -32,12 +32,14 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
             return;
         }
 
+        final var card = AbstractClientCard.from(game.getGameData(Game.ATTACK_CARD).serializer());
         final var client = NumGuesser.getInstance();
         final var center = panel.getCenterPanel();
         final var layout = (GridBagLayout) center.getLayout();
 
         // the remote player attacks.
         if (attacker != client.clientPlayer) {
+            attacker.onAttack(card);
             addButton(center, new JXLabel(attacker.getName() + "がアタックしています", SwingConstants.CENTER), layout, 0, 0, 1, 1, 1.0D, 0.05D);
             return;
         }
@@ -45,10 +47,9 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
         // your turn
         final var statusLabel = new JXLabel("あなたの番です。アタックしてください", SwingConstants.CENTER);
         final var cardCase = new JXPanel();
-        final var card = game.getGameData(Game.ATTACK_CARD);
-        cardCase.add(LocalCard.from(card.serializer()).toPanel(), BorderLayout.CENTER);
+        cardCase.add(card.toPanel(), BorderLayout.CENTER);
         final var button = new JXButton("アタック");
-        button.addActionListener(e -> this.showAttackDialog(panel, statusLabel, button));
+        button.addActionListener(e -> this.showAttackDialog(panel));
 
         addButton(center, statusLabel, layout, 0, 0, 1, 1, 1.0D, 0.05D);
         addButton(center, cardCase, layout, 0, 1, 1, 1, 1.0D);
@@ -67,7 +68,7 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
         }
     }
 
-    private void showAttackDialog(final GamePanel panel, final JXLabel statusLabel, final JXButton button) {
+    private void showAttackDialog(final GamePanel panel) {
         final var client = NumGuesser.getInstance();
         final var card = panel.getSelectedCard();
         if (card == null || card.isOpened() || client.clientPlayer.getDeck().contains(card)) {

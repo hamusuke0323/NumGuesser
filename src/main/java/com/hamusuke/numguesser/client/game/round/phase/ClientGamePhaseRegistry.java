@@ -16,7 +16,8 @@ public class ClientGamePhaseRegistry {
         register(PhaseType.SELECT_ATTACK_CARD, ClientSelectCardForAttackPhase::new);
         register(PhaseType.ATTACK, ClientAttackPhase::new);
         register(PhaseType.CONTINUE_OR_STAY, ClientContinueOrStayPhase::new);
-        validate();
+        register(PhaseType.END, ClientEndPhase::new);
+        //validate();
     }
 
     private static void register(final PhaseType phaseType, final Supplier<ClientGamePhase> supplier) {

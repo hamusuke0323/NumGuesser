@@ -49,6 +49,7 @@ public class ClientGame extends Game {
             }
 
             phase.onEnter(this, panel);
+            panel.revalidate();
         });
     }
 
