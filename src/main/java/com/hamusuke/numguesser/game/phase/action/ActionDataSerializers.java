@@ -25,6 +25,9 @@ public class ActionDataSerializers {
         register(SelectCardForAttackAction.class, SelectCardForAttackAction.STREAM_CODEC);
         register(SelectTossOrAttackAction.class, SelectTossOrAttackAction.STREAM_CODEC);
         register(TossAction.class, TossAction.STREAM_CODEC);
+        register(ButtonPressAction.class, ButtonPressAction.STREAM_CODEC);
+        register(PairMakingActions.PairColorChange.class, PairMakingActions.PairColorChange.STREAM_CODEC);
+        register(PairMakingActions.PairMakingDone.class, PairMakingActions.PairMakingDone.STREAM_CODEC);
     }
 
     public static <A> A readFrom(final IntelligentByteBuf buf) {

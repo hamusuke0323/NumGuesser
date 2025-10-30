@@ -1,8 +1,8 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.game.phase.action.actions.TossAction;
 import com.hamusuke.numguesser.game.phase.phases.TossPhase;
-import com.hamusuke.numguesser.server.game.event.events.PlayerSelectCardForTossEvent;
 import com.hamusuke.numguesser.server.game.event.events.TossEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
@@ -17,8 +17,8 @@ public class ServerTossPhase extends TossPhase implements ServerGamePhase, Actab
     }
 
     @Override
-    public void onEnter(final GameRound round) {
-        round.eventBus.post(new PlayerSelectCardForTossEvent(this.buddy));
+    public void syncGameData(GameRound round) {
+        round.game.setSyncedData(Game.CURRENT_TOSSER, this.buddy.getId());
     }
 
     @Override

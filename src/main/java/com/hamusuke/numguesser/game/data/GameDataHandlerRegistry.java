@@ -3,7 +3,9 @@ package com.hamusuke.numguesser.game.data;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.hamusuke.numguesser.game.card.CardSerializer;
+import com.hamusuke.numguesser.game.pair.PlayerPair;
 import com.hamusuke.numguesser.game.phase.phases.AttackPhase;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.channel.IntelligentByteBuf;
@@ -12,6 +14,7 @@ import com.hamusuke.numguesser.network.codec.StreamCodecs;
 import com.hamusuke.numguesser.network.codec.StreamEncoder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -32,6 +35,12 @@ public class GameDataHandlerRegistry {
             CardSerializer.STREAM_CODEC.encode(b, data.serializer().toUnknown());
         }
     });
+    public static final GameDataHandler<Map<Integer, PlayerPair.PairColor>> VAR_INT_TO_PAIR_COLOR = register(StreamCodec.of((b, map) -> {
+        b.writeMap(map, (e, buf) -> {
+            buf.writeVarInt(e.getKey());
+            buf.writeEnum(e.getValue());
+        });
+    }, b -> b.readJustMap(IntelligentByteBuf::readVarInt, b1 -> b1.readEnum(PlayerPair.PairColor.class), ImmutableMap::copyOf)));
 
     private static <V> GameDataHandler<V> register(final StreamCodec<IntelligentByteBuf, V> codec) {
         final var handler = GameDataHandler.of(codec);

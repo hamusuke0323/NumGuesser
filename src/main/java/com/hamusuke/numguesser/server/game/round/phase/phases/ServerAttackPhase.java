@@ -5,7 +5,6 @@ import com.hamusuke.numguesser.game.card.Card;
 import com.hamusuke.numguesser.game.phase.PhaseType;
 import com.hamusuke.numguesser.game.phase.action.actions.AttackActions;
 import com.hamusuke.numguesser.game.phase.phases.AttackPhase;
-import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.AttackRsp;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.events.CardOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
@@ -52,17 +51,14 @@ public class ServerAttackPhase extends AttackPhase implements ServerGamePhase, A
             }
             case AttackActions.DoAttack doAttack -> {
                 if (round.getCurAttacker() != actor) {
-                    actor.sendPacket(AttackRsp.INSTANCE);
                     return;
                 }
 
                 final var card = round.cardRegistry.getOwnedCardById(doAttack.cardId());
                 if (card == null || card.isOpened() || !this.canAttack(round, actor, card)) {
-                    actor.sendPacket(AttackRsp.INSTANCE); // Try again
                     return;
                 }
 
-                actor.sendPacket(AttackRsp.INSTANCE);
                 round.eventBus.post(new GameMessageEvent("アタック: " +
                         actor.getDisplayName() + "が" + doAttack.numExpected() + "で" +
                         round.cardRegistry.getCardOwnerById(doAttack.cardId()).getDisplayName() +

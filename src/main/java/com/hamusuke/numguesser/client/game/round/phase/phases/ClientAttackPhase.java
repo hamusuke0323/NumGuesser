@@ -49,7 +49,7 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
         final var cardCase = new JXPanel();
         cardCase.add(card.toPanel(), BorderLayout.CENTER);
         final var button = new JXButton("アタック");
-        button.addActionListener(e -> this.showAttackDialog(panel));
+        button.addActionListener(e -> this.showAttackDialog(game, panel));
 
         addButton(center, statusLabel, layout, 0, 0, 1, 1, 1.0D, 0.05D);
         addButton(center, cardCase, layout, 0, 1, 1, 1, 1.0D);
@@ -68,10 +68,10 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
         }
     }
 
-    private void showAttackDialog(final GamePanel panel) {
+    private void showAttackDialog(final ClientGame game, final GamePanel panel) {
         final var client = NumGuesser.getInstance();
         final var card = panel.getSelectedCard();
-        if (card == null || card.isOpened() || client.clientPlayer.getDeck().contains(card)) {
+        if (card == null || card.isOpened() || !this.isAttackable(client, game, card)) {
             return;
         }
 
@@ -108,6 +108,10 @@ public class ClientAttackPhase extends AttackPhase implements ClientGamePhase, C
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         dialog.setLocationRelativeTo(client.getMainWindow());
         dialog.setVisible(true);
+    }
+
+    protected boolean isAttackable(final NumGuesser client, final ClientGame game, final AbstractClientCard card) {
+        return !client.clientPlayer.getDeck().contains(card);
     }
 
     @EventHandler

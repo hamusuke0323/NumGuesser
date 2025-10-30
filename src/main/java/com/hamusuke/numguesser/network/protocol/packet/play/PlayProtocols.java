@@ -16,20 +16,16 @@ import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.PingReq;
 import com.hamusuke.numguesser.network.protocol.packet.loop.clientbound.RTTChangeNotify;
 import com.hamusuke.numguesser.network.protocol.packet.loop.serverbound.PongRsp;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.*;
-import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.*;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.ClientActionReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.ClientCommandReq;
+import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.GameExitedNotify;
 
 public class PlayProtocols {
     public static final ProtocolInfo<ServerPlayPacketListener> SERVERBOUND = ProtocolInfoBuilder
             .serverboundProtocol(Protocol.PLAY, builder -> {
-                builder.addPacket(PlayPacketTypes.ATTACK_REQ, AttackReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.CARD_FOR_ATTACK_SELECT_RSP, CardForAttackSelectRsp.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.CARD_SELECT_REQ, CardSelectReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.CLIENT_ACTION, ClientActionReq.STREAM_CODEC)
+                builder.addPacket(PlayPacketTypes.CLIENT_ACTION, ClientActionReq.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.CLIENT_COMMAND, ClientCommandReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.GAME_EXITED, GameExitedNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.PAIR_COLOR_CHANGE_REQ, PairColorChangeReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.PAIR_MAKING_DONE, PairMakingDoneReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.TOSS_RSP, TossRsp.STREAM_CODEC);
+                        .addPacket(PlayPacketTypes.GAME_EXITED, GameExitedNotify.STREAM_CODEC);
 
                 builder.addPacket(CommonPacketTypes.CHAT_REQ, ChatReq.STREAM_CODEC)
                         .addPacket(CommonPacketTypes.GAME_MODE_SELECT_REQ, GameModeSelectReq.STREAM_CODEC)
@@ -43,31 +39,18 @@ public class PlayProtocols {
             });
     public static final ProtocolInfo<ClientPlayPacketListener> CLIENTBOUND = ProtocolInfoBuilder
             .clientboundProtocol(Protocol.PLAY, builder -> {
-                builder.addPacket(PlayPacketTypes.ATTACK_RSP, AttackRsp.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.ATTACK_SUCC, AttackSuccNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.CARD_FOR_ATTACK_SELECT_REQ, CardForAttackSelectReq.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.CARD_OPEN, CardOpenNotify.STREAM_CODEC)
+                builder.addPacket(PlayPacketTypes.CARD_OPEN, CardOpenNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.CARDS_OPEN, CardsOpenNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.END_GAME_ROUND, EndGameRoundNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.EXIT_GAME_SUCC, ExitGameSuccNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.GAME_DATA_SYNC, GameDataSyncNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.GAME_PHASE_TRANSITION, GamePhaseTransitionNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PAIR_COLOR_CHANGE_NOTIFY, PairColorChangeNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.PAIR_MAKING_START, PairMakingStartNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_CARD_SELECTION_SYNC, PlayerCardSelectionSyncNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_DECK_SYNC, PlayerDeckSyncNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_NEW_CARD_ADD, PlayerNewCardAddNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.PLAYER_NEW_DECK, PlayerNewDeckNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.PLAYER_START_ATTACK, PlayerStartAttackNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_CARD_FOR_ATTACK, RemotePlayerSelectCardForAttackNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_CARD_FOR_TOSS, RemotePlayerSelectCardForTossNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_SELECT_TOSS_OR_ATTACK, RemotePlayerSelectTossOrAttackNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.REMOTE_PLAYER_START_ATTACK, RemotePlayerStartAttackNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.SEATING_ARRANGEMENT, SeatingArrangementNotify.STREAM_CODEC)
                         .addPacket(PlayPacketTypes.START_GAME_ROUND, StartGameRoundNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.TOSS_NOTIFY, TossNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.TOSS_OR_ATTACK_SELECTION, TossOrAttackSelectionNotify.STREAM_CODEC)
-                        .addPacket(PlayPacketTypes.TOSS_REQ, TossReq.STREAM_CODEC);
+                        .addPacket(PlayPacketTypes.TOSS_NOTIFY, TossNotify.STREAM_CODEC);
 
                 builder.addPacket(CommonPacketTypes.CHAT_NOTIFY, ChatNotify.STREAM_CODEC)
                         .addPacket(CommonPacketTypes.GAME_MODE_CHANGE, GameModeChangeNotify.STREAM_CODEC)

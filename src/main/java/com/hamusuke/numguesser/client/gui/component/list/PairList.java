@@ -1,8 +1,8 @@
 package com.hamusuke.numguesser.client.gui.component.list;
 
 import com.hamusuke.numguesser.client.NumGuesser;
+import com.hamusuke.numguesser.client.event.PairColorChangeEvent;
 import com.hamusuke.numguesser.client.network.player.AbstractClientPlayer;
-import com.hamusuke.numguesser.network.protocol.packet.play.serverbound.PairColorChangeReq;
 import org.jdesktop.swingx.JXLabel;
 import org.jdesktop.swingx.JXList;
 import org.jdesktop.swingx.JXPanel;
@@ -68,7 +68,7 @@ public class PairList extends JXList {
         var e = this.model.get(index);
         if (e != null && this.client.getConnection() != null) {
             e.setPairColor(e.getPairColor().opposite());
-            this.client.getConnection().sendPacket(new PairColorChangeReq(e.getId(), e.getPairColor()));
+            this.client.eventBus.post(new PairColorChangeEvent(e, e.getPairColor()));
         }
     }
 }

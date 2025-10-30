@@ -2,7 +2,6 @@ package com.hamusuke.numguesser.server.game.round.phase.phases;
 
 import com.hamusuke.numguesser.game.phase.action.actions.SelectTossOrAttackAction;
 import com.hamusuke.numguesser.game.phase.phases.SelectTossOrAttackPhase;
-import com.hamusuke.numguesser.server.game.event.events.PlayerSelectTossOrAttackEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.PairGameRound;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
@@ -12,11 +11,6 @@ import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public class ServerSelectTossOrAttackPhase extends SelectTossOrAttackPhase implements ServerGamePhase, Actable<SelectTossOrAttackAction>, HasResult<ServerSelectTossOrAttackPhase.Result> {
     private Result result;
-
-    @Override
-    public void onEnter(final GameRound round) {
-        round.eventBus.post(new PlayerSelectTossOrAttackEvent(round.getCurAttacker()));
-    }
 
     @Override
     public void onPlayerAction(final GameRound round, final ServerPlayer actor, final SelectTossOrAttackAction action) {

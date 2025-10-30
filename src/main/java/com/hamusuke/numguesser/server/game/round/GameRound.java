@@ -1,7 +1,6 @@
 package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.Game;
-import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.server.game.GameDataRegistry;
 import com.hamusuke.numguesser.server.game.ServerGenericGame;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
@@ -115,17 +114,6 @@ public class GameRound {
         return this.players.stream()
                 .filter(sp -> !sp.equals(player))
                 .allMatch(ServerPlayer::isDefeated);
-    }
-
-    public void ready() {
-        if (this.phaseManager.hasNext() || this.isLastRound()) {
-            return;
-        }
-
-        if (this.players.stream().allMatch(Player::isReady)) {
-            this.players.forEach(player -> player.setReady(false));
-            this.game.startNextRound();
-        }
     }
 
     public void nextAttacker() {

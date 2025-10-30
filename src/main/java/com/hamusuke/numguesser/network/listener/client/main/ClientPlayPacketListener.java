@@ -9,13 +9,9 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
         return Protocol.PLAY;
     }
 
-    void handlePairMakingStart(PairMakingStartNotify packet);
-
     void handlePairColorChange(PairColorChangeNotify packet);
 
     void handleStartGameRound(StartGameRoundNotify packet);
-
-    void handleSeatingArrangement(SeatingArrangementNotify packet);
 
     void handlePlayerNewDeck(PlayerNewDeckNotify packet);
 
@@ -27,23 +23,7 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handleGamePhaseTransition(GamePhaseTransitionNotify packet);
 
-    void handleTossOrAttackSelection(TossOrAttackSelectionNotify packet);
-
-    void handleTossReq(TossReq packet);
-
     void handleTossNotify(TossNotify packet);
-
-    void handleCardForAttackSelect(CardForAttackSelectReq packet);
-
-    void handleRemotePlayerSelectTossOrAttack(RemotePlayerSelectTossOrAttackNotify packet);
-
-    void handleRemotePlayerSelectCardForToss(RemotePlayerSelectCardForTossNotify packet);
-
-    void handleRemotePlayerSelectCardForAttack(RemotePlayerSelectCardForAttackNotify packet);
-
-    void handlePlayerStartAttacking(PlayerStartAttackNotify packet);
-
-    void handleRemotePlayerStartAttacking(RemotePlayerStartAttackNotify packet);
 
     void handleCardOpen(CardOpenNotify packet);
 
@@ -51,11 +31,5 @@ public interface ClientPlayPacketListener extends ClientCommonPacketListener {
 
     void handlePlayerCardSelectionSync(PlayerCardSelectionSyncNotify packet);
 
-    void handleAttack(AttackRsp packet);
-
     void handlePlayerNewCardAdd(PlayerNewCardAddNotify packet);
-
-    void handleAttackSucc(AttackSuccNotify packet);
-
-    void handleEndGameRound(EndGameRoundNotify packet);
 }

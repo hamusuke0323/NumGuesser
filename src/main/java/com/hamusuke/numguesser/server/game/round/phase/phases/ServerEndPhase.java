@@ -1,21 +1,30 @@
 package com.hamusuke.numguesser.server.game.round.phase.phases;
 
+import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.game.phase.action.actions.ButtonPressAction;
 import com.hamusuke.numguesser.game.phase.phases.EndPhase;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.server.game.event.events.CardsOpenEvent;
 import com.hamusuke.numguesser.server.game.event.events.GameMessageEvent;
-import com.hamusuke.numguesser.server.game.event.events.GameRoundEndEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
 import com.hamusuke.numguesser.server.game.round.phase.ServerGamePhase;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
+import java.util.Collections;
 import java.util.Comparator;
 
-public class ServerEndPhase extends EndPhase implements ServerGamePhase, Actable<Void> {
+public class ServerEndPhase extends EndPhase implements ServerGamePhase, Actable<ButtonPressAction> {
+    @Override
+    public void syncGameData(final GameRound round) {
+        round.game.setSyncedData(Game.LAST_ROUND, round.isLastRound());
+        round.game.setSyncedData(Game.READY_PLAYERS, Collections.emptyList());
+    }
+
     @Override
     public void onEnter(final GameRound round) {
+        ServerGamePhase.super.onEnter(round);
         round.eventBus.post(new GameMessageEvent("ラウンド終了"));
         this.giveTipToRoundWinner(round);
 
@@ -28,10 +37,7 @@ public class ServerEndPhase extends EndPhase implements ServerGamePhase, Actable
             round.eventBus.post(new CardsOpenEvent(list));
         }
 
-        final boolean isFinal = round.isLastRound();
-        round.eventBus.post(new GameRoundEndEvent(isFinal));
-
-        if (isFinal) {
+        if (round.isLastRound()) {
             this.endFinalRound(round);
         }
     }
@@ -69,10 +75,17 @@ public class ServerEndPhase extends EndPhase implements ServerGamePhase, Actable
     }
 
     @Override
-    public void onPlayerAction(final GameRound round, final ServerPlayer ignored, Void ignored2) {
+    public void onPlayerAction(final GameRound round, final ServerPlayer actor, final ButtonPressAction ignored2) {
         if (round.isLastRound()) {
             return;
         }
+
+        actor.setReady(true);
+        round.game.setSyncedData(Game.READY_PLAYERS,
+                round.players.stream()
+                        .filter(Player::isReady)
+                        .map(ServerPlayer::getId)
+                        .toList());
 
         if (round.players.stream().allMatch(Player::isReady)) {
             round.players.forEach(player -> player.setReady(false));

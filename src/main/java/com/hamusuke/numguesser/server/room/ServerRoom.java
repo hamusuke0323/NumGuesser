@@ -67,20 +67,22 @@ public class ServerRoom extends Room<ServerPlayer> {
     }
 
     public void onPlayerReady() {
-        if (this.game == null) {
-            synchronized (this.players) {
-                if (this.isPlayerNumValid() && this.players.stream().allMatch(Player::isReady)) {
-                    this.players.forEach(player -> player.setReady(false));
+        if (this.game != null) {
+            return;
+        }
 
-                    this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = GameModeRegistry.create(this.gameMode, this, this.players);
-                    this.players.forEach(player -> {
-                        player.sendPacket(StartGameNotify.INSTANCE);
-                        player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
-                    });
+        synchronized (this.players) {
+            if (this.isPlayerNumValid() && this.players.stream().allMatch(Player::isReady)) {
+                this.players.forEach(player -> player.setReady(false));
 
-                    this.game.startGame();
-                }
+                this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
+                this.game = GameModeRegistry.create(this.gameMode, this, this.players);
+                this.players.forEach(player -> {
+                    player.sendPacket(StartGameNotify.INSTANCE);
+                    player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
+                });
+
+                this.game.startGame();
             }
         }
     }

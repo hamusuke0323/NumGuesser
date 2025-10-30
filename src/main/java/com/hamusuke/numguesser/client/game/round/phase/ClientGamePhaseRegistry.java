@@ -12,12 +12,18 @@ public class ClientGamePhaseRegistry {
 
     static {
         register(PhaseType.PREPARE, ClientPreparingGamePhase::new);
+        register(PhaseType.PAIR_MAKING, ClientPairMakingPhase::new);
         register(PhaseType.PULL, ClientPullCardPhase::new);
+        register(PhaseType.CHECK_BUDDY_ALIVE, ClientCheckBuddyAlivePhase::new);
         register(PhaseType.SELECT_ATTACK_CARD, ClientSelectCardForAttackPhase::new);
+        register(PhaseType.SELECT_TOSS_OR_ATTACK, ClientSelectTossOrAttackPhase::new);
         register(PhaseType.ATTACK, ClientAttackPhase::new);
+        register(PhaseType.TOSS, ClientTossPhase::new);
+        register(PhaseType.PAIR_ATTACK, ClientPairAttackPhase::new);
         register(PhaseType.CONTINUE_OR_STAY, ClientContinueOrStayPhase::new);
         register(PhaseType.END, ClientEndPhase::new);
-        //validate();
+        register(PhaseType.PAIR_END, ClientPairEndPhase::new);
+        validate();
     }
 
     private static void register(final PhaseType phaseType, final Supplier<ClientGamePhase> supplier) {

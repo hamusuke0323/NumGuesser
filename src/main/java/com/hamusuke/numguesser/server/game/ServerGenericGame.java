@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public class ServerGenericGame extends Game {
     protected static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
-    protected final ServerRoom room;
+    public final ServerRoom room;
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
     protected final GameEventBus eventBus = new GameEventBus();
@@ -43,6 +43,14 @@ public class ServerGenericGame extends Game {
 
     public void removeData(final int id) {
         this.data.remove(id);
+    }
+
+    public <V> void setData(final int id, final V value) {
+        if (!this.data.containsKey(id)) {
+            throw new IllegalArgumentException("game data (id: " + id + ") is not defined");
+        }
+
+        this.data.put(id, value);
     }
 
     public <V> V getData(final int id) {
@@ -99,16 +107,12 @@ public class ServerGenericGame extends Game {
         }
     }
 
-    public void onPlayerAction(final ServerPlayer actor, final Object data) {
+    public synchronized void onPlayerAction(final ServerPlayer actor, final Object data) {
         this.round.onPlayerAction(actor, data);
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
         this.round.onCancelCommand(canceller);
-    }
-
-    public void ready() {
-        this.round.ready();
     }
 
     public List<ServerPlayer> getPlayingPlayers() {
