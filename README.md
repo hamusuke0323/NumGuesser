@@ -44,4 +44,4 @@ GUIに対応しているOSの場合，`jar`ファイルをダブルクリック�
 クライアントはグローバルIPアドレスを入力します。アドレスはサーバーを起動した人に教えてもらってください。
 
 ## ゲームルール
-ルールについては[こちら](https://www.sansu-olympic.gr.jp/algo/)を参照してください。
+ルールについては[こちら](https://www.sansu-olympic.gr.jp/algo/how/howto.htm)を参照してください。
