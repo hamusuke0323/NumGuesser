@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.hamusuke.numguesser.game.card.Card;
-import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.GameDataRegistry;
+import com.hamusuke.numguesser.server.game.ServerPairPlayGame;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseDirector;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
@@ -12,18 +12,14 @@ import java.util.List;
 public class PairGameRound extends GameRound {
     public final ServerPlayerPairRegistry pairRegistry;
 
-    public PairGameRound(PairPlayGame game, List<ServerPlayer> players) {
+    public PairGameRound(ServerPairPlayGame game, List<ServerPlayer> players) {
         super(game, players, GamePhaseDirector.forPairPlayGame());
-        this.pairRegistry = game.getPairRegistry();
+        this.pairRegistry = game.getData(GameDataRegistry.PAIR_REGISTRY);
     }
 
     protected PairGameRound(final PairGameRound old) {
         super(old);
         this.pairRegistry = old.pairRegistry;
-    }
-
-    @Override
-    public void ownCard(ServerPlayer player, Card card) {
     }
 
     @Override

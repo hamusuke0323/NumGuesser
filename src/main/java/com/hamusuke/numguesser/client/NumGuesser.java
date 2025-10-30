@@ -1,31 +1,24 @@
 package com.hamusuke.numguesser.client;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.config.Config;
+import com.hamusuke.numguesser.client.event.ClientEventBus;
+import com.hamusuke.numguesser.client.event.UINotifier;
 import com.hamusuke.numguesser.client.gui.MainWindow;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.client.gui.component.panel.menu.MainMenuPanel;
-import com.hamusuke.numguesser.client.gui.component.panel.menu.ServerListPanel;
 import com.hamusuke.numguesser.client.gui.component.table.PacketLogTable;
 import com.hamusuke.numguesser.client.gui.component.table.PlayerTable;
 import com.hamusuke.numguesser.client.network.Chat;
 import com.hamusuke.numguesser.client.network.ClientPacketLogger;
-import com.hamusuke.numguesser.client.network.listener.info.ClientInfoPacketListenerImpl;
+import com.hamusuke.numguesser.client.network.ServerChecker;
+import com.hamusuke.numguesser.client.network.ServerInfoRegistry;
 import com.hamusuke.numguesser.client.network.listener.login.ClientLoginPacketListenerImpl;
 import com.hamusuke.numguesser.client.network.listener.main.ClientCommonPacketListenerImpl;
 import com.hamusuke.numguesser.client.network.player.LocalPlayer;
 import com.hamusuke.numguesser.client.room.ClientRoom;
 import com.hamusuke.numguesser.network.PacketSendListener;
-import com.hamusuke.numguesser.network.ServerInfo;
-import com.hamusuke.numguesser.network.ServerInfo.Status;
 import com.hamusuke.numguesser.network.channel.Connection;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
 import com.hamusuke.numguesser.network.protocol.packet.disconnect.serverbound.DisconnectReq;
 import com.hamusuke.numguesser.network.protocol.packet.login.serverbound.KeyExchangeReq;
 import com.hamusuke.numguesser.util.Util;
@@ -35,42 +28,33 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import javax.swing.*;
-import java.io.*;
+import java.io.File;
 import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-
-import static com.hamusuke.numguesser.util.PacketUtil.LOOP_PACKETS;
 
 public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static NumGuesser INSTANCE;
-    private static final Gson GSON = new Gson();
     private final AtomicBoolean running = new AtomicBoolean();
     private final TickCounter tickCounter = new TickCounter(20.0F, 0L);
+    public final Config config;
+    public final PacketLogTable packetLogTable = new PacketLogTable();
+    public final ClientEventBus eventBus = new ClientEventBus();
+    private final MainWindow mainWindow;
+    private final ServerInfoRegistry serverInfoRegistry;
+    private final ServerChecker serverChecker;
     @Nullable
     private Connection connection;
     @Nullable
     public ClientCommonPacketListenerImpl listener;
-    private final MainWindow mainWindow;
     @Nullable
     public LocalPlayer clientPlayer;
     private Thread thread;
-    private int tickCount;
     public PlayerTable playerTable;
     public Chat chat;
-    public final PacketLogTable packetLogTable = new PacketLogTable();
     @Nullable
     public ClientRoom curRoom;
-    private final File serversFile;
-    public final Config config;
-    private final List<ServerInfo> servers = Collections.synchronizedList(Lists.newArrayList());
-    private final List<Connection> infoConnections = Collections.synchronizedList(Lists.newArrayList());
 
     NumGuesser() {
         super("Client");
@@ -82,11 +66,9 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         INSTANCE = this;
         this.running.set(true);
         this.thread = Thread.currentThread();
-        this.serversFile = new File("./servers.json");
-        this.loadServers();
+        this.serverInfoRegistry = new ServerInfoRegistry(new File("./servers.json"));
+        this.serverChecker = new ServerChecker();
         this.config = new Config("./config.json");
-        this.config.loadConfig();
-
         if (this.config.darkTheme.getValue()) {
             FlatDarkLaf.setup();
         }
@@ -97,98 +79,15 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         this.mainWindow.setSize(1280, 720);
         this.mainWindow.setLocationRelativeTo(null);
         this.mainWindow.setVisible(true);
+        this.eventBus.register(new UINotifier());
     }
 
     public static NumGuesser getInstance() {
+        if (INSTANCE == null) {
+            throw new IllegalStateException("NumGuesser is not initialized!");
+        }
+
         return INSTANCE;
-    }
-
-    private synchronized void loadServers() {
-        this.servers.clear();
-
-        try {
-            if (!this.serversFile.exists() || !this.serversFile.isFile()) {
-                this.serversFile.createNewFile();
-            }
-        } catch (Exception e) {
-            LOGGER.warn("Failed to load servers", e);
-            return;
-        }
-
-        if (this.serversFile.exists() && this.serversFile.isFile()) {
-            try (var isr = new InputStreamReader(new FileInputStream(this.serversFile), StandardCharsets.UTF_8)) {
-                var servers = GSON.fromJson(isr, JsonArray.class);
-                if (servers == null) {
-                    return;
-                }
-
-                Set<ServerInfo> set = Sets.newHashSet();
-                servers.forEach(e -> {
-                    try {
-                        var info = GSON.fromJson(e, ServerInfo.class);
-                        if (info == null) {
-                            return;
-                        }
-
-                        info.status = Status.NONE;
-                        set.add(info);
-                    } catch (Exception ex) {
-                        LOGGER.warn("Error occurred while loading json and skip", ex);
-                    }
-                });
-
-                this.servers.addAll(set);
-            } catch (Exception e) {
-                LOGGER.warn("Failed to load servers json file", e);
-            }
-        }
-    }
-
-    public synchronized void saveServers() {
-        try (var w = new OutputStreamWriter(new FileOutputStream(this.serversFile), StandardCharsets.UTF_8)) {
-            GSON.toJson(this.servers, w);
-            w.flush();
-        } catch (Exception e) {
-            LOGGER.warn("Error occurred while saving servers", e);
-        }
-    }
-
-    public List<ServerInfo> getServers() {
-        return ImmutableList.copyOf(this.servers);
-    }
-
-    public boolean addServer(ServerInfo info) {
-        if (this.servers.contains(info)) {
-            return false;
-        }
-
-        this.servers.add(info);
-        return true;
-    }
-
-    public void removeServer(ServerInfo info) {
-        this.servers.remove(info);
-    }
-
-    public void checkServerInfo(ServerInfo info) {
-        CompletableFuture.runAsync(() -> {
-            info.status = Status.CONNECTING;
-            this.onServerInfoChanged();
-            var address = new InetSocketAddress(info.address, info.port);
-            var connection = Connection.connectToServer(address, new ClientPacketLogger(this));
-            connection.initiateServerboundInfoConnection(new ClientInfoPacketListenerImpl(this, connection, info));
-            this.infoConnections.add(connection);
-        }, this).exceptionally(throwable -> {
-            info.status = Status.FAILED;
-            this.onServerInfoChanged();
-            return null;
-        });
-    }
-
-    public void onServerInfoChanged() {
-        if (this.getPanel() instanceof ServerListPanel panel) {
-            panel.onServerInfoChanged();
-        }
     }
 
     public void run() {
@@ -220,16 +119,56 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         }
     }
 
-    public String getGameTitleWithVersion() {
-        return this.getGameTitle() + " " + this.getVersion();
+    private void loop(boolean tick) {
+        if (tick) {
+            int i = this.tickCounter.beginLoopTick(Util.getMeasuringTimeMs());
+            this.runTasks();
+            for (int j = 0; j < Math.min(10, i); j++) {
+                this.tick();
+            }
+        }
     }
 
-    public String getGameTitle() {
-        return "NumGuesser";
+    private void tick() {
+        SwingUtilities.invokeLater(this.mainWindow::tick);
+        if (this.connection != null) {
+            this.connection.tick();
+            if (this.connection.isDisconnected()) {
+                this.connection = null;
+            }
+        } else {
+            this.serverChecker.tick();
+        }
     }
 
-    public String getVersion() {
-        return Constants.VERSION;
+    public void stopLooping() {
+        if (this.connection != null) {
+            this.connection.disconnect("Client Exit");
+        }
+
+        this.running.set(false);
+    }
+
+    private void stop() {
+        try {
+            LOGGER.info("Stopping");
+            this.close();
+        } catch (Exception e) {
+            LOGGER.warn("Error occurred while stopping", e);
+        }
+    }
+
+    @Override
+    public void close() {
+        System.exit(0);
+    }
+
+    public ServerInfoRegistry getServerInfoRegistry() {
+        return this.serverInfoRegistry;
+    }
+
+    public ServerChecker getServerChecker() {
+        return this.serverChecker;
     }
 
     public void setWindowTitle(String title) {
@@ -248,63 +187,12 @@ public final class NumGuesser extends ReentrantThreadExecutor<Runnable> {
         this.mainWindow.setPanel(panel);
     }
 
-    public void stopLooping() {
-        if (this.connection != null) {
-            this.connection.disconnect("Client Exit");
-        }
-
-        this.running.set(false);
-    }
-
-    public void stop() {
-        try {
-            LOGGER.info("Stopping");
-            this.close();
-        } catch (Exception e) {
-            LOGGER.warn("Error occurred while stopping", e);
-        }
-    }
-
-    private void loop(boolean tick) {
-        if (tick) {
-            int i = this.tickCounter.beginLoopTick(Util.getMeasuringTimeMs());
-            this.runTasks();
-            for (int j = 0; j < Math.min(10, i); j++) {
-                this.tick();
-            }
-        }
-    }
-
-    public void tick() {
-        this.tickCount++;
-
-        SwingUtilities.invokeLater(this.mainWindow::tick);
-        if (this.connection != null) {
-            this.connection.tick();
-            if (this.connection.isDisconnected()) {
-                this.connection = null;
-            }
-        }
-
-        this.infoConnections.forEach(Connection::tick);
-        this.infoConnections.removeIf(Connection::isDisconnected);
-    }
-
     public void connectToServer(String host, int port, Consumer<String> consumer) {
         this.clientPlayer = null;
         var address = new InetSocketAddress(host, port);
         this.connection = Connection.connectToServer(address, new ClientPacketLogger(this));
         this.connection.initiateServerboundLoginConnection(new ClientLoginPacketListenerImpl(this.connection, this, consumer));
         this.connection.sendPacket(KeyExchangeReq.INSTANCE);
-    }
-
-    public boolean isPacketTrash(Packet<?> packet) {
-        return LOOP_PACKETS.contains(packet.getClass().getSimpleName());
-    }
-
-    @Override
-    public void close() {
-        System.exit(0);
     }
 
     @Override

@@ -109,9 +109,8 @@ public class IntelligentByteBuf extends ByteBuf {
         return readByteArray(this, maxSize);
     }
 
-    public IntelligentByteBuf writeVarInt(int value) {
+    public void writeVarInt(int value) {
         VarInt.write(this.parent, value);
-        return this;
     }
 
     public void writeVarLong(long l) {

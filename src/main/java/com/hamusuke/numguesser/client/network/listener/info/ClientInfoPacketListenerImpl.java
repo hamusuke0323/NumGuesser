@@ -2,6 +2,7 @@ package com.hamusuke.numguesser.client.network.listener.info;
 
 import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.NumGuesser;
+import com.hamusuke.numguesser.client.event.ServerInfoChangeEvent;
 import com.hamusuke.numguesser.network.ServerInfo;
 import com.hamusuke.numguesser.network.ServerInfo.Status;
 import com.hamusuke.numguesser.network.channel.Connection;
@@ -42,7 +43,7 @@ public class ClientInfoPacketListenerImpl implements ClientInfoPacketListener, T
             this.target.status = Status.FAILED;
         }
 
-        this.client.onServerInfoChanged();
+        this.client.eventBus.post(new ServerInfoChangeEvent());
     }
 
     @Override

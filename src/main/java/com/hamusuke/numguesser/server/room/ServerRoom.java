@@ -1,6 +1,5 @@
 package com.hamusuke.numguesser.server.room;
 
-import com.google.common.collect.Lists;
 import com.hamusuke.numguesser.game.GameMode;
 import com.hamusuke.numguesser.network.Player;
 import com.hamusuke.numguesser.network.protocol.packet.Packet;
@@ -14,30 +13,23 @@ import com.hamusuke.numguesser.network.protocol.packet.room.clientbound.StartGam
 import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
-import com.hamusuke.numguesser.server.game.NormalGame;
-import com.hamusuke.numguesser.server.game.PairPlayGame;
+import com.hamusuke.numguesser.server.game.GameModeRegistry;
+import com.hamusuke.numguesser.server.game.ServerGenericGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
-import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ServerRoom extends Room {
+public class ServerRoom extends Room<ServerPlayer> {
     private static final AtomicInteger ROOM_ID_INCREMENTER = new AtomicInteger();
     private final int id = ROOM_ID_INCREMENTER.getAndIncrement();
     private final NumGuesserServer server;
-    private final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
-    private final List<ServerPlayer> playerList;
     private final String password;
-    private NormalGame game;
-    private ServerPlayer owner;
+    private ServerGenericGame game;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
         super(roomName);
         this.server = server;
         this.password = password;
-        this.playerList = Collections.unmodifiableList(this.players);
     }
 
     public RoomInfo toInfo() {
@@ -54,12 +46,9 @@ public class ServerRoom extends Room {
         this.sendPacketToAllInRoom(new GameModeChangeNotify(gameMode));
     }
 
-    public ServerPlayer getOwner() {
-        return this.owner;
-    }
-
+    @Override
     public void setOwner(ServerPlayer owner) {
-        this.owner = owner;
+        super.setOwner(owner);
         this.sendPacketToAllInRoom(new RoomOwnerChangeNotify(this.owner.getId()));
     }
 
@@ -78,23 +67,22 @@ public class ServerRoom extends Room {
     }
 
     public void onPlayerReady() {
-        if (this.game == null) {
-            synchronized (this.players) {
-                if (this.isPlayerNumValid() && this.players.stream().allMatch(Player::isReady)) {
-                    this.players.forEach(player -> player.setReady(false));
+        if (this.game != null) {
+            return;
+        }
 
-                    this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
-                    this.game = switch (this.gameMode) {
-                        case NORMAL_GAME -> new NormalGame(this, this.players);
-                        case PAIR_PLAY -> new PairPlayGame(this, this.players);
-                    };
-                    this.players.forEach(player -> {
-                        player.sendPacket(StartGameNotify.INSTANCE);
-                        player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
-                    });
+        synchronized (this.players) {
+            if (this.isPlayerNumValid() && this.players.stream().allMatch(Player::isReady)) {
+                this.players.forEach(player -> player.setReady(false));
 
-                    this.game.startGame();
-                }
+                this.sendPacketToAllInRoom(new ChatNotify("ゲームを開始します"));
+                this.game = GameModeRegistry.create(this.gameMode, this, this.players);
+                this.players.forEach(player -> {
+                    player.sendPacket(StartGameNotify.INSTANCE);
+                    player.connection.getConnection().setupOutboundProtocol(PlayProtocols.CLIENTBOUND);
+                });
+
+                this.game.startGame();
             }
         }
     }
@@ -104,42 +92,39 @@ public class ServerRoom extends Room {
     }
 
     @Override
-    public synchronized void join(Player player) {
-        var serverPlayer = (ServerPlayer) player;
-
+    public synchronized void join(ServerPlayer player) {
         if (!this.server.getRoomMap().containsKey(this.id)) {
-            serverPlayer.sendPacket(new JoinRoomFailNotify("部屋が見つかりませんでした"));
+            player.sendPacket(new JoinRoomFailNotify("部屋が見つかりませんでした"));
             return;
         }
 
-        serverPlayer.curRoom = this;
-        serverPlayer.sendPacket(new JoinRoomSuccNotify(this.toInfo()));
-        serverPlayer.connection.getConnection().setupOutboundProtocol(RoomProtocols.CLIENTBOUND);
+        player.curRoom = this;
+        player.sendPacket(new JoinRoomSuccNotify(this.toInfo()));
+        player.connection.getConnection().setupOutboundProtocol(RoomProtocols.CLIENTBOUND);
 
-        this.sendPacketToAllInRoom(new PlayerJoinNotify(serverPlayer));
-        this.players.forEach(player1 -> serverPlayer.sendPacket(new PlayerJoinNotify(player1)));
-        this.players.add(serverPlayer);
+        this.sendPacketToAllInRoom(new PlayerJoinNotify(player));
+        this.players.forEach(player1 -> player.sendPacket(new PlayerJoinNotify(player1)));
+        this.players.add(player);
 
         if (this.owner != null) {
-            serverPlayer.sendPacket(new RoomOwnerChangeNotify(this.owner.getId()));
+            player.sendPacket(new RoomOwnerChangeNotify(this.owner.getId()));
         }
 
-        serverPlayer.sendPacket(new GameModeChangeNotify(this.gameMode));
+        player.sendPacket(new GameModeChangeNotify(this.gameMode));
 
-        this.sendPacketToAllInRoom(new ChatNotify("%s が部屋に参加しました".formatted(serverPlayer.getDisplayName())));
+        this.sendPacketToAllInRoom(new ChatNotify("%s が部屋に参加しました".formatted(player.getDisplayName())));
 
         this.players.forEach(sp -> this.sendPacketToAllInRoom(new PlayerReadySyncNotify(sp.getId(), sp.isReady())));
     }
 
     @Override
-    public synchronized void leave(Player player) {
-        var serverPlayer = (ServerPlayer) player;
-        serverPlayer.curRoom = null;
-        serverPlayer.setReady(false);
-        this.players.remove(serverPlayer);
+    public synchronized void leave(ServerPlayer player) {
+        player.curRoom = null;
+        player.setReady(false);
+        this.players.remove(player);
 
         if (this.game != null) {
-            this.game.leavePlayer(serverPlayer);
+            this.game.leavePlayer(player);
         }
 
         if (this.players.isEmpty()) {
@@ -147,21 +132,16 @@ public class ServerRoom extends Room {
             return;
         }
 
-        if (serverPlayer == this.owner) {
+        if (player == this.owner) {
             this.setOwner(this.players.getFirst());
         }
 
-        this.sendPacketToAllInRoom(new PlayerLeaveNotify(serverPlayer));
-        this.sendPacketToAllInRoom(new ChatNotify("%s が部屋から退出しました".formatted(serverPlayer.getDisplayName())));
+        this.sendPacketToAllInRoom(new PlayerLeaveNotify(player));
+        this.sendPacketToAllInRoom(new ChatNotify("%s が部屋から退出しました".formatted(player.getDisplayName())));
 
         if (this.game == null) {
             this.players.forEach(sp -> sp.setReady(false));
         }
-    }
-
-    @Override
-    public List<ServerPlayer> getPlayers() {
-        return this.playerList;
     }
 
     public void sendPacketToAllInRoom(Packet<?> packet) {
@@ -202,12 +182,7 @@ public class ServerRoom extends Room {
         }
     }
 
-    public NormalGame getGame() {
+    public ServerGenericGame getGame() {
         return this.game;
-    }
-
-    @Nullable
-    public ServerPlayer getPlayer(int id) {
-        return (ServerPlayer) super.getPlayer(id);
     }
 }

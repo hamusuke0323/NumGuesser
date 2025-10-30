@@ -14,8 +14,8 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CardRegistry {
-    private final List<Card> deck = Lists.newArrayList();
-    private final Map<Integer, Card> ownCardIdMap = Maps.newConcurrentMap();
+    private final List<ServerCard> deck = Lists.newArrayList();
+    private final Map<Integer, ServerCard> ownCardIdMap = Maps.newConcurrentMap();
     private final Map<Integer, ServerPlayer> cardIdPlayerMap = Maps.newConcurrentMap();
 
     public CardRegistry(final Random random) {
@@ -38,17 +38,17 @@ public class CardRegistry {
         this.deck.forEach(card -> card.setId(uniqueIdCounter.getAndIncrement()));
     }
 
-    public Card pullBy(final ServerPlayer player) {
+    public ServerCard pullBy(final ServerPlayer player) {
         final var card = this.pull();
         this.own(player, card);
         return card;
     }
 
-    public Card pull() {
+    public ServerCard pull() {
         return this.deck.removeFirst();
     }
 
-    public boolean own(final ServerPlayer player, final Card card) {
+    public boolean own(final ServerPlayer player, final ServerCard card) {
         if (this.ownCardIdMap.containsKey(card.getId())) {
             return false;
         }
@@ -74,7 +74,7 @@ public class CardRegistry {
         return this.deck.isEmpty();
     }
 
-    public Card getOwnedCardById(final int id) {
+    public ServerCard getOwnedCardById(final int id) {
         return this.ownCardIdMap.get(id);
     }
 

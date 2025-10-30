@@ -31,9 +31,5 @@ public record ClientCommandReq(Command command) implements Packet<ServerPlayPack
     public enum Command {
         EXIT_GAME,
         CANCEL,
-        LET_ALLY_TOSS,
-        ATTACK_WITHOUT_TOSS,
-        CONTINUE_ATTACKING,
-        STAY,
     }
 }

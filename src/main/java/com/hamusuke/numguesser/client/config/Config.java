@@ -22,15 +22,16 @@ public class Config {
         this.configFile = new File(fileName);
         this.values = Lists.newArrayList();
 
-        this.darkTheme = this.registerConfig(new BooleanValue("darkTheme"));
+        this.darkTheme = this.register(new BooleanValue("darkTheme"));
+        this.load();
     }
 
-    private <T, V extends ConfigValue<T>> V registerConfig(V value) {
+    private <T, V extends ConfigValue<T>> V register(V value) {
         this.values.add(value);
         return value;
     }
 
-    public void loadConfig() {
+    private void load() {
         try {
             if (!this.configFile.exists() || !this.configFile.isFile()) {
                 this.configFile.createNewFile();
@@ -56,7 +57,7 @@ public class Config {
         }
     }
 
-    public void saveConfig() {
+    public synchronized void save() {
         try (var jsonWriter = new JsonWriter(new OutputStreamWriter(new FileOutputStream(this.configFile), StandardCharsets.UTF_8))) {
             jsonWriter.setIndent("  ");
             var obj = new JsonObject();

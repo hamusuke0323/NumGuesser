@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.client.game.card;
 
 public class RemoteCard extends AbstractClientCard {
-    private int num = -1;
+    private int num = UNKNOWN;
 
     public RemoteCard(CardColor cardColor) {
         super(cardColor);

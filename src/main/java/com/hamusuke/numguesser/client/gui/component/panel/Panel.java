@@ -9,7 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public abstract class Panel extends JXPanel implements ActionListener, ComponentListener {
-    protected NumGuesser client;
+    protected final NumGuesser client = NumGuesser.getInstance();
 
     protected Panel() {
         this(new BorderLayout());
@@ -38,7 +38,6 @@ public abstract class Panel extends JXPanel implements ActionListener, Component
     }
 
     public void init() {
-        this.client = NumGuesser.getInstance();
         this.registerKeyboardAction(e -> this.onClose(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 

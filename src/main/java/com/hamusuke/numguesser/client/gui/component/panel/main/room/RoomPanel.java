@@ -1,5 +1,6 @@
 package com.hamusuke.numguesser.client.gui.component.panel.main.room;
 
+import com.hamusuke.numguesser.Constants;
 import com.hamusuke.numguesser.client.gui.component.panel.OwnerChangeListener;
 import com.hamusuke.numguesser.client.gui.component.panel.Panel;
 import com.hamusuke.numguesser.game.GameMode;
@@ -31,7 +32,7 @@ public class RoomPanel extends Panel implements OwnerChangeListener {
     public void init() {
         super.init();
 
-        this.client.setWindowTitle(Objects.requireNonNull(this.client.curRoom).getRoomName() + " - " + this.client.getGameTitleWithVersion());
+        this.client.setWindowTitle(Objects.requireNonNull(this.client.curRoom).getRoomName() + " - " + Constants.TITLE_AND_VERSION);
 
         var label = new JXLabel("全員が準備完了になるとゲームが始まります", SwingConstants.CENTER);
         this.add(label);

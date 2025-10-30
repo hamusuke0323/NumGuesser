@@ -1,15 +1,14 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.hamusuke.numguesser.game.card.Card;
-import com.hamusuke.numguesser.network.Player;
-import com.hamusuke.numguesser.network.protocol.packet.Packet;
-import com.hamusuke.numguesser.server.game.NormalGame;
+import com.hamusuke.numguesser.game.Game;
+import com.hamusuke.numguesser.server.game.GameDataRegistry;
+import com.hamusuke.numguesser.server.game.ServerGenericGame;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
-import com.hamusuke.numguesser.server.game.round.phase.ActableGamePhase;
-import com.hamusuke.numguesser.server.game.round.phase.CancellableGamePhase;
+import com.hamusuke.numguesser.server.game.round.phase.Actable;
+import com.hamusuke.numguesser.server.game.round.phase.Cancellable;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseManager;
-import com.hamusuke.numguesser.server.game.round.phase.action.ActionResolver;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 import com.hamusuke.numguesser.util.Util;
@@ -24,7 +23,7 @@ import java.util.Random;
 
 public class GameRound {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final NormalGame game;
+    public final ServerGenericGame game;
     public final List<ServerPlayer> players;
     public final CardRegistry cardRegistry;
     public final ParentDeterminer parentDeterminer;
@@ -36,14 +35,14 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(NormalGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
+    public GameRound(ServerGenericGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
         this.game = game;
         this.eventBus = game.getEventBus();
         this.players = players;
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
         this.parentDeterminer = new ParentDeterminer();
-        this.seatingArranger = game.getSeatingArranger();
+        this.seatingArranger = game.getData(GameDataRegistry.SEATING_ARRANGER);
         this.phaseManager = phaseManager;
     }
 
@@ -86,32 +85,28 @@ public class GameRound {
         this.phaseManager.next(this);
     }
 
-    public void ownCard(ServerPlayer player, Card card) {
+    public void ownCard(ServerPlayer player, ServerCard card) {
         if (this.cardRegistry.own(player, card)) {
             int index = player.getDeck().addCard(card);
             this.eventBus.post(new PlayerNewCardAddEvent(player, index, card));
         }
     }
 
-    public void onPlayerAction(final ServerPlayer actor, final Packet<?> packet) {
-        if (!(this.phaseManager.getCurrentPhase() instanceof ActableGamePhase actableGamePhase)) {
-            return;
-        }
-
-        if (!ActionResolver.canActWith(packet, actableGamePhase)) {
+    public void onPlayerAction(final ServerPlayer actor, final Object data) {
+        if (!(this.phaseManager.getCurrentPhase() instanceof Actable actable)) {
             return;
         }
 
         try {
-            actableGamePhase.onPlayerAction(this, actor, ActionResolver.resolve(packet));
+            actable.onPlayerAction(this, actor, data);
         } catch (Throwable e) {
             LOGGER.warn("Player " + actor.getDisplayName() + " might send an invalid action", e);
         }
     }
 
     public void onCancelCommand(ServerPlayer canceller) {
-        if (this.phaseManager.getCurrentPhase() instanceof CancellableGamePhase<?> cancellableGamePhase) {
-            cancellableGamePhase.onPlayerCancel(this, canceller);
+        if (this.phaseManager.getCurrentPhase() instanceof Cancellable cancellable) {
+            cancellable.onPlayerCancel(this, canceller);
         }
     }
 
@@ -119,17 +114,6 @@ public class GameRound {
         return this.players.stream()
                 .filter(sp -> !sp.equals(player))
                 .allMatch(ServerPlayer::isDefeated);
-    }
-
-    public void ready() {
-        if (this.phaseManager.hasNext() || this.isLastRound()) {
-            return;
-        }
-
-        if (this.players.stream().allMatch(Player::isReady)) {
-            this.players.forEach(player -> player.setReady(false));
-            this.game.startNextRound();
-        }
     }
 
     public void nextAttacker() {
@@ -142,7 +126,7 @@ public class GameRound {
                 continue;
             }
 
-            this.curAttacker = player;
+            this.setCurAttacker(player);
             break;
         }
     }
@@ -191,6 +175,7 @@ public class GameRound {
 
     public void setCurAttacker(ServerPlayer curAttacker) {
         this.curAttacker = curAttacker;
+        this.game.setSyncedData(Game.CURRENT_ATTACKER, curAttacker.getId());
     }
 
     @Nullable

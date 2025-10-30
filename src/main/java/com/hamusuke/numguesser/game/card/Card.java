@@ -1,13 +1,19 @@
 package com.hamusuke.numguesser.game.card;
 
+import com.hamusuke.numguesser.network.Player;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.Objects;
 
 public abstract class Card implements Comparable<Card> {
+    public static final int UNKNOWN = -1;
     private int id = -1;
     protected final CardColor cardColor;
     protected boolean opened;
+    @Nullable
+    protected Player owner;
 
     public Card(CardColor cardColor) {
         this.cardColor = cardColor;
@@ -33,6 +39,10 @@ public abstract class Card implements Comparable<Card> {
 
     public boolean isOpened() {
         return this.opened;
+    }
+
+    public void setOwner(@Nullable final Player owner) {
+        this.owner = owner;
     }
 
     public int getPoint() {
@@ -70,14 +80,6 @@ public abstract class Card implements Comparable<Card> {
     @Override
     public String toString() {
         return this.cardColor + " Card: " + getNum();
-    }
-
-    public CardSerializer toSerializer() {
-        return new CardSerializer(this.getId(), this.getCardColor(), this.getNum());
-    }
-
-    public CardSerializer toSerializerForOthers() {
-        return new CardSerializer(this.getId(), this.getCardColor(), -1);
     }
 
     public enum CardColor {

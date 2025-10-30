@@ -1,13 +1,13 @@
 package com.hamusuke.numguesser.server.game.event.events;
 
-import com.hamusuke.numguesser.game.card.Card;
+import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 public final class PlayerNewCardAddEvent extends PlayerEvent {
     private final int index;
-    private final Card card;
+    private final ServerCard card;
 
-    public PlayerNewCardAddEvent(ServerPlayer player, int index, Card card) {
+    public PlayerNewCardAddEvent(ServerPlayer player, int index, ServerCard card) {
         super(player);
         this.index = index;
         this.card = card;
@@ -17,7 +17,7 @@ public final class PlayerNewCardAddEvent extends PlayerEvent {
         return this.index;
     }
 
-    public Card getCard() {
+    public ServerCard getCard() {
         return this.card;
     }
 }

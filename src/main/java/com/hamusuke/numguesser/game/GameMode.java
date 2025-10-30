@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.game;
 
 public enum GameMode {
-    NORMAL_GAME("ノーマル", 2, 4),
+    GENERIC("通常", 2, 4),
     PAIR_PLAY("ペアプレー", 4, 4);
 
     public final String name;
