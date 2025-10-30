@@ -19,7 +19,7 @@
 ### サーバー
 GUIに対応しているOSの場合，`jar`ファイルをダブルクリックすればGUIが起動します。
 
-または，`java -jar -server NumGuesser-1.20.0-server.jar nogui`
+または，`java -jar -server NumGuesser-1.21.0-server.jar nogui`
 
 - 引数の種類 （複数の引数を入力したい場合，半角スペースで区切ってください。）
   - nogui GUIを無効化する
