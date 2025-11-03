@@ -1,4 +1,4 @@
-package com.hamusuke.numguesser.server.game;
+package com.hamusuke.numguesser.server.game.data;
 
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.seating.SeatingArranger;

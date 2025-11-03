@@ -1,6 +1,7 @@
 package com.hamusuke.numguesser.server.game;
 
 import com.hamusuke.numguesser.game.GameMode;
+import com.hamusuke.numguesser.server.game.data.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.seating.PairPlaySeatingArranger;
@@ -16,7 +17,7 @@ public class GameModeRegistry {
     private static final GameModeRegistry GENERIC =
             Builder.of(ServerGame::new)
                     .configureGame(game -> {
-                        game.defineServerGameData(ServerGameDataRegistry.SEATING_ARRANGER, new SeatingArranger());
+                        game.serverGameData.define(ServerGameDataRegistry.SEATING_ARRANGER, new SeatingArranger());
                         game.eventBus.register(new PacketSender(game.playerList));
                     })
                     .build();
@@ -24,9 +25,9 @@ public class GameModeRegistry {
             Builder.of(ServerPairPlayGame::new)
                     .configureGame(game -> {
                         final var pairRegistry = new ServerPlayerPairRegistry();
-                        game.defineServerGameData(ServerGameDataRegistry.PAIR_REGISTRY, pairRegistry)
-                                .defineServerGameData(ServerGameDataRegistry.SEATING_ARRANGER, new PairPlaySeatingArranger(pairRegistry))
-                                .defineServerGameData(ServerGameDataRegistry.HAS_MADE_TEAM, false);
+                        game.serverGameData.define(ServerGameDataRegistry.PAIR_REGISTRY, pairRegistry)
+                                .define(ServerGameDataRegistry.SEATING_ARRANGER, new PairPlaySeatingArranger(pairRegistry))
+                                .define(ServerGameDataRegistry.HAS_MADE_TEAM, false);
 
                         game.eventBus.register(new PacketSender(game.playerList));
                     })

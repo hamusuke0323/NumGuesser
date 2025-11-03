@@ -1,10 +1,10 @@
 package com.hamusuke.numguesser.server.game;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.game.data.GameData;
 import com.hamusuke.numguesser.network.protocol.packet.play.clientbound.GameDataSyncNotify;
+import com.hamusuke.numguesser.server.game.data.ServerGameData;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.GameRoundStartEvent;
 import com.hamusuke.numguesser.server.game.round.GameRound;
@@ -14,7 +14,6 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class ServerGame extends Game {
     private static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
@@ -22,7 +21,7 @@ public class ServerGame extends Game {
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
     protected final GameEventBus eventBus = new GameEventBus();
-    protected final Map<ServerGameDataRegistry.DataKey<?>, Object> serverGameData = Maps.newConcurrentMap();
+    public final ServerGameData serverGameData = new ServerGameData();
     protected GameRound round;
     protected int waitForForceExitGameTicks;
 
@@ -30,23 +29,6 @@ public class ServerGame extends Game {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
-    }
-
-    public <T> ServerGame defineServerGameData(final ServerGameDataRegistry.DataKey<T> id, final T value) {
-        this.serverGameData.put(id, value);
-        return this;
-    }
-
-    public <T> void setServerGameData(final ServerGameDataRegistry.DataKey<T> id, final T value) {
-        if (!this.serverGameData.containsKey(id)) {
-            throw new IllegalArgumentException("server game data (id: " + id.id() + ") is not defined");
-        }
-
-        this.serverGameData.put(id, value);
-    }
-
-    public <T> T getServerGameData(final ServerGameDataRegistry.DataKey<T> id) {
-        return (T) this.serverGameData.get(id);
     }
 
     public <V> void setSyncedData(final GameData<V> data, final V value) {

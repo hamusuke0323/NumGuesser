@@ -1,7 +1,7 @@
 package com.hamusuke.numguesser.server.game.round;
 
-import com.hamusuke.numguesser.server.game.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.ServerPairPlayGame;
+import com.hamusuke.numguesser.server.game.data.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.round.phase.GamePhaseDirector;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
@@ -14,7 +14,7 @@ public class PairGameRound extends GameRound {
 
     public PairGameRound(ServerPairPlayGame game, List<ServerPlayer> players) {
         super(game, players, GamePhaseDirector.forPairPlayGame());
-        this.pairRegistry = game.getServerGameData(ServerGameDataRegistry.PAIR_REGISTRY);
+        this.pairRegistry = game.serverGameData.get(ServerGameDataRegistry.PAIR_REGISTRY);
     }
 
     protected PairGameRound(final PairGameRound old) {

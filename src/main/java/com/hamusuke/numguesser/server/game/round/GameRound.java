@@ -2,8 +2,8 @@ package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.Game;
 import com.hamusuke.numguesser.server.game.ServerGame;
-import com.hamusuke.numguesser.server.game.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
+import com.hamusuke.numguesser.server.game.data.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
 import com.hamusuke.numguesser.server.game.round.phase.Actable;
@@ -42,7 +42,7 @@ public class GameRound {
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
         this.parentDeterminer = new ParentDeterminer();
-        this.seatingArranger = game.getServerGameData(ServerGameDataRegistry.SEATING_ARRANGER);
+        this.seatingArranger = game.serverGameData.get(ServerGameDataRegistry.SEATING_ARRANGER);
         this.phaseManager = phaseManager;
     }
 
