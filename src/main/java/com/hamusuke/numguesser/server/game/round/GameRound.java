@@ -1,8 +1,8 @@
 package com.hamusuke.numguesser.server.game.round;
 
 import com.hamusuke.numguesser.game.Game;
-import com.hamusuke.numguesser.server.game.GameDataRegistry;
-import com.hamusuke.numguesser.server.game.ServerGenericGame;
+import com.hamusuke.numguesser.server.game.ServerGame;
+import com.hamusuke.numguesser.server.game.ServerGameDataRegistry;
 import com.hamusuke.numguesser.server.game.card.ServerCard;
 import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.events.PlayerNewCardAddEvent;
@@ -23,7 +23,7 @@ import java.util.Random;
 
 public class GameRound {
     private static final Logger LOGGER = LogManager.getLogger();
-    public final ServerGenericGame game;
+    public final ServerGame game;
     public final List<ServerPlayer> players;
     public final CardRegistry cardRegistry;
     public final ParentDeterminer parentDeterminer;
@@ -35,14 +35,14 @@ public class GameRound {
     @Nullable
     protected ServerPlayer winner;
 
-    public GameRound(ServerGenericGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
+    public GameRound(ServerGame game, List<ServerPlayer> players, GamePhaseManager phaseManager) {
         this.game = game;
         this.eventBus = game.getEventBus();
         this.players = players;
         this.random = newRandom();
         this.cardRegistry = new CardRegistry(this.random);
         this.parentDeterminer = new ParentDeterminer();
-        this.seatingArranger = game.getData(GameDataRegistry.SEATING_ARRANGER);
+        this.seatingArranger = game.getServerGameData(ServerGameDataRegistry.SEATING_ARRANGER);
         this.phaseManager = phaseManager;
     }
 

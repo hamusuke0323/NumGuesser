@@ -1,7 +1,6 @@
 package com.hamusuke.numguesser.server.game;
 
 import com.hamusuke.numguesser.game.GameMode;
-import com.hamusuke.numguesser.server.game.event.GameEventBus;
 import com.hamusuke.numguesser.server.game.event.handler.PacketSender;
 import com.hamusuke.numguesser.server.game.pair.ServerPlayerPairRegistry;
 import com.hamusuke.numguesser.server.game.seating.PairPlaySeatingArranger;
@@ -11,30 +10,25 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 import org.apache.commons.lang3.function.Consumers;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class GameModeRegistry {
-    public static final GameModeRegistry GENERIC =
-            Builder.of(ServerGenericGame::new)
-                    .defineGameData(map -> {
-                        map.put(GameDataRegistry.SEATING_ARRANGER, new SeatingArranger());
-                    })
-                    .withEventBus((game, eventBus) -> {
-                        eventBus.register(new PacketSender(game.playerList));
+    private static final GameModeRegistry GENERIC =
+            Builder.of(ServerGame::new)
+                    .configureGame(game -> {
+                        game.defineServerGameData(ServerGameDataRegistry.SEATING_ARRANGER, new SeatingArranger());
+                        game.eventBus.register(new PacketSender(game.playerList));
                     })
                     .build();
-    public static final GameModeRegistry PAIR_PLAY =
+    private static final GameModeRegistry PAIR_PLAY =
             Builder.of(ServerPairPlayGame::new)
-                    .defineGameData(map -> {
+                    .configureGame(game -> {
                         final var pairRegistry = new ServerPlayerPairRegistry();
-                        map.put(GameDataRegistry.PAIR_REGISTRY, pairRegistry);
-                        map.put(GameDataRegistry.SEATING_ARRANGER, new PairPlaySeatingArranger(pairRegistry));
-                        map.put(GameDataRegistry.HAS_MADE_TEAM, false);
-                    })
-                    .withEventBus((game, eventBus) -> {
-                        eventBus.register(new PacketSender(game.playerList));
+                        game.defineServerGameData(ServerGameDataRegistry.PAIR_REGISTRY, pairRegistry)
+                                .defineServerGameData(ServerGameDataRegistry.SEATING_ARRANGER, new PairPlaySeatingArranger(pairRegistry))
+                                .defineServerGameData(ServerGameDataRegistry.HAS_MADE_TEAM, false);
+
+                        game.eventBus.register(new PacketSender(game.playerList));
                     })
                     .build();
     private final GameCreator creator;
@@ -43,46 +37,38 @@ public class GameModeRegistry {
         this.creator = creator;
     }
 
-    public static ServerGenericGame create(final GameMode mode, final ServerRoom room, final List<ServerPlayer> players) {
+    public static ServerGame create(final GameMode mode, final ServerRoom room, final List<ServerPlayer> players) {
         return switch (mode) {
             case GENERIC -> GENERIC.creator.create(room, players);
             case PAIR_PLAY -> PAIR_PLAY.creator.create(room, players);
         };
     }
 
-    public interface GameCreator {
-        ServerGenericGame create(final ServerRoom room, final List<ServerPlayer> players);
+    private interface GameCreator {
+        ServerGame create(final ServerRoom room, final List<ServerPlayer> players);
     }
 
-    public static class Builder {
+    private static class Builder {
         private final GameCreator base;
-        private Consumer<Map<Integer, Object>> gameDataDefiner = Consumers.nop();
-        private BiConsumer<ServerGenericGame, GameEventBus> eventBusConsumer = (serverGenericGame, gameEventBus) -> {
-        };
+        private Consumer<ServerGame> gameManipulator = Consumers.nop();
 
         private Builder(final GameCreator base) {
             this.base = base;
         }
 
-        public static Builder of(final GameCreator base) {
+        private static Builder of(final GameCreator base) {
             return new Builder(base);
         }
 
-        public Builder defineGameData(final Consumer<Map<Integer, Object>> gameDataDefiner) {
-            this.gameDataDefiner = gameDataDefiner;
+        private Builder configureGame(final Consumer<ServerGame> gameManipulator) {
+            this.gameManipulator = gameManipulator;
             return this;
         }
 
-        public Builder withEventBus(final BiConsumer<ServerGenericGame, GameEventBus> eventBusConsumer) {
-            this.eventBusConsumer = eventBusConsumer;
-            return this;
-        }
-
-        public GameModeRegistry build() {
+        private GameModeRegistry build() {
             return new GameModeRegistry((room, players) -> {
                 final var game = this.base.create(room, players);
-                game.defineData(this.gameDataDefiner);
-                this.eventBusConsumer.accept(game, game.eventBus);
+                this.gameManipulator.accept(game);
                 return game;
             });
         }

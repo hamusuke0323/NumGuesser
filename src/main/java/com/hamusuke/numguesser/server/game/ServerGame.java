@@ -15,46 +15,38 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
-public class ServerGenericGame extends Game {
-    protected static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
+public class ServerGame extends Game {
+    private static final int AUTO_FORCE_EXIT_GAME_TICKS = 60 * 20;
     public final ServerRoom room;
     protected final List<ServerPlayer> players = Collections.synchronizedList(Lists.newArrayList());
     protected final List<ServerPlayer> playerList;
     protected final GameEventBus eventBus = new GameEventBus();
+    protected final Map<ServerGameDataRegistry.DataKey<?>, Object> serverGameData = Maps.newConcurrentMap();
     protected GameRound round;
     protected int waitForForceExitGameTicks;
-    protected final Map<Integer, Object> data = Maps.newConcurrentMap();
 
-    public ServerGenericGame(ServerRoom room, List<ServerPlayer> players) {
+    public ServerGame(ServerRoom room, List<ServerPlayer> players) {
         this.room = room;
         this.players.addAll(players);
         this.playerList = Collections.unmodifiableList(this.players);
     }
 
-    public void defineData(final Consumer<Map<Integer, Object>> consumer) {
-        consumer.accept(this.data);
+    public <T> ServerGame defineServerGameData(final ServerGameDataRegistry.DataKey<T> id, final T value) {
+        this.serverGameData.put(id, value);
+        return this;
     }
 
-    public <V> void defineData(final int id, final V value) {
-        this.data.put(id, value);
-    }
-
-    public void removeData(final int id) {
-        this.data.remove(id);
-    }
-
-    public <V> void setData(final int id, final V value) {
-        if (!this.data.containsKey(id)) {
-            throw new IllegalArgumentException("game data (id: " + id + ") is not defined");
+    public <T> void setServerGameData(final ServerGameDataRegistry.DataKey<T> id, final T value) {
+        if (!this.serverGameData.containsKey(id)) {
+            throw new IllegalArgumentException("server game data (id: " + id.id() + ") is not defined");
         }
 
-        this.data.put(id, value);
+        this.serverGameData.put(id, value);
     }
 
-    public <V> V getData(final int id) {
-        return (V) this.data.get(id);
+    public <T> T getServerGameData(final ServerGameDataRegistry.DataKey<T> id) {
+        return (T) this.serverGameData.get(id);
     }
 
     public <V> void setSyncedData(final GameData<V> data, final V value) {

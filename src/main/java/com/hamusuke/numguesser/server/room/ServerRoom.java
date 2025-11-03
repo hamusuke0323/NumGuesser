@@ -14,7 +14,7 @@ import com.hamusuke.numguesser.room.Room;
 import com.hamusuke.numguesser.room.RoomInfo;
 import com.hamusuke.numguesser.server.NumGuesserServer;
 import com.hamusuke.numguesser.server.game.GameModeRegistry;
-import com.hamusuke.numguesser.server.game.ServerGenericGame;
+import com.hamusuke.numguesser.server.game.ServerGame;
 import com.hamusuke.numguesser.server.network.ServerPlayer;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -24,7 +24,7 @@ public class ServerRoom extends Room<ServerPlayer> {
     private final int id = ROOM_ID_INCREMENTER.getAndIncrement();
     private final NumGuesserServer server;
     private final String password;
-    private ServerGenericGame game;
+    private ServerGame game;
 
     public ServerRoom(NumGuesserServer server, String roomName, String password) {
         super(roomName);
@@ -182,7 +182,7 @@ public class ServerRoom extends Room<ServerPlayer> {
         }
     }
 
-    public ServerGenericGame getGame() {
+    public ServerGame getGame() {
         return this.game;
     }
 }

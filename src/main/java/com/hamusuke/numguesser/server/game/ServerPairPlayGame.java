@@ -8,7 +8,7 @@ import com.hamusuke.numguesser.server.room.ServerRoom;
 
 import java.util.List;
 
-public class ServerPairPlayGame extends ServerGenericGame {
+public class ServerPairPlayGame extends ServerGame {
     public ServerPairPlayGame(ServerRoom room, List<ServerPlayer> players) {
         super(room, players);
     }
