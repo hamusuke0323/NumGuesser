@@ -27,9 +27,8 @@ public class ServerCard extends Card {
         return new CardSerializer(this.getId(), this.getCardColor(), visibleTester.test(this) ? this.getNum() : UNKNOWN);
     }
 
-    public sealed interface VisibleTester extends Predicate<ServerCard> permits VisibleTester.EveryOne, VisibleTester.Never, VisibleTester.OnlyOwner {
+    public sealed interface VisibleTester extends Predicate<ServerCard> permits VisibleTester.EveryOne, VisibleTester.OnlyOwner {
         EveryOne EVERYONE = new EveryOne();
-        Never NEVER = new Never();
 
         final class EveryOne implements VisibleTester {
             private EveryOne() {
@@ -38,16 +37,6 @@ public class ServerCard extends Card {
             @Override
             public boolean test(final ServerCard card) {
                 return true;
-            }
-        }
-
-        final class Never implements VisibleTester {
-            private Never() {
-            }
-
-            @Override
-            public boolean test(final ServerCard card) {
-                return false;
             }
         }
 
