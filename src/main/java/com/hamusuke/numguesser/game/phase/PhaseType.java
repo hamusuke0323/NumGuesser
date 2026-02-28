@@ -17,7 +17,11 @@ public enum PhaseType {
     END,
     PAIR_END;
 
-    public static final StreamCodec<IntelligentByteBuf, PhaseType> STREAM_CODEC = StreamCodec.ofMember(PhaseType::write, buf -> buf.readEnum(PhaseType.class));
+    public static final StreamCodec<IntelligentByteBuf, PhaseType> STREAM_CODEC = StreamCodec.ofMember(PhaseType::write, PhaseType::from);
+
+    private static PhaseType from(final IntelligentByteBuf buf) {
+        return buf.readEnum(PhaseType.class);
+    }
 
     private void write(final IntelligentByteBuf buf) {
         buf.writeEnum(this);
